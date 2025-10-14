@@ -37,7 +37,10 @@ help: ## Show this help message
 
 .PHONY: build
 build: ## Build for current platform → dist/sourcebox
-	@echo "Build target not yet implemented"
+	@echo "Building $(BINARY_NAME) for current platform..."
+	@mkdir -p $(BUILD_DIR)
+	@go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/sourcebox
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
 .PHONY: test
 test: ## Run tests with race detection and coverage

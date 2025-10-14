@@ -73,10 +73,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Implement `make build` target in Makefile (builds for current platform → dist/sourcebox)
-- [ ] T016 [US2] Configure VERSION variable in Makefile using `git describe --tags --always --dirty`
-- [ ] T017 [US2] Configure LDFLAGS in Makefile with `-s -w` (strip symbols) and `-X main.version=$(VERSION)`
-- [ ] T018 [US2] Verify binary is executable and includes version information
+- [X] T015 [US2] Implement `make build` target in Makefile (builds for current platform → dist/sourcebox)
+- [X] T016 [US2] Configure VERSION variable in Makefile using `git describe --tags --always --dirty`
+- [X] T017 [US2] Configure LDFLAGS in Makefile with `-s -w` (strip symbols) and `-X main.version=$(VERSION)`
+- [X] T018 [US2] Verify binary is executable and includes version information
 
 **Checkpoint**: `make build` produces working binary in < 30 seconds
 
