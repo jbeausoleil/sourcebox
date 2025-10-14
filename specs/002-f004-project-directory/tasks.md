@@ -122,14 +122,14 @@
 
 ### Implementation for User Story 5
 
-- [ ] T025 [US5] Define PLATFORMS variable in Makefile (darwin/amd64, darwin/arm64, linux/amd64, linux/arm64, windows/amd64)
-- [ ] T026 [P] [US5] Implement build target for macOS Intel (darwin/amd64) with gzip compression
-- [ ] T027 [P] [US5] Implement build target for macOS Apple Silicon (darwin/arm64) with gzip compression
-- [ ] T028 [P] [US5] Implement build target for Linux x86_64 (linux/amd64) with gzip compression
-- [ ] T029 [P] [US5] Implement build target for Linux ARM64 (linux/arm64) with gzip compression
-- [ ] T030 [P] [US5] Implement build target for Windows x86_64 (windows/amd64 with .exe extension) with gzip compression
-- [ ] T031 [US5] Implement `make build-all` target that orchestrates all 5 platform builds
-- [ ] T032 [US5] Verify all compressed binaries are under 50MB (constitutional requirement)
+- [X] T025 [US5] Define PLATFORMS variable in Makefile (darwin/amd64, darwin/arm64, linux/amd64, linux/arm64, windows/amd64)
+- [X] T026 [P] [US5] Implement build target for macOS Intel (darwin/amd64) with gzip compression
+- [X] T027 [P] [US5] Implement build target for macOS Apple Silicon (darwin/arm64) with gzip compression
+- [X] T028 [P] [US5] Implement build target for Linux x86_64 (linux/amd64) with gzip compression
+- [X] T029 [P] [US5] Implement build target for Linux ARM64 (linux/arm64) with gzip compression
+- [X] T030 [P] [US5] Implement build target for Windows x86_64 (windows/amd64 with .exe extension) with gzip compression
+- [X] T031 [US5] Implement `make build-all` target that orchestrates all 5 platform builds
+- [X] T032 [US5] Verify all compressed binaries are under 50MB (constitutional requirement)
 
 **Checkpoint**: `make build-all` creates 5 platform binaries in under 2 minutes (with parallel builds)
 
