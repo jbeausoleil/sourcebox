@@ -58,7 +58,7 @@ F003 creates foundational configuration files at repository root. No source code
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Create README.md with structure per research.md Decision 3
+- [X] T009 [P] [US1] Create README.md with structure per research.md Decision 3
   - **File**: `README.md`
   - **Content**:
     - Project name and tagline: "SourceBox - Verticalized demo data for developers in 30 seconds"
@@ -71,7 +71,7 @@ F003 creates foundational configuration files at repository root. No source code
     - Contributing: Link to CONTRIBUTING.md
     - License: MIT with link to LICENSE file
 
-- [ ] T010 [P] [US1] Create CONTRIBUTING.md per research.md Decision 5
+- [X] T010 [P] [US1] Create CONTRIBUTING.md per research.md Decision 5
   - **File**: `CONTRIBUTING.md`
   - **Content**:
     - Bug Reports section: Template for reporting bugs (description, steps to reproduce, environment, logs)
@@ -80,12 +80,12 @@ F003 creates foundational configuration files at repository root. No source code
     - Code Style section: gofmt, go vet, TDD for core logic, comments for non-obvious logic
     - Testing Requirements section: TDD for core, >80% coverage, manual QA on Mac/Linux/Windows
 
-- [ ] T011 [P] [US1] Create CODE_OF_CONDUCT.md per research.md Decision 6
+- [X] T011 [P] [US1] Create CODE_OF_CONDUCT.md per research.md Decision 6
   - **File**: `CODE_OF_CONDUCT.md`
   - **Content**: Full Contributor Covenant v2.1 text from contributor-covenant.org
   - **Customizations**: Project name (SourceBox), contact email (to be determined), scope (all project spaces)
 
-- [ ] T012 [US1] Add .gitignore patterns for documentation tools
+- [X] T012 [US1] Add .gitignore patterns for documentation tools
   - **File**: `.gitignore` (append to existing)
   - **Content**: Add patterns for Markdown editors (*.md.backup, .obsidian/, etc.)
 
