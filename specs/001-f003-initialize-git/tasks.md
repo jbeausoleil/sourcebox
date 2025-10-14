@@ -193,7 +193,7 @@ User Story 4 has no additional implementation tasks - it depends entirely on T01
 - [X] T018 [P] [Polish] Search for any accidental employer references: `grep -r "employer-name" .`
 - [X] T019 [P] [Polish] Search for any accidentally committed secrets: `git log --all --full-history -- .env`
 - [X] T020 [Polish] Verify all success criteria from spec.md (SC-001 through SC-007)
-- [ ] T021 [Polish] Commit all changes with message:
+- [X] T021 [Polish] Commit all changes with message:
   ```
   feat: Initialize Git repository and Go module (F003)
 
