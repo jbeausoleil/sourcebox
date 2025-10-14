@@ -143,9 +143,9 @@
 
 ### Implementation for User Story 6
 
-- [ ] T033 [US6] Implement `make clean` target in Makefile (removes dist/ and coverage.txt)
-- [ ] T034 [US6] Verify clean target removes all build artifacts without affecting source files
-- [ ] T035 [US6] Verify `git status` shows no leftover build artifacts after `make clean`
+- [X] T033 [US6] Implement `make clean` target in Makefile (removes dist/ and coverage.txt)
+- [X] T034 [US6] Verify clean target removes all build artifacts without affecting source files
+- [X] T035 [US6] Verify `git status` shows no leftover build artifacts after `make clean`
 
 **Checkpoint**: `make clean` successfully removes all build artifacts
 
