@@ -10,6 +10,9 @@ VERSION = $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev"
 # Build output directory
 BUILD_DIR = dist
 
+# Installation directory
+INSTALL_DIR = $(shell go env GOPATH)/bin
+
 # Linker flags for binary optimization (strip debug symbols)
 LDFLAGS = -ldflags="-s -w -X main.version=$(VERSION)"
 
@@ -49,8 +52,12 @@ test: ## Run tests with race detection and coverage
 	@echo "Tests complete. Coverage report: coverage.txt"
 
 .PHONY: install
-install: ## Install binary to $GOPATH/bin
-	@echo "Install target not yet implemented"
+install: build ## Install binary to $GOPATH/bin
+	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
+	@mkdir -p $(INSTALL_DIR)
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
+	@echo "Installation complete: $(INSTALL_DIR)/$(BINARY_NAME)"
+	@echo "Ensure $(INSTALL_DIR) is in your PATH to use '$(BINARY_NAME)' globally"
 
 .PHONY: build-all
 build-all: ## Cross-compile for all 5 platforms

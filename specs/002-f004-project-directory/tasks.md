@@ -106,9 +106,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T022 [US4] Implement `make install` target in Makefile (installs binary to $GOPATH/bin)
-- [ ] T023 [US4] Configure install target to build and copy binary to $GOPATH/bin/sourcebox
-- [ ] T024 [US4] Verify installed binary is globally accessible and shows correct version
+- [X] T022 [US4] Implement `make install` target in Makefile (installs binary to $GOPATH/bin)
+- [X] T023 [US4] Configure install target to build and copy binary to $GOPATH/bin/sourcebox
+- [X] T024 [US4] Verify installed binary is globally accessible and shows correct version
 
 **Checkpoint**: `make install` enables global `sourcebox` command access
 
