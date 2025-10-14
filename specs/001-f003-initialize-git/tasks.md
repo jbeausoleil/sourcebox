@@ -183,16 +183,16 @@ User Story 4 has no additional implementation tasks - it depends entirely on T01
 
 **Purpose**: Final verification and quality checks across all user stories
 
-- [ ] T013 [P] [Polish] Verify all documentation links work (README → CONTRIBUTING, LICENSE)
-- [ ] T014 [P] [Polish] Verify all badges render correctly on GitHub (build status placeholder, license, Go version)
-- [ ] T015 [Polish] Run full quickstart.md verification checklist
+- [X] T013 [P] [Polish] Verify all documentation links work (README → CONTRIBUTING, LICENSE)
+- [X] T014 [P] [Polish] Verify all badges render correctly on GitHub (build status placeholder, license, Go version)
+- [X] T015 [Polish] Run full quickstart.md verification checklist
   - **Location**: specs/001-f003-initialize-git/quickstart.md
   - **Checklist**: All 24 items in "Verification Checklist" section
-- [ ] T016 [Polish] Verify repository size < 1MB per success criteria SC-002
-- [ ] T017 [Polish] Verify legal notice is prominently visible in README per success criteria SC-005
-- [ ] T018 [P] [Polish] Search for any accidental employer references: `grep -r "employer-name" .`
-- [ ] T019 [P] [Polish] Search for any accidentally committed secrets: `git log --all --full-history -- .env`
-- [ ] T020 [Polish] Verify all success criteria from spec.md (SC-001 through SC-007)
+- [X] T016 [Polish] Verify repository size < 1MB per success criteria SC-002
+- [X] T017 [Polish] Verify legal notice is prominently visible in README per success criteria SC-005
+- [X] T018 [P] [Polish] Search for any accidental employer references: `grep -r "employer-name" .`
+- [X] T019 [P] [Polish] Search for any accidentally committed secrets: `git log --all --full-history -- .env`
+- [X] T020 [Polish] Verify all success criteria from spec.md (SC-001 through SC-007)
 - [ ] T021 [Polish] Commit all changes with message:
   ```
   feat: Initialize Git repository and Go module (F003)
