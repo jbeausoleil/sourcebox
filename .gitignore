@@ -1,0 +1,47 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+sourcebox
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Dependency directories (Go modules)
+vendor/
+
+# Build artifacts
+/dist/
+/build/
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (CRITICAL: prevent credential leaks)
+.env
+.env.local
+.env.*.local
+
+internal-docs/
+
+# Documentation tool files
+*.md.backup
+*.md~
+.obsidian/
+.foam/
