@@ -90,9 +90,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Implement `make test` target in Makefile (runs tests with race detection and coverage)
-- [ ] T020 [US3] Configure test target to run `go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...`
-- [ ] T021 [US3] Verify placeholder test in `main_test.go` passes and generates coverage report
+- [X] T019 [US3] Implement `make test` target in Makefile (runs tests with race detection and coverage)
+- [X] T020 [US3] Configure test target to run `go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...`
+- [X] T021 [US3] Verify placeholder test in `main_test.go` passes and generates coverage report
 
 **Checkpoint**: `make test` runs successfully with coverage reporting
 

@@ -44,7 +44,9 @@ build: ## Build for current platform → dist/sourcebox
 
 .PHONY: test
 test: ## Run tests with race detection and coverage
-	@echo "Test target not yet implemented"
+	@echo "Running tests with race detection and coverage..."
+	@go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	@echo "Tests complete. Coverage report: coverage.txt"
 
 .PHONY: install
 install: ## Install binary to $GOPATH/bin
