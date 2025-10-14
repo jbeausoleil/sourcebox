@@ -1,0 +1,988 @@
+---
+project: SourceBox
+version: 2.0
+last_updated: 2025-01-14
+status: pre-launch
+phase: mvp_planning
+
+meta:
+  document_type: technical_architecture
+  audience: [founder, contributors, technical_users]
+  purpose: Define technical architecture, tech stack, and implementation approach for SourceBox developer platform
+  legal_note: "This project is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information."
+
+# ========================================
+# PROJECT OVERVIEW
+# ========================================
+
+overview:
+  name: SourceBox
+  tagline: "Realistic, verticalized demo data for developers - spin up production-like databases in 30 seconds"
+  mission: "Provide developers with instant access to realistic, verticalized demo data through CLI tools and Docker images"
+
+  core_problem:
+    description: "Developers waste 5-10 hours/week creating realistic demo data"
+    key_pain_points:
+      - generic_faker: "Faker is too generic ('John Doe', 'Acme Corp') - looks unprofessional"
+      - manual_sql: "Writing 1,000+ INSERT statements is tedious and time-consuming"
+      - production_dumps: "Using production data is a security/compliance nightmare (PII, GDPR, HIPAA)"
+      - no_verticalization: "No existing tool provides verticalized data (fintech looks like fintech, not 'Employee 123')"
+
+  solution:
+    description: "CLI tool + Docker images with verticalized, realistic demo data"
+    key_features:
+      - "CLI: `sourcebox seed mysql --schema=fintech-loans --records=1000` (30 seconds)"
+      - "Docker: `docker run sourcebox/mysql-fintech` (10 seconds)"
+      - "Verticalized schemas: Fintech, healthcare, retail, SaaS, e-commerce, logistics"
+      - "Realistic distributions: Proper bell curves, relationships, edge cases"
+      - "Multiple databases: MySQL, PostgreSQL, MongoDB (Phase 2)"
+      - "Open source: MIT license, free forever"
+
+  success_metrics:
+    north_star: "Weekly active developers using SourceBox (target: 10,000+ by Month 12)"
+    phase_1_targets_month_6:
+      - "1,000 GitHub stars"
+      - "10,000 Docker Hub pulls"
+      - "100 daily CLI installs (npm + homebrew)"
+      - "NPS 50+ (strong product/market fit)"
+    phase_2_targets_month_12:
+      - "$10K MRR (cloud version: freemium SaaS)"
+      - "1,000 paying users"
+      - "5% free → paid conversion"
+
+# ========================================
+# ARCHITECTURE OVERVIEW
+# ========================================
+
+architecture:
+  style: modular_cli
+  deployment: local_first_cloud_optional
+  distribution: open_source
+
+  high_level_components:
+    - cli_tool: "Go + Cobra framework (commands: seed, list-schemas, version, help)"
+    - data_generation_engine: "Faker + custom logic for verticalized distributions"
+    - schema_definitions: "JSON/YAML templates (fintech, healthcare, retail)"
+    - database_connectors: "MySQL, PostgreSQL drivers (MongoDB in Phase 2)"
+    - docker_images: "Pre-seeded databases on Docker Hub"
+    - documentation_site: "Docusaurus (examples, CLI reference, schema library)"
+
+  data_flow_cli:
+    - step_1: "Developer runs `sourcebox seed mysql --schema=fintech-loans --records=1000`"
+    - step_2: "CLI validates inputs (schema exists, DB connection works)"
+    - step_3: "CLI loads schema definition (fintech-loans.json)"
+    - step_4: "Data generation engine creates realistic records (loans, borrowers, payments)"
+    - step_5: "CLI inserts data into MySQL (batched INSERTs, progress bar)"
+    - step_6: "CLI reports success (tables created, record counts, time elapsed)"
+
+  data_flow_docker:
+    - step_1: "Developer runs `docker run -p 3306:3306 sourcebox/mysql-fintech`"
+    - step_2: "Docker pulls image from Docker Hub (or uses cached)"
+    - step_3: "Container starts MySQL with pre-seeded fintech data"
+    - step_4: "Developer connects: `mysql -h localhost -u root -p demo`"
+    - step_5: "Data is immediately available (no seeding time)"
+
+# ========================================
+# TECH STACK
+# ========================================
+
+tech_stack:
+  philosophy: "Boring tech wins - proven > shiny"
+
+  cli_tool:
+    language: Go 1.21+
+    framework: Cobra (CLI framework, used by kubectl, GitHub CLI)
+    libraries:
+      - go_faker: "github.com/bxcodec/faker (base for data generation)"
+      - mysql_driver: "github.com/go-sql-driver/mysql"
+      - postgres_driver: "github.com/lib/pq"
+      - viper: "github.com/spf13/viper (config management)"
+      - progressbar: "github.com/schollz/progressbar (CLI progress)"
+
+    rationale:
+      - "Go: Fast, single binary, cross-platform (Mac, Linux, Windows)"
+      - "Cobra: Standard for CLI tools, great UX, easy to extend"
+      - "Single binary: No dependencies, easy install (vs Python + pip)"
+
+    distribution:
+      - npm: "npm install -g sourcebox (JavaScript developers)"
+      - homebrew: "brew install sourcebox (Mac developers)"
+      - apt_deb: "apt install sourcebox (Linux developers)"
+      - binary_download: "GitHub Releases (Windows, direct download)"
+      - docker: "docker run sourcebox/cli (containerized)"
+
+  data_generation:
+    core_library: go-faker (base random data)
+    custom_generators:
+      - fintech: "LoanAmount, InterestRate, CreditScore, LoanStatus"
+      - healthcare: "Diagnosis, Prescription, InsuranceProvider, ClaimAmount"
+      - retail: "ProductPrice, InventoryCount, OrderStatus, CustomerSegment"
+
+    distribution_logic:
+      - credit_scores: "Bell curve (mean=680, std=80, range=300-850)"
+      - loan_amounts: "Log-normal (median=$50K, skewed right, max=$500K)"
+      - interest_rates: "Weighted (3%-6% = 60%, 6%-10% = 30%, 10%-15% = 10%)"
+      - loan_status: "Weighted (active=70%, paid=25%, delinquent=5%)"
+
+    rationale:
+      - "Faker: Good baseline (names, emails, addresses)"
+      - "Custom logic: Verticalization (fintech looks like fintech, not 'Acme Corp')"
+      - "Proper distributions: Realistic (bell curves, weighted, log-normal)"
+
+  schema_definitions:
+    format: JSON (machine-readable, easy to parse)
+    location: "cli/schemas/*.json"
+
+    structure:
+      - metadata: "name, description, version, industry"
+      - tables: "array of table definitions"
+      - columns: "name, type, generator, constraints"
+      - relationships: "foreign keys, references"
+
+    example_fintech_schema:
+      name: "fintech-loans"
+      description: "Loan records for fintech demos"
+      version: "1.0.0"
+      tables:
+        - name: "borrowers"
+          columns:
+            - {name: "id", type: "int", primary_key: true, auto_increment: true}
+            - {name: "name", type: "varchar(100)", generator: "name"}
+            - {name: "email", type: "varchar(100)", generator: "email"}
+            - {name: "credit_score", type: "int", generator: "credit_score"}
+            - {name: "created_at", type: "timestamp", generator: "timestamp"}
+        - name: "loans"
+          columns:
+            - {name: "id", type: "int", primary_key: true, auto_increment: true}
+            - {name: "borrower_id", type: "int", foreign_key: "borrowers.id"}
+            - {name: "amount", type: "decimal(10,2)", generator: "loan_amount"}
+            - {name: "interest_rate", type: "decimal(5,2)", generator: "interest_rate"}
+            - {name: "status", type: "varchar(20)", generator: "loan_status"}
+            - {name: "created_at", type: "timestamp", generator: "timestamp"}
+
+    rationale:
+      - "JSON: Easy to parse, machine-readable, extensible"
+      - "Schema-driven: Add new schemas without changing CLI code"
+      - "Community-friendly: Easy for contributors to add schemas"
+
+  docker_images:
+    base_images:
+      - mysql: "mysql:8.0"
+      - postgres: "postgres:16"
+      - mongo: "mongo:7 (Phase 2)"
+
+    custom_images:
+      - sourcebox_mysql_fintech: "MySQL + fintech seed data"
+      - sourcebox_mysql_healthcare: "MySQL + healthcare seed data"
+      - sourcebox_mysql_retail: "MySQL + retail seed data"
+      - sourcebox_postgres_fintech: "PostgreSQL + fintech seed data"
+      - sourcebox_postgres_healthcare: "PostgreSQL + healthcare seed data"
+      - sourcebox_postgres_retail: "PostgreSQL + retail seed data"
+
+    dockerfile_approach:
+      - step_1: "FROM mysql:8.0"
+      - step_2: "COPY seed-fintech.sql /docker-entrypoint-initdb.d/"
+      - step_3: "ENV MYSQL_DATABASE=demo MYSQL_ROOT_PASSWORD=password"
+      - step_4: "MySQL auto-runs seed script on first start"
+
+    distribution:
+      - docker_hub: "hub.docker.com/u/sourcebox"
+      - github_packages: "ghcr.io/yourusername/sourcebox"
+
+    rationale:
+      - "Docker Hub: Standard for developers, free hosting"
+      - "Pre-seeded: 10-second spin-up (vs 30s for CLI seeding)"
+      - "Portable: Works anywhere Docker runs (local, CI/CD, cloud)"
+
+  documentation:
+    site_generator: Docusaurus 3
+    hosting: Vercel (free for open source)
+    url: "docs.sourcebox.dev"
+
+    structure:
+      - introduction: "What is SourceBox, quick start"
+      - installation: "npm, homebrew, binary download"
+      - cli_reference: "Commands, flags, examples"
+      - schema_library: "All schemas (fintech, healthcare, retail)"
+      - docker_images: "Docker Hub images, docker-compose examples"
+      - custom_schemas: "How to create custom schemas (JSON format)"
+      - contributing: "How to contribute schemas, report bugs"
+
+    rationale:
+      - "Docusaurus: Standard for dev tools (React, Tailwind, Vercel, etc.)"
+      - "Vercel: Free, fast, auto-deploy on git push"
+
+  testing:
+    unit: "Go testing package (test data generation logic)"
+    integration: "Testcontainers (real MySQL/Postgres in Docker)"
+    cli_e2e: "Shell scripts (test CLI commands end-to-end)"
+    docker_e2e: "docker-compose tests (test images work)"
+
+    rationale:
+      - "Go testing: Built-in, fast, good enough"
+      - "Testcontainers: Real databases, catch more bugs"
+
+  observability_phase_1:
+    github_stars: "Track via GitHub API"
+    docker_pulls: "Track via Docker Hub API"
+    npm_installs: "Track via npm API"
+    errors: "None (local CLI, no telemetry)"
+
+    rationale:
+      - "Open source: No telemetry (privacy-first)"
+      - "Public metrics: GitHub stars, Docker pulls (validate traction)"
+
+  observability_phase_2_cloud:
+    uptime: "Uptime Robot (cloud-hosted databases)"
+    apm: "Datadog APM"
+    errors: "Sentry"
+    logs: "Datadog logs"
+    metrics: "Custom (usage, API calls)"
+
+    rationale:
+      - "Cloud version: Need observability (customers pay for uptime)"
+
+---
+
+# ========================================
+# SCHEMA DEFINITIONS (MVP)
+# ========================================
+
+schema_library_mvp:
+  philosophy: "Start with 3 schemas, expand to 50+ via community"
+
+  fintech_loans:
+    description: "Loan records for fintech demos (lending, banking, payments)"
+    tables:
+      - borrowers: "250 records (names, emails, credit scores)"
+      - loans: "1,000 records (amounts, interest rates, status, dates)"
+      - payments: "3,500 records (loan payments, amounts, dates)"
+      - credit_scores: "250 records (historical credit score snapshots)"
+
+    realistic_features:
+      - credit_scores: "Bell curve (300-850, mean=680)"
+      - loan_amounts: "Log-normal ($5K-$500K, median=$50K)"
+      - interest_rates: "Weighted (3%-6% prime, 6%-10% near-prime, 10%-15% subprime)"
+      - loan_status: "Weighted (70% active, 25% paid, 5% delinquent)"
+      - relationships: "Proper FKs (borrowers → loans → payments)"
+
+    use_cases:
+      - "Fintech analytics dashboard demos"
+      - "Lending platform development"
+      - "Credit risk modeling tutorials"
+
+  healthcare_patients:
+    description: "Patient records for healthcare demos (HIPAA-compliant synthetic data)"
+    tables:
+      - patients: "500 records (names, DOB, insurance)"
+      - visits: "2,000 records (dates, diagnoses, providers)"
+      - prescriptions: "1,500 records (medications, dosages, dates)"
+      - insurance_claims: "1,200 records (amounts, status, dates)"
+
+    realistic_features:
+      - diagnoses: "ICD-10 codes (common: diabetes, hypertension, flu)"
+      - prescriptions: "Real drug names (metformin, lisinopril, amoxicillin)"
+      - insurance: "Real providers (Blue Cross, Aetna, Medicare)"
+      - claim_amounts: "Realistic ($50-$50K, weighted toward $200-$2K)"
+      - relationships: "Proper FKs (patients → visits → prescriptions → claims)"
+
+    use_cases:
+      - "Healthcare app development"
+      - "Medical billing system demos"
+      - "HIPAA-compliant data pipeline testing"
+
+  retail_ecommerce:
+    description: "E-commerce records for retail demos (orders, products, customers)"
+    tables:
+      - products: "2,000 records (names, prices, categories, inventory)"
+      - customers: "500 records (names, emails, segments, loyalty)"
+      - orders: "1,500 records (amounts, dates, status)"
+      - order_items: "4,000 records (products, quantities, prices)"
+
+    realistic_features:
+      - product_prices: "Realistic ($5-$2K, weighted toward $20-$200)"
+      - product_categories: "Electronics, Clothing, Home, Beauty, Sports"
+      - customer_segments: "VIP (10%), Regular (60%), New (30%)"
+      - order_status: "Completed (80%), Pending (15%), Cancelled (5%)"
+      - relationships: "Proper FKs (customers → orders → order_items → products)"
+
+    use_cases:
+      - "E-commerce platform development"
+      - "Recommendation engine demos"
+      - "Inventory management system testing"
+
+---
+
+# ========================================
+# CLI DESIGN
+# ========================================
+
+cli_design:
+  philosophy: "Simple, predictable, fast - follow Unix conventions"
+
+  commands:
+
+    seed:
+      description: "Seed database with schema"
+      usage: "sourcebox seed <database> --schema=<name> --records=<count>"
+
+      required_flags:
+        - database: "mysql, postgres (positional argument)"
+        - schema: "fintech-loans, healthcare-patients, retail-ecommerce"
+
+      optional_flags:
+        - records: "number (default 1000, max 100000)"
+        - host: "string (default localhost)"
+        - port: "int (default 3306 for mysql, 5432 for postgres)"
+        - user: "string (default root)"
+        - password: "string (default password)"
+        - db_name: "string (default demo)"
+        - output: "file path (export SQL instead of seeding)"
+        - dry_run: "boolean (show what would be created, don't seed)"
+        - quiet: "boolean (suppress progress bars, only show summary)"
+        - edge_cases: "boolean (include edge cases: negative balances, null fields)"
+
+      examples:
+        - basic: "sourcebox seed mysql --schema=fintech-loans --records=1000"
+        - custom_db: "sourcebox seed postgres --schema=healthcare-patients --host=db.company.com --port=5432 --user=admin --password=secret"
+        - export_sql: "sourcebox seed mysql --schema=retail-ecommerce --output=seed.sql"
+        - dry_run: "sourcebox seed mysql --schema=fintech-loans --dry-run"
+
+      output:
+        - connecting: "Connecting to MySQL (localhost:3306)..."
+        - progress: "Seeding borrowers table... (250/250) [██████████] 100%"
+        - summary: "✅ Successfully seeded 4,950 records in 15 seconds"
+        - tables: "Tables: borrowers (250), loans (1000), payments (3500), credit_scores (250)"
+        - connect: "Connect: mysql -u root -p demo"
+
+    list_schemas:
+      description: "List available schemas"
+      usage: "sourcebox list-schemas"
+
+      optional_flags:
+        - industry: "string (filter by industry: fintech, healthcare, retail)"
+        - database: "string (filter by database: mysql, postgres)"
+
+      examples:
+        - basic: "sourcebox list-schemas"
+        - filtered: "sourcebox list-schemas --industry=fintech"
+
+      output:
+        - header: "Available Schemas:"
+        - table: "| Name | Industry | Database | Tables | Records | Description |"
+        - row: "| fintech-loans | Fintech | MySQL, Postgres | 4 | 4,950 | Loan records for fintech demos |"
+
+    version:
+      description: "Show version"
+      usage: "sourcebox version"
+      output: "SourceBox CLI v1.0.0"
+
+    help:
+      description: "Show help"
+      usage: "sourcebox help [command]"
+      examples:
+        - basic: "sourcebox help"
+        - command: "sourcebox help seed"
+
+---
+
+# ========================================
+# SECURITY
+# ========================================
+
+security:
+  philosophy: "Synthetic data only, no PII, privacy-first"
+
+  data_protection:
+    - synthetic_data_only: "All data is generated (no real names, emails, SSNs)"
+    - no_telemetry: "CLI does not send usage data (privacy-first)"
+    - local_execution: "All data generation happens locally (no cloud API calls)"
+    - no_credentials_stored: "CLI never stores DB credentials (passed via flags or env vars)"
+
+  open_source_security:
+    - code_review: "All code on GitHub (community can audit)"
+    - dependency_scanning: "Dependabot (auto-update vulnerable deps)"
+    - sast: "CodeQL (static analysis on every commit)"
+    - license: "MIT (no restrictions, full transparency)"
+
+  docker_security:
+    - non_root_user: "Run MySQL/Postgres as non-root user"
+    - minimal_images: "Use official MySQL/Postgres base images (no unnecessary packages)"
+    - no_secrets: "Default credentials only (dev/demo use, not production)"
+
+  phase_2_cloud_security:
+    - encryption_at_rest: "AES-256 for user data in DB"
+    - encryption_in_transit: "TLS 1.3 for all API calls"
+    - authentication: "Auth.js (OAuth + email/password)"
+    - authorization: "RBAC (free, pro, team, enterprise)"
+    - compliance: "SOC 2 Type II (Year 2)"
+
+---
+
+# ========================================
+# PERFORMANCE
+# ========================================
+
+performance:
+  philosophy: "Speed is non-negotiable - 30s seeding or cut features"
+
+  targets:
+    - cli_seeding_1000_records: "< 30s (95th percentile)"
+    - cli_seeding_10000_records: "< 2 minutes"
+    - docker_container_start: "< 10s (pre-seeded, no seeding time)"
+    - cli_binary_size: "< 20 MB (single binary, no dependencies)"
+    - cli_startup_time: "< 100ms (show help or version)"
+
+  optimization_strategies:
+    - batched_inserts: "Insert 100 records per batch (not 1 at a time)"
+    - prepared_statements: "Use prepared statements (avoid SQL injection + faster)"
+    - parallel_table_seeding: "Seed tables in parallel (borrowers + loans at once)"
+    - progress_bars: "Show progress (users don't mind waiting if they see progress)"
+    - single_binary: "Go compiles to single binary (no runtime overhead)"
+
+  scalability_cli:
+    mvp: "1,000 records in 30s (good enough for 90% of use cases)"
+    stretch: "10,000 records in 2 minutes (data engineers, large datasets)"
+    enterprise: "100,000+ records (Phase 2 cloud, pre-generate and download)"
+
+  scalability_docker:
+    mvp: "6 images (fintech, healthcare, retail × MySQL, Postgres)"
+    year_1: "20 images (10 schemas × 2 databases)"
+    year_2: "50+ images (community-contributed schemas)"
+
+---
+
+# ========================================
+# COST STRUCTURE
+# ========================================
+
+cost_structure:
+  philosophy: "Open source = $0, cloud version = 98%+ gross margin"
+
+  phase_1_open_source:
+    infrastructure_costs:
+      - github: "$0 (free for open source)"
+      - docker_hub: "$0 (free tier, 200 MB total)"
+      - documentation_hosting: "$0 (Vercel free for open source)"
+      - domain: "$12/year (sourcebox.dev)"
+      - total: "$12/year = $1/month"
+
+    unit_economics:
+      - revenue_per_user: "$0 (open source, free forever)"
+      - infrastructure_cost_per_user: "$0 (users run locally)"
+      - gross_margin: "100% ($0 revenue - $0 cost)"
+
+    rationale:
+      - "Open source: No hosting costs (users run locally)"
+      - "Free forever: Build trust, validate market, grow user base"
+
+  phase_2_cloud_saas:
+    infrastructure_costs:
+      - vercel: "$20/month (Pro plan)"
+      - supabase: "$25/month (Pro plan, PostgreSQL + Auth)"
+      - aws_rds: "$50/month (cloud-hosted demo databases)"
+      - redis: "$10/month (Upstash, caching)"
+      - monitoring: "$50/month (Datadog Lite)"
+      - total: "$155/month (at 100 paying users)"
+
+    unit_economics:
+      - revenue_per_user_per_month: "$20 (blended: 80% free, 15% $20, 5% $200)"
+      - infrastructure_cost_per_user: "$1.55"
+      - gross_margin: "92% ($20 revenue - $1.55 cost)"
+
+    pricing:
+      - free: "$0 (CLI + Docker, open source)"
+      - pro: "$20/month (cloud-hosted databases, 10 envs, 4-hour TTL)"
+      - team: "$200/month (cloud-hosted, 100 envs, custom schemas)"
+
+    break_even:
+      - fixed_costs: "$155/month"
+      - variable_cost_per_user: "$1.55"
+      - avg_revenue_per_user: "$20"
+      - break_even_users: "8 users ($155 / ($20 - $1.55) = 8.4)"
+
+  phase_3_marketplace:
+    revenue_streams:
+      - freemium_saas: "$200K/year (1,000 users × $20/mo)"
+      - marketplace_commission: "$50K/year (20% of schema sales)"
+      - enterprise: "$100K/year (5 customers × $20K/yr)"
+      - total: "$350K/year"
+
+    target_margins:
+      - gross_margin: "90%+ ($350K revenue - $35K infra cost)"
+      - net_margin: "50%+ (after salaries, marketing, etc.)"
+
+---
+
+# ========================================
+# BUILD VS BUY DECISIONS
+# ========================================
+
+build_vs_buy:
+  philosophy: "Buy if commodity, build if differentiator"
+
+  decisions:
+
+    - component: "CLI Framework"
+      decision: BUY (Cobra)
+      rationale:
+        - "Cobra is standard (kubectl, GitHub CLI, Hugo)"
+        - "Great UX, easy to extend, battle-tested"
+        - "Free, open source, MIT license"
+      alternatives_considered:
+        - "urfave/cli: Less popular, worse docs"
+        - "Build custom: Reinventing wheel, bad UX"
+
+    - component: "Data Generation"
+      decision: BUILD (custom generators on top of Faker)
+      rationale:
+        - "Core differentiator (verticalized, not generic)"
+        - "Faker is baseline (names, emails), we add industry logic"
+        - "Must control distributions (bell curves, weighted, log-normal)"
+      alternatives_considered:
+        - "Use Faker only: Too generic, not verticalized"
+        - "Mockaroo API: Web-based, not local, $60/mo"
+
+    - component: "Schema Definitions"
+      decision: BUILD (JSON format)
+      rationale:
+        - "Core product (differentiator)"
+        - "Simple JSON format (easy for contributors)"
+        - "Schema-driven (add new schemas without changing CLI code)"
+      alternatives_considered:
+        - "YAML: More verbose, harder to parse"
+        - "Code-based (Go structs): Harder for contributors"
+
+    - component: "Database Drivers"
+      decision: BUY (go-sql-driver/mysql, lib/pq)
+      rationale:
+        - "Standard Go drivers (battle-tested)"
+        - "Free, open source, well-maintained"
+      alternatives_considered:
+        - "Build custom: Reinventing wheel, bugs, no benefit"
+
+    - component: "Docker Images"
+      decision: BUILD (custom Dockerfiles with seed data)
+      rationale:
+        - "Core product (differentiator)"
+        - "Must pre-seed data (10-second spin-up vs 30s CLI seeding)"
+      alternatives_considered:
+        - "Use official MySQL/Postgres only: No pre-seeding, manual setup"
+
+    - component: "Documentation Site"
+      decision: BUY (Docusaurus)
+      rationale:
+        - "Docusaurus is standard for dev tools"
+        - "Free, open source, Vercel hosting"
+      alternatives_considered:
+        - "Jekyll: Older, Ruby-based"
+        - "Custom: Too much work, bad UX"
+
+    - component: "Testing"
+      decision: BUY (Go testing, Testcontainers)
+      rationale:
+        - "Go testing is built-in, good enough"
+        - "Testcontainers: Real databases, catch more bugs"
+      alternatives_considered:
+        - "Build custom: Reinventing wheel"
+
+---
+
+# ========================================
+# MVP IMPLEMENTATION PLAN
+# ========================================
+
+mvp_implementation:
+  duration: "12 weeks"
+  team: "1 founder (part-time, 10-15 hrs/week)"
+
+  week_1_2_validation:
+    - interview_20_developers: "Backend devs, data engineers, SEs (validate problem)"
+    - validate_cli_docker_approach: "Confirm CLI + Docker is preferred over web UI"
+    - design_mvp_scope: "3 schemas (fintech, healthcare, retail), 2 databases (MySQL, Postgres)"
+    deliverable: "Validated problem, confirmed approach, scoped MVP"
+
+  week_3_foundation:
+    - setup_go_project: "Initialize Go module, Cobra CLI framework"
+    - setup_github: "GitHub repo, README, LICENSE (MIT), CONTRIBUTING.md"
+    - setup_ci: "GitHub Actions (test on every commit)"
+    deliverable: "Go project ready, GitHub repo public"
+
+  week_4_data_generation:
+    - implement_faker_wrapper: "Go wrapper for faker library"
+    - implement_custom_generators: "Fintech (LoanAmount, InterestRate, CreditScore)"
+    - test_distributions: "Verify bell curves, weighted, log-normal"
+    deliverable: "Data generation engine works, realistic distributions"
+
+  week_5_schema_system:
+    - design_json_schema_format: "Define JSON structure (tables, columns, generators)"
+    - implement_schema_parser: "Go code to parse JSON schemas"
+    - create_fintech_schema: "fintech-loans.json (borrowers, loans, payments, credit_scores)"
+    deliverable: "Schema system works, fintech schema ready"
+
+  week_6_database_seeding:
+    - implement_mysql_seeding: "Connect, create tables, insert data"
+    - implement_postgres_seeding: "Connect, create tables, insert data"
+    - implement_progress_bars: "Show progress, record counts, time elapsed"
+    deliverable: "CLI can seed MySQL and Postgres with fintech schema"
+
+  week_7_healthcare_retail:
+    - create_healthcare_schema: "healthcare-patients.json (patients, visits, prescriptions, claims)"
+    - create_retail_schema: "retail-ecommerce.json (products, customers, orders, order_items)"
+    - test_all_schemas: "Verify all 3 schemas work with MySQL and Postgres"
+    deliverable: "3 schemas working, CLI seeding tested"
+
+  week_8_docker_images:
+    - create_dockerfiles: "MySQL + Postgres base images with seed data"
+    - generate_seed_sql: "Export SQL from CLI for Docker COPY"
+    - build_and_test_images: "docker build, docker run, verify data"
+    deliverable: "6 Docker images working (fintech, healthcare, retail × MySQL, Postgres)"
+
+  week_9_documentation:
+    - setup_docusaurus: "Initialize Docusaurus project, deploy to Vercel"
+    - write_installation_guide: "npm, homebrew, binary download, Docker"
+    - write_cli_reference: "Commands, flags, examples"
+    - write_schema_library: "All 3 schemas (descriptions, use cases, examples)"
+    deliverable: "Documentation site live (docs.sourcebox.dev)"
+
+  week_10_polish:
+    - improve_cli_output: "Better progress bars, colors, error messages"
+    - add_edge_cases_flag: "CLI flag for edge cases (negative balances, null fields)"
+    - add_dry_run_flag: "Show what would be created, don't seed"
+    - add_export_sql_flag: "Export SQL instead of seeding"
+    deliverable: "CLI polished, all flags working"
+
+  week_11_alpha_testing:
+    - distribute_to_10_developers: "GitHub repo, Docker images, documentation"
+    - collect_feedback: "GitHub issues, Discord, direct messages"
+    - measure_usage: "GitHub stars, Docker pulls, CLI installs (npm analytics)"
+    deliverable: "10 developers testing, feedback collected"
+
+  week_12_launch:
+    - fix_top_bugs: "Top 5 bugs from alpha testing"
+    - publish_to_docker_hub: "Push images to Docker Hub (public)"
+    - publish_to_npm: "Publish CLI to npm (public)"
+    - submit_to_homebrew: "Create Homebrew formula (public)"
+    - write_launch_posts: "Hacker News, Reddit r/programming, dev.to"
+    - launch: "Submit Show HN, Reddit posts, tweet"
+    deliverable: "Public launch, 100+ GitHub stars in first week"
+
+---
+
+# ========================================
+# TECHNICAL DEBT STRATEGY
+# ========================================
+
+technical_debt:
+  philosophy: "Debt is OK if it gets us to validation faster - pay down after adoption"
+
+  acceptable_debt_mvp:
+    - "No MongoDB support (MySQL + Postgres only)"
+    - "No CI/CD releases (manual GitHub Releases)"
+    - "No Windows installer (binary download only)"
+    - "No schema validation (trust JSON is correct)"
+    - "No error recovery (if seed fails, user re-runs)"
+    - "No usage analytics (no telemetry)"
+    - "No homebrew-core submission (homebrew tap only)"
+
+  pay_down_after_validation:
+    - month_4: "Add MongoDB support (3rd database)"
+    - month_6: "Add CI/CD releases (GoReleaser, auto-build binaries)"
+    - month_6: "Add Windows installer (MSI or exe)"
+    - month_9: "Add schema validation (JSON schema validation)"
+    - month_12: "Add error recovery (auto-retry, resume from checkpoint)"
+
+  red_flags_never_ship:
+    - "SQL injection vulnerabilities (use prepared statements from day 1)"
+    - "No progress bars (users will think CLI is frozen)"
+    - "No error messages (users won't know what went wrong)"
+    - "Hardcoded credentials (use env vars or flags)"
+    - "Proprietary license (must be MIT from day 1)"
+
+---
+
+# ========================================
+# SCALING PLAN
+# ========================================
+
+scaling_plan:
+  philosophy: "Open source first, cloud optional, marketplace third"
+
+  stage_1_mvp_1000_users_month_6:
+    - distribution: "npm, homebrew, Docker Hub, GitHub Releases"
+    - support: "GitHub issues, Discord community (founder responds within 24 hours)"
+    - monitoring: "GitHub stars, Docker pulls, npm downloads (via APIs)"
+    - cost: "$1/month (domain only)"
+    bottlenecks: "None (users run locally, no hosting costs)"
+
+  stage_2_growth_10000_users_month_12:
+    - distribution: "Same (npm, homebrew, Docker Hub)"
+    - support: "Discord community, GitHub Discussions, 1 part-time community manager"
+    - monitoring: "Same (GitHub stars, Docker pulls, npm downloads)"
+    - cost: "$100/month (domain + community manager stipend)"
+    bottlenecks: "Community support (need moderators, docs contributors)"
+
+  stage_3_cloud_launch_1000_paying_users_month_18:
+    - distribution: "Same (npm, homebrew, Docker Hub) + cloud SaaS (freemium)"
+    - infrastructure: "Vercel ($20/mo), Supabase ($25/mo), AWS RDS ($50/mo)"
+    - support: "Same (Discord, GitHub) + email support for paid users"
+    - monitoring: "Datadog ($150/mo), Sentry ($0 free tier)"
+    - cost: "$250/month (infra + support)"
+    bottlenecks: "Need to hire 1 full-time engineer (backend + DevOps)"
+
+  stage_4_marketplace_10000_paying_users_month_24:
+    - distribution: "Same (npm, homebrew, Docker Hub, cloud SaaS) + marketplace"
+    - infrastructure: "Vercel ($100/mo), Supabase ($599/mo), AWS RDS ($200/mo)"
+    - support: "Full-time support engineer, 24-hour SLA for Pro, 4-hour for Team"
+    - monitoring: "Datadog ($500/mo), PagerDuty ($100/mo)"
+    - cost: "$1,500/month (infra + support + 2 FTEs amortized)"
+    bottlenecks: "Need to hire VP Engineering to manage 5-person team"
+
+---
+
+# ========================================
+# DEVELOPER EXPERIENCE
+# ========================================
+
+developer_experience:
+  philosophy: "Fast feedback loops - test ideas in seconds, not hours"
+
+  local_development:
+    - setup_time: "< 5 minutes (clone, go build, ./sourcebox)"
+    - test_data_generation: "go test ./... (< 5s)"
+    - test_mysql_seeding: "docker-compose up -d mysql (< 10s)"
+    - test_postgres_seeding: "docker-compose up -d postgres (< 10s)"
+    - rebuild_cli: "go build -o sourcebox (< 5s)"
+
+  testing:
+    - unit_tests: "go test ./... (< 5s)"
+    - integration_tests: "go test ./integration (< 30s, uses Testcontainers)"
+    - cli_e2e_tests: "bash test/e2e.sh (< 1 minute)"
+    - docker_e2e_tests: "bash test/docker-e2e.sh (< 1 minute)"
+
+  deployment:
+    - cli_releases: "GitHub Releases (manual, < 5 min to create release)"
+    - docker_images: "docker build, docker push (< 5 min per image)"
+    - documentation: "git push → Vercel auto-deploys (< 2 min)"
+
+  tooling:
+    - ide: "VS Code + Go extension"
+    - debugger: "Delve (Go debugger)"
+    - database_gui: "TablePlus or DBeaver (connect to MySQL/Postgres)"
+    - cli_testing: "Terminal (run ./sourcebox commands)"
+
+---
+
+# ========================================
+# RISKS & MITIGATIONS
+# ========================================
+
+risks_and_mitigations:
+
+  - risk: "30s seeding target not achievable (users won't use if slow)"
+    impact: HIGH (core promise)
+    probability: LOW
+    mitigation:
+      - "Batched inserts (100 records per batch, not 1)"
+      - "Prepared statements (avoid SQL injection + faster)"
+      - "Parallel table seeding (seed tables in parallel)"
+      - "Fallback: Accept 60s for MVP, optimize later"
+
+  - risk: "Data not realistic enough (users won't trust it)"
+    impact: MEDIUM (credibility)
+    probability: LOW
+    mitigation:
+      - "User testing with 10 developers (validate realism)"
+      - "Proper distributions (bell curves, weighted, log-normal)"
+      - "Industry-specific values (not 'John Doe' or 'Acme Corp')"
+
+  - risk: "Schema complexity (every industry is different)"
+    impact: MEDIUM (can't scale to 50+ schemas)
+    probability: LOW
+    mitigation:
+      - "Start with 3 schemas (fintech, healthcare, retail)"
+      - "JSON format (easy for contributors)"
+      - "Community-driven (accept pull requests for new schemas)"
+
+  - risk: "Docker Hub size limits (200 MB free tier)"
+    impact: LOW (can't publish all images)
+    probability: MEDIUM
+    mitigation:
+      - "Optimize image sizes (compress seed data, multi-stage builds)"
+      - "Host on GitHub Packages (unlimited for public repos)"
+      - "Upgrade to Docker Hub Pro ($5/mo) if needed"
+
+  - risk: "Go learning curve (founder not expert in Go)"
+    impact: MEDIUM (slower development)
+    probability: MEDIUM
+    mitigation:
+      - "Go is simple (easier than Rust)"
+      - "Lots of tutorials, documentation, community"
+      - "Hire freelance Go dev ($50-100/hr) if stuck"
+
+  - risk: "Legal/IP issues (employment constraints)"
+    impact: HIGH (company-ending)
+    probability: LOW
+    mitigation:
+      - "Independent development only (personal equipment, outside work hours)"
+      - "No employer resources or proprietary information"
+      - "Open source (MIT license, full transparency)"
+      - "No employer references in documentation"
+
+---
+
+# ========================================
+# FUTURE ARCHITECTURE (YEAR 2+)
+# ========================================
+
+future_architecture:
+  description: "How architecture evolves as we add cloud SaaS and marketplace"
+
+  phase_2_cloud_saas_month_7_12:
+    architecture_changes:
+      - web_dashboard: "Next.js + React (list envs, create, manage)"
+      - api_routes: "Next.js API routes (REST API for cloud-hosted databases)"
+      - database: "Supabase PostgreSQL (user accounts, environments, usage)"
+      - auth: "Auth.js (OAuth + email/password)"
+      - cloud_databases: "AWS RDS (MySQL/Postgres, ephemeral, auto-teardown)"
+      - queue: "BullMQ (async jobs for provisioning, teardown)"
+
+    new_features:
+      - cloud_hosted_databases: "Spin up cloud databases (no local setup)"
+      - auto_teardown: "TTL-based (4-hour default, extend to 24 hours)"
+      - snapshot_restore: "Save/restore database states"
+      - team_sharing: "Share databases with teammates"
+      - custom_schemas: "Upload custom JSON schemas"
+
+    pricing:
+      - free: "CLI + Docker (open source, unlimited)"
+      - pro: "$20/month (10 cloud envs, 4-hour TTL)"
+      - team: "$200/month (100 cloud envs, custom schemas)"
+
+  phase_3_marketplace_year_2:
+    architecture_changes:
+      - marketplace_api: "REST API for schema publishing, downloads, ratings"
+      - schema_builder: "Visual schema builder (drag-and-drop)"
+      - payment_processing: "Stripe (schema sales, revenue share)"
+      - community_moderation: "Review schemas before publishing"
+
+    new_features:
+      - schema_marketplace: "Buy/sell custom schemas ($10-$100 each)"
+      - revenue_share: "80/20 split (creator gets 80%, SourceBox gets 20%)"
+      - schema_ratings: "Users rate schemas (5-star, reviews)"
+      - premium_schemas: "Advanced schemas (SaaS, ML, blockchain)"
+
+    pricing:
+      - marketplace_commission: "20% of schema sales"
+      - premium_subscriptions: "Unlimited schema downloads ($50/mo)"
+
+  enterprise_features_year_3:
+    - white_label: "Rebrand as YourCo Demo Platform"
+    - sso: "SAML, Okta, Azure AD"
+    - dedicated_infrastructure: "Isolated VPC per enterprise"
+    - sla: "99.9% uptime, 4-hour support SLA"
+    - compliance: "SOC 2 Type II, ISO 27001, GDPR, HIPAA"
+    - custom_schemas: "Professional services (build custom schemas, $5K-$20K)"
+
+---
+
+# ========================================
+# DECISION LOG
+# ========================================
+
+decision_log:
+  description: "Key technical decisions and rationale"
+
+  - date: "2025-01-14"
+    decision: "Use Go instead of Rust for CLI"
+    rationale:
+      - "Go: Simpler, faster compile, easier to hire for"
+      - "Single binary: Same benefit as Rust"
+      - "Cross-platform: Same as Rust (Mac, Linux, Windows)"
+    alternatives_considered:
+      - "Rust: Steeper learning curve, slower compile, harder to hire"
+      - "Python: Requires runtime, slower, not single binary"
+
+  - date: "2025-01-14"
+    decision: "Use Cobra instead of urfave/cli"
+    rationale:
+      - "Cobra: Standard (kubectl, GitHub CLI, Hugo)"
+      - "Great UX: Help, autocomplete, subcommands"
+      - "Better docs: More tutorials, examples"
+    alternatives_considered:
+      - "urfave/cli: Less popular, worse docs"
+      - "Build custom: Reinventing wheel, bad UX"
+
+  - date: "2025-01-14"
+    decision: "Start with CLI + Docker, not web UI"
+    rationale:
+      - "Developers prefer CLI (fits workflow)"
+      - "Docker: Standard for developers (already installed)"
+      - "Web UI: More complex, slower to build, less developer-friendly"
+    alternatives_considered:
+      - "Web UI first: SE-focused, not developer-focused"
+      - "API-only: No UX, users would need to build own CLI"
+
+  - date: "2025-01-14"
+    decision: "Use JSON for schemas, not YAML or code"
+    rationale:
+      - "JSON: Machine-readable, easy to parse, standard"
+      - "Simpler than YAML: No indentation issues"
+      - "Easier for contributors than code (Go structs)"
+    alternatives_considered:
+      - "YAML: More verbose, indentation issues"
+      - "Go structs: Harder for non-Go contributors"
+
+  - date: "2025-01-14"
+    decision: "Open source first (MIT), not proprietary"
+    rationale:
+      - "Build trust: Users can audit code"
+      - "Validate market: Free adoption, then monetize cloud version"
+      - "Community-driven: Accept contributions (schemas, bug fixes)"
+    alternatives_considered:
+      - "Proprietary: Lower trust, slower adoption, no community"
+      - "GPL: Too restrictive, limits commercial use"
+
+  - date: "2025-01-14"
+    decision: "Start with MySQL + Postgres, not MongoDB"
+    rationale:
+      - "MySQL + Postgres: Most common (80% of developers)"
+      - "SQL: Easier to seed (batched INSERTs)"
+      - "MongoDB: NoSQL, different paradigm (Phase 2)"
+    alternatives_considered:
+      - "MongoDB first: Less demand, harder to seed"
+      - "All 3 at once: Too slow, risky"
+
+---
+
+# ========================================
+# LEGAL PROTECTION
+# ========================================
+
+legal_protection:
+  description: "How this project maintains legal independence"
+
+  independent_development:
+    - equipment: "Personal laptop only (no employer equipment)"
+    - time: "Outside work hours only (evenings, weekends, 10-15 hrs/week)"
+    - resources: "No employer resources (no employer APIs, no employer data)"
+    - information: "Public information only (no proprietary knowledge)"
+
+  documentation:
+    - no_employer_references: "All documentation excludes employer names"
+    - illustrative_examples: "Company/product references are illustrative only"
+    - no_affiliations: "SourceBox is standalone, no affiliation to any third party"
+
+  open_source_protection:
+    - mit_license: "MIT license (full transparency, no proprietary claims)"
+    - public_repository: "All code on GitHub (community can audit)"
+    - community_driven: "Accept contributions from anyone (not employer-specific)"
+
+  compliance:
+    - gdpr: "No PII (synthetic data only)"
+    - hipaa: "No real patient data (synthetic only)"
+    - sox: "No real financial data (synthetic only)"
+
+---
+
+# END OF DOCUMENT
