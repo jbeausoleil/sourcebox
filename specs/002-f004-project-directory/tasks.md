@@ -57,9 +57,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Create `cmd/sourcebox/main.go` with minimal bootstrap code (version flag, placeholder output)
-- [ ] T013 [US1] Create `cmd/sourcebox/main_test.go` with placeholder test (TestPlaceholder verifies build system)
-- [ ] T014 [US1] Add version variable in `main.go` that gets overridden at build time via ldflags
+- [X] T012 [US1] Create `cmd/sourcebox/main.go` with minimal bootstrap code (version flag, placeholder output)
+- [X] T013 [US1] Create `cmd/sourcebox/main_test.go` with placeholder test (TestPlaceholder verifies build system)
+- [X] T014 [US1] Add version variable in `main.go` that gets overridden at build time via ldflags
 
 **Checkpoint**: Directory structure is navigable and main.go exists with basic functionality
 
