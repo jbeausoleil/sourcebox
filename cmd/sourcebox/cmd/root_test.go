@@ -10,6 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// resetGlobalFlags resets package-level flag variables to their defaults.
+// Call this at the beginning of tests that modify global flags to ensure isolation.
+func resetGlobalFlags() {
+	verbose = false
+	quiet = false
+	cfgFile = ""
+}
+
 // TestSetVersion verifies that SetVersion correctly sets the version
 // on the root command.
 func TestSetVersion(t *testing.T) {
@@ -317,8 +325,7 @@ func TestMainVersionFlow(t *testing.T) {
 // and initialized to their default values.
 func TestGlobalFlagVariables(t *testing.T) {
 	// Reset flags to default state
-	verbose = false
-	quiet = false
+	resetGlobalFlags()
 
 	// Verify default values
 	assert.False(t, verbose, "verbose should default to false")
@@ -332,8 +339,7 @@ func TestGlobalFlagVariables(t *testing.T) {
 	assert.True(t, quiet, "quiet should be modifiable")
 
 	// Reset for other tests
-	verbose = false
-	quiet = false
+	resetGlobalFlags()
 }
 
 // TestVerboseFlagParsing verifies that the --verbose/-v flag parses correctly
@@ -374,8 +380,7 @@ func TestVerboseFlagParsing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			// Create a fresh command to avoid state pollution
 			cmd := &cobra.Command{
@@ -446,8 +451,7 @@ func TestQuietFlagParsing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			// Create a fresh command to avoid state pollution
 			cmd := &cobra.Command{
@@ -541,8 +545,7 @@ func TestFlagCombinations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			// Create a fresh command
 			cmd := &cobra.Command{
@@ -651,8 +654,7 @@ func TestPersistentFlagsWithSubcommands(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			// Create root command with persistent flags
 			rootCmd := &cobra.Command{
@@ -783,9 +785,7 @@ func TestConfigFlagParsing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
-			cfgFile = ""
+			resetGlobalFlags()
 
 			// Create a fresh command to avoid state pollution
 			cmd := &cobra.Command{
@@ -821,8 +821,7 @@ func TestConfigFlagParsing(t *testing.T) {
 // TestConfigFlagInHelp verifies that the config flag appears in help output (T020).
 func TestConfigFlagInHelp(t *testing.T) {
 	// Reset flags
-	verbose = false
-	quiet = false
+	resetGlobalFlags()
 	cfgFile = ""
 
 	// Capture help output
@@ -875,9 +874,7 @@ func TestConfigFlagPersistence(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
-			cfgFile = ""
+			resetGlobalFlags()
 
 			// Create root command with persistent flags
 			rootCmd := &cobra.Command{
@@ -970,9 +967,7 @@ func TestAllGlobalFlagsTogether(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
-			cfgFile = ""
+			resetGlobalFlags()
 
 			// Create a fresh command
 			cmd := &cobra.Command{
@@ -1009,6 +1004,9 @@ func TestAllGlobalFlagsTogether(t *testing.T) {
 // TestExecuteFunction verifies that Execute() function works correctly.
 // This tests the exported Execute function that's called from main.go.
 func TestExecuteFunction(t *testing.T) {
+	// Set a known version for tests that use --version flag
+	SetVersion("test-execute-version")
+
 	tests := []struct {
 		name        string
 		args        []string
@@ -1049,8 +1047,7 @@ func TestExecuteFunction(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			// Capture output
 			buf := new(bytes.Buffer)

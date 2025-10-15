@@ -13,9 +13,7 @@ import (
 // getTestRootCommand creates a fresh root command for testing to avoid state pollution
 func getTestRootCommand() *cobra.Command {
 	// Reset global flags
-	verbose = false
-	quiet = false
-	cfgFile = ""
+	resetGlobalFlags()
 
 	// Create a new root command instance
 	cmd := &cobra.Command{
@@ -261,8 +259,7 @@ func TestListSchemasCommandWithGlobalFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags
-			verbose = false
-			quiet = false
+			resetGlobalFlags()
 
 			buf := new(bytes.Buffer)
 			rootCmd.SetOut(buf)
