@@ -145,7 +145,15 @@ LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION)"
 - 004-f006-cobra-cli: Added Cobra v1.8+ CLI framework integration
 - 004-f006-cobra-cli: Added cobra-cli v1.3+ scaffolding tool
 - 004-f006-cobra-cli: Added testify for unit test assertions
+- 004-f006-cobra-cli: Deferred output helper functions to F021 (VerbosePrintf, QuietPrintf)
+- 004-f006-cobra-cli: Deferred color output support to F021
+- 004-f006-cobra-cli: Deferred verbosity levels (-vv, -vvv) to future releases
 - 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
+
+## Known Technical Debt (004-f006-cobra-cli)
+- T054: Test state pollution (tests pass individually, some fail in full suite) - decision pending
+- T055: Coverage methodology needs documentation (76.2% vs 84.2% reporting)
+- Integration tests require pre-built binary (accepted design pattern)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

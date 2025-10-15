@@ -14,6 +14,7 @@ dist/sourcebox-*
 # Output of the go coverage tool
 *.out
 coverage.txt
+*_coverage.txt
 coverage.html
 
 # Dependency directories (Go modules)

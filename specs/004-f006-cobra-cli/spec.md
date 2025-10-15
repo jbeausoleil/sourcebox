@@ -137,3 +137,41 @@ As a developer ready to use SourceBox, I want to access the primary commands (se
 - **SC-008**: Quiet mode reduces output volume by at least 80% compared to default mode
 - **SC-009**: Custom configuration file paths are correctly recognized and loaded 100% of the time when specified
 - **SC-010**: All subcommands are accessible via both full name and short aliases where defined
+
+---
+
+## Future Work & Deferred Items
+
+### Deferred to F021 (Seed Command Implementation)
+- **Output Helper Functions** (Medium Priority)
+  - Implement `VerbosePrintf()`, `QuietPrintf()` wrappers
+  - Enable verbosity-aware output in seed command
+  - Source: T016-T019 session risk identification
+
+- **Color Output Support** (Low Priority)
+  - Add colorized output for verbose mode (warnings, progress)
+  - Consider terminal capability detection
+  - Source: T016-T019 session risk identification
+
+### Deferred to F022 (List-Schemas Command Implementation)
+- **Output Helper Integration** (Medium Priority)
+  - Use output helpers from F021
+  - Implement verbosity-aware schema listing
+  - Source: F021 dependency
+
+### Deferred to Future Releases
+- **Verbosity Level Support** (Medium Priority)
+  - Add `-vv`, `-vvv` style graduated verbosity
+  - Consider if user feedback requests more granular control
+  - Source: T016-T019 session risk identification
+
+- **Environment Variable Overrides** (Low Priority)
+  - Support `SOURCEBOX_VERBOSE=1`, `SOURCEBOX_QUIET=1`
+  - Useful for CI/automation scenarios
+  - Source: T016-T019 session risk identification
+
+### Accepted Technical Decisions
+- **Integration Test Binary Dependency**: Tests skip if binary not built, CI builds before testing
+- **Viper Config Assumptions**: Standard locations (~/.sourcebox.yaml) per industry conventions
+- **Config Path Validation**: No pre-validation, fails gracefully via viper
+- **Cross-Platform Testing**: CI automation preferred over local VM testing
