@@ -29,11 +29,11 @@ Schemas are categorized by industry and use case.`,
   sourcebox ls`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("List-schemas command - implementation coming in F022")
-		fmt.Println("Available schemas:")
-		fmt.Println("  - fintech-loans")
-		fmt.Println("  - healthcare-patients")
-		fmt.Println("  - retail-orders")
+		fmt.Fprintln(cmd.OutOrStdout(), "List-schemas command - implementation coming in F022")
+		fmt.Fprintln(cmd.OutOrStdout(), "Available schemas:")
+		fmt.Fprintln(cmd.OutOrStdout(), "  - fintech-loans")
+		fmt.Fprintln(cmd.OutOrStdout(), "  - healthcare-patients")
+		fmt.Fprintln(cmd.OutOrStdout(), "  - retail-orders")
 	},
 }
 

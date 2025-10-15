@@ -34,12 +34,12 @@ Supported schemas: fintech-loans, healthcare-patients, retail-orders`,
 
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Seed command - implementation coming in F021")
-		fmt.Printf("  Database: %s\n", args[0])
+		fmt.Fprintln(cmd.OutOrStdout(), "Seed command - implementation coming in F021")
+		fmt.Fprintf(cmd.OutOrStdout(), "  Database: %s\n", args[0])
 		schema, _ := cmd.Flags().GetString("schema")
 		records, _ := cmd.Flags().GetInt("records")
-		fmt.Printf("  Schema: %s\n", schema)
-		fmt.Printf("  Records: %d\n", records)
+		fmt.Fprintf(cmd.OutOrStdout(), "  Schema: %s\n", schema)
+		fmt.Fprintf(cmd.OutOrStdout(), "  Records: %d\n", records)
 	},
 }
 
