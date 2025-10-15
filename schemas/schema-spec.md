@@ -1756,6 +1756,1688 @@ SourceBox supports the MySQL/PostgreSQL common subset of data types to ensure cr
 
 ---
 
+## Validation Rules
+
+Schema validation ensures that schema JSON files are structurally correct, semantically valid, and will generate data that satisfies database constraints. This section documents all validation rules enforced by the SourceBox schema parser (F008), enabling schema authors to self-validate their schemas and F008 implementers to build comprehensive validators.
+
+### Validation Philosophy
+
+SourceBox validation follows a **fail-fast, fail-loud** philosophy:
+
+- **Fail-fast**: Invalid schemas are rejected immediately during parsing, before any data generation begins
+- **Fail-loud**: Error messages are clear, actionable, and guide schema authors toward fixes
+- **Comprehensive**: All structural, semantic, and referential integrity constraints are validated
+- **Implementable**: Every rule is testable, unambiguous, and can be mechanically verified
+
+Validation occurs in multiple phases:
+
+1. **Structural validation**: JSON syntax, required fields, data types
+2. **Schema-level validation**: Top-level field constraints and completeness
+3. **Table-level validation**: Table structure and primary key requirements
+4. **Column-level validation**: Column definitions, data types, and generators
+5. **Relationship validation**: Foreign key integrity and referential actions
+6. **Generation order validation**: Dependency resolution and circular dependency detection
+7. **Cross-validation**: Consistency across tables, relationships, and generation order
+
+### Validation Categories
+
+This section is organized into the following categories:
+
+1. **Schema-Level Validation**: Top-level field validation (name, version, database_type, etc.)
+2. **Table-Level Validation**: Table structure and completeness
+3. **Column-Level Validation**: Column definitions and data types
+4. **Relationship-Level Validation**: Foreign key integrity
+5. **Generation Order Validation**: Dependency ordering and circular dependency detection
+6. **Edge Cases**: Common failure scenarios and how to detect them
+7. **Error Message Guidance**: Standards for helpful error messages
+
+---
+
+### Schema-Level Validation
+
+Schema-level validation ensures that the top-level structure of the schema JSON is complete and correct.
+
+#### V-S001: Required Fields Must Be Present
+
+**Rule**: All required top-level fields must exist in the schema JSON.
+
+**Required fields**:
+- `schema_version` (string)
+- `name` (string)
+- `description` (string)
+- `author` (string)
+- `version` (string)
+- `database_type` (array of strings)
+
+**Validation logic**:
+```
+FOR EACH required_field IN [schema_version, name, description, author, version, database_type]:
+  IF required_field NOT IN schema:
+    RAISE ERROR "Missing required field: {required_field}"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "schema_version": "1.0",
+  "name": "fintech-loans",
+  "description": "Realistic fintech loan data",
+  "author": "SourceBox Contributors",
+  "version": "1.0.0",
+  "database_type": ["mysql", "postgres"]
+}
+```
+
+**Invalid** (missing `author`):
+```json
+{
+  "schema_version": "1.0",
+  "name": "fintech-loans",
+  "description": "Realistic fintech loan data",
+  "version": "1.0.0",
+  "database_type": ["mysql", "postgres"]
+}
+```
+
+**Error message**:
+```
+Missing required field: author
+```
+
+**F008 Implementation Note**: Check for field existence before validating field values.
+
+---
+
+#### V-S002: Schema Name Must Be Valid
+
+**Rule**: The `name` field must:
+- Be non-empty
+- Use lowercase-kebab-case format
+- Contain only alphanumeric characters and hyphens
+- Not start or end with a hyphen
+- Be unique across all schemas in the repository (enforced at repository level)
+
+**Validation logic**:
+```
+IF schema.name IS EMPTY:
+  RAISE ERROR "Schema name cannot be empty"
+
+IF NOT MATCHES(schema.name, "^[a-z0-9]+(-[a-z0-9]+)*$"):
+  RAISE ERROR "Schema name must use lowercase-kebab-case format (e.g., 'fintech-loans')"
+```
+
+**Examples**:
+
+**Valid**:
+- `"fintech-loans"`
+- `"healthcare-patients"`
+- `"retail-orders"`
+- `"ecommerce-catalog-v2"`
+
+**Invalid**:
+- `""` (empty)
+- `"Fintech-Loans"` (uppercase)
+- `"fintech_loans"` (underscore)
+- `"-fintech-loans"` (starts with hyphen)
+- `"fintech-loans-"` (ends with hyphen)
+- `"fintech--loans"` (double hyphen)
+
+**Error messages**:
+```
+Schema name cannot be empty
+Schema name must use lowercase-kebab-case format (e.g., 'fintech-loans')
+```
+
+---
+
+#### V-S003: Schema Version Must Be Valid Semantic Version
+
+**Rule**: The `version` field must follow semantic versioning format: `major.minor.patch` where each component is a non-negative integer.
+
+**Validation logic**:
+```
+IF NOT MATCHES(schema.version, "^[0-9]+\\.[0-9]+\\.[0-9]+$"):
+  RAISE ERROR "Schema version must follow semantic versioning (e.g., '1.0.0')"
+```
+
+**Examples**:
+
+**Valid**:
+- `"1.0.0"`
+- `"2.1.3"`
+- `"0.0.1"`
+- `"10.20.30"`
+
+**Invalid**:
+- `"1.0"` (missing patch)
+- `"1"` (missing minor and patch)
+- `"v1.0.0"` (prefix not allowed)
+- `"1.0.0-beta"` (pre-release suffix not supported in MVP)
+- `"1.0.0.0"` (too many components)
+
+**Error message**:
+```
+Schema version must follow semantic versioning (e.g., '1.0.0')
+```
+
+---
+
+#### V-S004: Schema Format Version Must Be Valid
+
+**Rule**: The `schema_version` field must:
+- Be a string
+- Match the current supported format version (`"1.0"` for MVP)
+- Follow `major.minor` format
+
+**Validation logic**:
+```
+IF schema.schema_version != "1.0":
+  RAISE ERROR "Unsupported schema_version: {schema.schema_version}. Parser supports: 1.0"
+```
+
+**Examples**:
+
+**Valid**:
+- `"1.0"`
+
+**Invalid** (for MVP parser):
+- `"2.0"` (future format version)
+- `"1.1"` (future format version)
+- `"1"` (missing minor version)
+- `1.0` (number instead of string)
+
+**Error message**:
+```
+Unsupported schema_version: 2.0. Parser supports: 1.0
+```
+
+**F008 Implementation Note**: This enables forward compatibility—new parsers can support multiple schema versions.
+
+---
+
+#### V-S005: Database Type Must Be Non-Empty and Valid
+
+**Rule**: The `database_type` field must:
+- Be a non-empty array
+- Contain at least one database type
+- Contain only valid database type strings: `"mysql"`, `"postgres"` (MVP)
+- Not contain duplicates
+
+**Validation logic**:
+```
+IF database_type IS EMPTY:
+  RAISE ERROR "database_type must contain at least one database type"
+
+FOR EACH db IN database_type:
+  IF db NOT IN ["mysql", "postgres"]:
+    RAISE ERROR "Invalid database_type: {db}. Supported: mysql, postgres"
+
+IF HAS_DUPLICATES(database_type):
+  RAISE ERROR "database_type contains duplicates"
+```
+
+**Examples**:
+
+**Valid**:
+- `["mysql"]`
+- `["postgres"]`
+- `["mysql", "postgres"]`
+
+**Invalid**:
+- `[]` (empty array)
+- `["sqlite"]` (unsupported database)
+- `["mysql", "mysql"]` (duplicate)
+- `["MySQL"]` (incorrect case)
+
+**Error messages**:
+```
+database_type must contain at least one database type
+Invalid database_type: sqlite. Supported: mysql, postgres
+database_type contains duplicates
+```
+
+---
+
+#### V-S006: Schema Must Have At Least One Table
+
+**Rule**: If the `tables` field is present, it must contain at least one table definition.
+
+**Validation logic**:
+```
+IF "tables" IN schema:
+  IF schema.tables IS EMPTY:
+    RAISE ERROR "Schema must define at least one table"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "tables": [
+    {
+      "name": "borrowers",
+      "record_count": 1000,
+      "columns": [...]
+    }
+  ]
+}
+```
+
+**Invalid**:
+```json
+{
+  "tables": []
+}
+```
+
+**Error message**:
+```
+Schema must define at least one table
+```
+
+**F008 Implementation Note**: Empty `tables` array is invalid if `tables` is present. Omitting `tables` entirely is valid (metadata-only schema).
+
+---
+
+#### V-S007: Generation Order Must Include All Tables
+
+**Rule**: If the `generation_order` field is present, it must include all table names defined in `tables`, with no duplicates or extra entries.
+
+**Validation logic**:
+```
+IF "generation_order" IN schema:
+  defined_tables = {table.name FOR table IN schema.tables}
+  ordered_tables = SET(schema.generation_order)
+
+  IF ordered_tables != defined_tables:
+    missing = defined_tables - ordered_tables
+    extra = ordered_tables - defined_tables
+
+    IF missing IS NOT EMPTY:
+      RAISE ERROR "Tables missing from generation_order: {missing}"
+
+    IF extra IS NOT EMPTY:
+      RAISE ERROR "Unknown tables in generation_order: {extra}"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "tables": [
+    {"name": "borrowers", ...},
+    {"name": "loans", ...}
+  ],
+  "generation_order": ["borrowers", "loans"]
+}
+```
+
+**Invalid** (missing table):
+```json
+{
+  "tables": [
+    {"name": "borrowers", ...},
+    {"name": "loans", ...}
+  ],
+  "generation_order": ["borrowers"]
+}
+```
+
+**Invalid** (extra table):
+```json
+{
+  "tables": [
+    {"name": "borrowers", ...}
+  ],
+  "generation_order": ["borrowers", "payments"]
+}
+```
+
+**Error messages**:
+```
+Tables missing from generation_order: ['loans']
+Unknown tables in generation_order: ['payments']
+```
+
+---
+
+### Table-Level Validation
+
+Table-level validation ensures that each table definition is structurally correct and contains all required elements.
+
+#### V-T001: Table Name Must Be Valid
+
+**Rule**: Each table's `name` field must:
+- Be non-empty
+- Use lowercase with underscores for multi-word names
+- Contain only lowercase letters, numbers, and underscores
+- Be a valid SQL identifier
+- Be unique across all tables in the schema
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  IF table.name IS EMPTY:
+    RAISE ERROR "Table name cannot be empty"
+
+  IF NOT MATCHES(table.name, "^[a-z][a-z0-9_]*$"):
+    RAISE ERROR "Table '{table.name}' uses invalid format. Use lowercase_with_underscores"
+
+  IF table.name IN seen_table_names:
+    RAISE ERROR "Duplicate table name: {table.name}"
+
+  seen_table_names.ADD(table.name)
+```
+
+**Examples**:
+
+**Valid**:
+- `"borrowers"`
+- `"loan_payments"`
+- `"user_sessions"`
+- `"transaction_history_2024"`
+
+**Invalid**:
+- `""` (empty)
+- `"Borrowers"` (uppercase)
+- `"loan-payments"` (hyphen)
+- `"1_table"` (starts with number)
+- `"user sessions"` (space)
+
+**Error messages**:
+```
+Table name cannot be empty
+Table 'Borrowers' uses invalid format. Use lowercase_with_underscores
+Duplicate table name: borrowers
+```
+
+---
+
+#### V-T002: Record Count Must Be Positive
+
+**Rule**: Each table's `record_count` field must be a positive integer (> 0).
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  IF table.record_count <= 0:
+    RAISE ERROR "Table '{table.name}' has invalid record_count: {table.record_count}. Must be > 0"
+
+  IF NOT IS_INTEGER(table.record_count):
+    RAISE ERROR "Table '{table.name}' has non-integer record_count: {table.record_count}"
+```
+
+**Examples**:
+
+**Valid**:
+- `1`
+- `1000`
+- `999999`
+
+**Invalid**:
+- `0`
+- `-100`
+- `1.5` (float)
+- `"1000"` (string)
+
+**Error messages**:
+```
+Table 'borrowers' has invalid record_count: 0. Must be > 0
+Table 'loans' has non-integer record_count: 1.5
+```
+
+---
+
+#### V-T003: Table Must Have At Least One Column
+
+**Rule**: Each table must define at least one column in its `columns` array.
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  IF table.columns IS EMPTY:
+    RAISE ERROR "Table '{table.name}' must define at least one column"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "name": "borrowers",
+  "columns": [
+    {"name": "id", "type": "int", "primary_key": true}
+  ]
+}
+```
+
+**Invalid**:
+```json
+{
+  "name": "borrowers",
+  "columns": []
+}
+```
+
+**Error message**:
+```
+Table 'borrowers' must define at least one column
+```
+
+---
+
+#### V-T004: Table Must Have Exactly One Primary Key
+
+**Rule**: Each table must have exactly one column marked with `"primary_key": true`.
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  primary_keys = [col FOR col IN table.columns IF col.primary_key == true]
+
+  IF LENGTH(primary_keys) == 0:
+    RAISE ERROR "Table '{table.name}' has no primary key. Exactly one column must have primary_key: true"
+
+  IF LENGTH(primary_keys) > 1:
+    pk_names = [pk.name FOR pk IN primary_keys]
+    RAISE ERROR "Table '{table.name}' has multiple primary keys: {pk_names}. Only one column can be primary key"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "name": "borrowers",
+  "columns": [
+    {"name": "id", "type": "int", "primary_key": true},
+    {"name": "email", "type": "varchar(255)"}
+  ]
+}
+```
+
+**Invalid** (no primary key):
+```json
+{
+  "name": "borrowers",
+  "columns": [
+    {"name": "email", "type": "varchar(255)"}
+  ]
+}
+```
+
+**Invalid** (multiple primary keys):
+```json
+{
+  "name": "borrowers",
+  "columns": [
+    {"name": "id", "type": "int", "primary_key": true},
+    {"name": "uuid", "type": "varchar(36)", "primary_key": true}
+  ]
+}
+```
+
+**Error messages**:
+```
+Table 'borrowers' has no primary key. Exactly one column must have primary_key: true
+Table 'borrowers' has multiple primary keys: ['id', 'uuid']. Only one column can be primary key
+```
+
+**F008 Implementation Note**: Composite primary keys are not supported in MVP.
+
+---
+
+### Column-Level Validation
+
+Column-level validation ensures that column definitions are correct, generators are valid, and parameters match requirements.
+
+#### V-C001: Column Name Must Be Valid
+
+**Rule**: Each column's `name` field must:
+- Be non-empty
+- Use lowercase with underscores for multi-word names
+- Contain only lowercase letters, numbers, and underscores
+- Be a valid SQL identifier
+- Be unique within the table
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  seen_column_names = SET()
+
+  FOR EACH column IN table.columns:
+    IF column.name IS EMPTY:
+      RAISE ERROR "Table '{table.name}': Column name cannot be empty"
+
+    IF NOT MATCHES(column.name, "^[a-z][a-z0-9_]*$"):
+      RAISE ERROR "Table '{table.name}': Column '{column.name}' uses invalid format. Use lowercase_with_underscores"
+
+    IF column.name IN seen_column_names:
+      RAISE ERROR "Table '{table.name}': Duplicate column name: {column.name}"
+
+    seen_column_names.ADD(column.name)
+```
+
+**Examples**:
+
+**Valid**:
+- `"id"`
+- `"first_name"`
+- `"created_at"`
+- `"user_id_2"`
+
+**Invalid**:
+- `""` (empty)
+- `"firstName"` (camelCase)
+- `"First-Name"` (hyphen, uppercase)
+- `"1st_name"` (starts with number)
+
+**Error messages**:
+```
+Table 'borrowers': Column name cannot be empty
+Table 'borrowers': Column 'firstName' uses invalid format. Use lowercase_with_underscores
+Table 'borrowers': Duplicate column name: email
+```
+
+---
+
+#### V-C002: Column Data Type Must Be Valid
+
+**Rule**: Each column's `type` field must be a supported SQL data type from the MySQL/PostgreSQL common subset.
+
+**Supported types**:
+- Integer: `int`, `bigint`, `smallint`, `tinyint`
+- Decimal: `decimal(p,s)`, `float`, `double`
+- String: `varchar(n)`, `text`, `char(n)`
+- Date/Time: `date`, `datetime`, `timestamp`
+- Boolean: `boolean`
+- JSON: `json`, `jsonb` (PostgreSQL only, warn if used with MySQL)
+- Enum: `enum('val1','val2',...)`
+
+**Validation logic**:
+```
+valid_types_regex = "^(int|bigint|smallint|tinyint|float|double|boolean|text|json|jsonb|date|datetime|timestamp|decimal\\([0-9]+,[0-9]+\\)|varchar\\([0-9]+\\)|char\\([0-9]+\\)|enum\\(.+\\))$"
+
+FOR EACH column IN table.columns:
+  IF NOT MATCHES(column.type, valid_types_regex):
+    RAISE ERROR "Table '{table.name}', Column '{column.name}': Invalid type '{column.type}'"
+
+  # Warn about jsonb with MySQL
+  IF column.type == "jsonb" AND "mysql" IN schema.database_type:
+    WARN "Table '{table.name}', Column '{column.name}': jsonb is PostgreSQL-only. MySQL schemas should use json"
+```
+
+**Examples**:
+
+**Valid**:
+- `"int"`
+- `"varchar(255)"`
+- `"decimal(10,2)"`
+- `"enum('active','paid','defaulted')"`
+- `"timestamp"`
+
+**Invalid**:
+- `"string"` (use `varchar` or `text`)
+- `"integer"` (use `int`)
+- `"VARCHAR(255)"` (uppercase not allowed)
+- `"decimal"` (missing precision/scale)
+- `"varchar"` (missing length)
+
+**Error messages**:
+```
+Table 'borrowers', Column 'email': Invalid type 'string'
+Table 'borrowers', Column 'name': Invalid type 'VARCHAR(255)'
+```
+
+**F008 Implementation Note**: Use regex validation for complex types (decimal, varchar, enum).
+
+---
+
+#### V-C003: Generator Must Be Valid
+
+**Rule**: If a column specifies a `generator`, it must be a valid built-in or custom generator name.
+
+**Built-in generators** (MVP):
+- Personal data: `first_name`, `last_name`, `full_name`, `email`, `phone`, `address`, `ssn`, `date_of_birth`
+- Company data: `company_name`, `job_title`, `company_email`, `domain`
+- Date/time: `timestamp_past`, `timestamp_future`, `date_between`
+- Numeric: `int_range`, `float_range`, `decimal_range`
+- Boolean: `weighted_boolean`
+- Enum: `enum`
+- UUID: `uuid`
+
+**Validation logic**:
+```
+built_in_generators = ["first_name", "last_name", "full_name", "email", "phone", "address", "ssn", "date_of_birth", "company_name", "job_title", "company_email", "domain", "timestamp_past", "timestamp_future", "date_between", "int_range", "float_range", "decimal_range", "weighted_boolean", "enum", "uuid"]
+
+FOR EACH column IN table.columns:
+  IF "generator" IN column:
+    IF column.generator NOT IN built_in_generators:
+      RAISE ERROR "Table '{table.name}', Column '{column.name}': Unknown generator '{column.generator}'"
+```
+
+**Examples**:
+
+**Valid**:
+- `"email"`
+- `"int_range"`
+- `"date_between"`
+
+**Invalid**:
+- `"random_email"` (not a built-in generator)
+- `"Email"` (incorrect case)
+- `"emailGenerator"` (incorrect naming)
+
+**Error message**:
+```
+Table 'borrowers', Column 'email': Unknown generator 'random_email'
+```
+
+**F008 Implementation Note**: Custom generators (defined in schema metadata) will be supported in post-MVP.
+
+---
+
+#### V-C004: Generator Parameters Must Match Requirements
+
+**Rule**: If a column specifies `generator_params`, they must match the generator's requirements.
+
+**Parameter requirements by generator**:
+
+| Generator | Required Params | Optional Params |
+|-----------|----------------|-----------------|
+| `int_range` | `min`, `max` OR `distribution` | `distribution` |
+| `float_range` | `min`, `max` OR `distribution` | `distribution` |
+| `decimal_range` | `min`, `max` OR `distribution` | `distribution` |
+| `date_between` | `start_date`, `end_date` | - |
+| `timestamp_past` | `years_ago` | - |
+| `timestamp_future` | `years_ahead` | - |
+| `weighted_boolean` | `true_weight` | - |
+| `enum` | `values` (array of {value, weight}) | - |
+
+**Validation logic**:
+```
+FOR EACH column IN table.columns:
+  IF "generator" IN column AND "generator_params" IN column:
+    params = column.generator_params
+
+    CASE column.generator:
+      WHEN "int_range", "float_range", "decimal_range":
+        IF "distribution" NOT IN params:
+          IF "min" NOT IN params OR "max" NOT IN params:
+            RAISE ERROR "Table '{table.name}', Column '{column.name}': {column.generator} requires 'min' and 'max' parameters OR 'distribution'"
+
+      WHEN "date_between":
+        IF "start_date" NOT IN params OR "end_date" NOT IN params:
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': date_between requires 'start_date' and 'end_date'"
+
+      WHEN "timestamp_past":
+        IF "years_ago" NOT IN params:
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': timestamp_past requires 'years_ago'"
+
+      WHEN "enum":
+        IF "values" NOT IN params OR NOT IS_ARRAY(params.values):
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': enum requires 'values' array"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "generator": "int_range",
+  "generator_params": {
+    "min": 300,
+    "max": 850
+  }
+}
+```
+
+**Invalid** (missing params):
+```json
+{
+  "generator": "int_range",
+  "generator_params": {
+    "max": 850
+  }
+}
+```
+
+**Error message**:
+```
+Table 'borrowers', Column 'credit_score': int_range requires 'min' and 'max' parameters OR 'distribution'
+```
+
+---
+
+#### V-C005: Distribution Parameters Must Be Valid
+
+**Rule**: If a column uses a `distribution`, the distribution type and parameters must be valid.
+
+**Distribution types**:
+- `uniform`: Requires `min`, `max`
+- `normal`: Requires `mean`, `std_dev`, optional `min`, `max`
+- `lognormal`: Requires `median`, `min`, `max`
+- `weighted`: Requires `values` array with `{value, weight}` objects
+- `ranges`: Requires `ranges` array with `{min, max, weight}` objects
+
+**Validation logic**:
+```
+FOR EACH column IN table.columns:
+  IF "distribution" IN column.generator_params:
+    dist = column.generator_params.distribution
+
+    IF dist.type NOT IN ["uniform", "normal", "lognormal", "weighted", "ranges"]:
+      RAISE ERROR "Table '{table.name}', Column '{column.name}': Unknown distribution type '{dist.type}'"
+
+    CASE dist.type:
+      WHEN "uniform":
+        IF "min" NOT IN dist.params OR "max" NOT IN dist.params:
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': uniform distribution requires 'min' and 'max'"
+
+      WHEN "normal":
+        IF "mean" NOT IN dist.params OR "std_dev" NOT IN dist.params:
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': normal distribution requires 'mean' and 'std_dev'"
+
+      WHEN "lognormal":
+        IF "median" NOT IN dist.params OR "min" NOT IN dist.params OR "max" NOT IN dist.params:
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': lognormal distribution requires 'median', 'min', and 'max'"
+
+      WHEN "weighted":
+        IF "values" NOT IN dist.params OR NOT IS_ARRAY(dist.params.values):
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': weighted distribution requires 'values' array"
+
+        FOR EACH value_obj IN dist.params.values:
+          IF "value" NOT IN value_obj OR "weight" NOT IN value_obj:
+            RAISE ERROR "Table '{table.name}', Column '{column.name}': weighted values must have 'value' and 'weight'"
+
+      WHEN "ranges":
+        IF "ranges" NOT IN dist.params OR NOT IS_ARRAY(dist.params.ranges):
+          RAISE ERROR "Table '{table.name}', Column '{column.name}': ranges distribution requires 'ranges' array"
+
+        FOR EACH range_obj IN dist.params.ranges:
+          IF "min" NOT IN range_obj OR "max" NOT IN range_obj OR "weight" NOT IN range_obj:
+            RAISE ERROR "Table '{table.name}', Column '{column.name}': range objects must have 'min', 'max', and 'weight'"
+```
+
+**Examples**:
+
+**Valid** (normal distribution):
+```json
+{
+  "distribution": {
+    "type": "normal",
+    "params": {
+      "mean": 680,
+      "std_dev": 80,
+      "min": 300,
+      "max": 850
+    }
+  }
+}
+```
+
+**Invalid** (missing params):
+```json
+{
+  "distribution": {
+    "type": "normal",
+    "params": {
+      "mean": 680
+    }
+  }
+}
+```
+
+**Error message**:
+```
+Table 'borrowers', Column 'credit_score': normal distribution requires 'mean' and 'std_dev'
+```
+
+---
+
+#### V-C006: Foreign Key Must Reference Existing Table and Column
+
+**Rule**: If a column defines a `foreign_key`, the referenced table and column must exist in the schema.
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  FOR EACH column IN table.columns:
+    IF "foreign_key" IN column:
+      fk = column.foreign_key
+
+      # Check referenced table exists
+      ref_table = FIND_TABLE(schema.tables, fk.table)
+      IF ref_table IS NULL:
+        RAISE ERROR "Table '{table.name}', Column '{column.name}': Foreign key references non-existent table '{fk.table}'"
+
+      # Check referenced column exists
+      ref_column = FIND_COLUMN(ref_table.columns, fk.column)
+      IF ref_column IS NULL:
+        RAISE ERROR "Table '{table.name}', Column '{column.name}': Foreign key references non-existent column '{fk.table}.{fk.column}'"
+
+      # Check referenced column is primary key or unique
+      IF NOT (ref_column.primary_key == true OR ref_column.unique == true):
+        RAISE ERROR "Table '{table.name}', Column '{column.name}': Foreign key must reference a primary key or unique column. '{fk.table}.{fk.column}' is neither"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "tables": [
+    {
+      "name": "borrowers",
+      "columns": [
+        {"name": "id", "type": "int", "primary_key": true}
+      ]
+    },
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "foreign_key": {
+            "table": "borrowers",
+            "column": "id"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Invalid** (non-existent table):
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "foreign_key": {
+    "table": "users",
+    "column": "id"
+  }
+}
+```
+
+**Invalid** (non-existent column):
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "foreign_key": {
+    "table": "borrowers",
+    "column": "user_id"
+  }
+}
+```
+
+**Error messages**:
+```
+Table 'loans', Column 'borrower_id': Foreign key references non-existent table 'users'
+Table 'loans', Column 'borrower_id': Foreign key references non-existent column 'borrowers.user_id'
+Table 'loans', Column 'borrower_id': Foreign key must reference a primary key or unique column. 'borrowers.email' is neither
+```
+
+---
+
+### Relationship-Level Validation
+
+Relationship-level validation ensures that foreign key relationships are consistent and referential integrity actions are valid.
+
+#### V-R001: Foreign Keys Must Reference Primary Keys or Unique Columns
+
+**Rule**: Foreign key columns must reference columns that are either primary keys or have unique constraints.
+
+**Validation logic**: (Covered in V-C006 above)
+
+**Rationale**: Referencing non-unique columns would create ambiguous relationships (which parent record does the foreign key reference?).
+
+---
+
+#### V-R002: Foreign Key Data Types Must Match
+
+**Rule**: Foreign key columns must have the same data type as the referenced column.
+
+**Validation logic**:
+```
+FOR EACH table IN schema.tables:
+  FOR EACH column IN table.columns:
+    IF "foreign_key" IN column:
+      fk = column.foreign_key
+      ref_table = FIND_TABLE(schema.tables, fk.table)
+      ref_column = FIND_COLUMN(ref_table.columns, fk.column)
+
+      IF column.type != ref_column.type:
+        RAISE ERROR "Table '{table.name}', Column '{column.name}': Foreign key type '{column.type}' does not match referenced column type '{ref_column.type}' in '{fk.table}.{fk.column}'"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "tables": [
+    {
+      "name": "borrowers",
+      "columns": [
+        {"name": "id", "type": "int", "primary_key": true}
+      ]
+    },
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "foreign_key": {"table": "borrowers", "column": "id"}
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Invalid** (type mismatch):
+```json
+{
+  "tables": [
+    {
+      "name": "borrowers",
+      "columns": [
+        {"name": "id", "type": "int", "primary_key": true}
+      ]
+    },
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "borrower_id",
+          "type": "varchar(36)",
+          "foreign_key": {"table": "borrowers", "column": "id"}
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Error message**:
+```
+Table 'loans', Column 'borrower_id': Foreign key type 'varchar(36)' does not match referenced column type 'int' in 'borrowers.id'
+```
+
+---
+
+#### V-R003: Referential Integrity Actions Must Be Valid
+
+**Rule**: Foreign key `on_delete` and `on_update` actions must be one of: `CASCADE`, `SET NULL`, `RESTRICT`.
+
+**Validation logic**:
+```
+valid_actions = ["CASCADE", "SET NULL", "RESTRICT"]
+
+FOR EACH column IN table.columns:
+  IF "foreign_key" IN column:
+    fk = column.foreign_key
+
+    IF "on_delete" IN fk AND fk.on_delete NOT IN valid_actions:
+      RAISE ERROR "Table '{table.name}', Column '{column.name}': Invalid on_delete action '{fk.on_delete}'. Valid: CASCADE, SET NULL, RESTRICT"
+
+    IF "on_update" IN fk AND fk.on_update NOT IN valid_actions:
+      RAISE ERROR "Table '{table.name}', Column '{column.name}': Invalid on_update action '{fk.on_update}'. Valid: CASCADE, SET NULL, RESTRICT"
+```
+
+**Examples**:
+
+**Valid**:
+- `"CASCADE"`
+- `"SET NULL"`
+- `"RESTRICT"`
+
+**Invalid**:
+- `"DELETE CASCADE"` (incorrect syntax)
+- `"cascade"` (lowercase not allowed)
+- `"NO ACTION"` (not supported in MVP)
+- `"SET DEFAULT"` (not supported in MVP)
+
+**Error message**:
+```
+Table 'loans', Column 'borrower_id': Invalid on_delete action 'NO ACTION'. Valid: CASCADE, SET NULL, RESTRICT
+```
+
+---
+
+#### V-R004: SET NULL Requires Nullable Column
+
+**Rule**: If a foreign key uses `on_delete: "SET NULL"` or `on_update: "SET NULL"`, the foreign key column must have `nullable: true`.
+
+**Validation logic**:
+```
+FOR EACH column IN table.columns:
+  IF "foreign_key" IN column:
+    fk = column.foreign_key
+
+    IF (fk.on_delete == "SET NULL" OR fk.on_update == "SET NULL") AND column.nullable != true:
+      RAISE ERROR "Table '{table.name}', Column '{column.name}': Foreign key uses 'SET NULL' but column is not nullable. Set nullable: true"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "name": "user_id",
+  "type": "int",
+  "nullable": true,
+  "foreign_key": {
+    "table": "users",
+    "column": "id",
+    "on_delete": "SET NULL"
+  }
+}
+```
+
+**Invalid**:
+```json
+{
+  "name": "user_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "users",
+    "column": "id",
+    "on_delete": "SET NULL"
+  }
+}
+```
+
+**Error message**:
+```
+Table 'sessions', Column 'user_id': Foreign key uses 'SET NULL' but column is not nullable. Set nullable: true
+```
+
+---
+
+### Generation Order Validation
+
+Generation order validation ensures that tables can be populated in a valid sequence without violating foreign key constraints.
+
+#### V-G001: Parent Tables Must Appear Before Child Tables
+
+**Rule**: In `generation_order`, any table referenced by a foreign key (parent) must appear before the table containing the foreign key (child).
+
+**Validation logic**:
+```
+# Build dependency map: child -> [parents]
+dependencies = {}
+FOR EACH table IN schema.tables:
+  dependencies[table.name] = []
+  FOR EACH column IN table.columns:
+    IF "foreign_key" IN column:
+      dependencies[table.name].APPEND(column.foreign_key.table)
+
+# Validate generation order
+table_positions = {name: index FOR index, name IN ENUMERATE(schema.generation_order)}
+
+FOR child_table, parent_tables IN dependencies:
+  FOR parent_table IN parent_tables:
+    IF table_positions[child_table] < table_positions[parent_table]:
+      RAISE ERROR "Invalid generation_order: '{child_table}' has foreign key to '{parent_table}', but '{parent_table}' appears later in generation_order (position {table_positions[parent_table]} vs {table_positions[child_table]})"
+```
+
+**Examples**:
+
+**Valid**:
+```json
+{
+  "generation_order": ["borrowers", "loans", "payments"]
+}
+```
+
+**Invalid** (child before parent):
+```json
+{
+  "generation_order": ["loans", "borrowers", "payments"]
+}
+```
+
+**Error message**:
+```
+Invalid generation_order: 'loans' has foreign key to 'borrowers', but 'borrowers' appears later in generation_order (position 1 vs 0)
+```
+
+---
+
+#### V-G002: No Circular Dependencies
+
+**Rule**: The schema must not contain circular foreign key dependencies (e.g., A → B → A).
+
+**Validation logic**:
+```
+# Build dependency graph
+graph = {}
+FOR EACH table IN schema.tables:
+  graph[table.name] = []
+  FOR EACH column IN table.columns:
+    IF "foreign_key" IN column:
+      graph[table.name].APPEND(column.foreign_key.table)
+
+# Detect cycles using DFS
+FOR EACH table IN schema.tables:
+  visited = SET()
+  stack = [table.name]
+
+  WHILE stack IS NOT EMPTY:
+    current = stack.POP()
+
+    IF current IN visited:
+      cycle_path = RECONSTRUCT_CYCLE(visited, current)
+      RAISE ERROR "Circular dependency detected: {cycle_path}"
+
+    visited.ADD(current)
+
+    FOR EACH dependency IN graph[current]:
+      IF dependency NOT IN visited:
+        stack.PUSH(dependency)
+```
+
+**Examples**:
+
+**Valid** (no cycles):
+```
+borrowers → (none)
+loans → borrowers
+payments → loans
+```
+
+**Invalid** (circular dependency):
+```
+users → addresses
+addresses → users
+```
+
+**Error message**:
+```
+Circular dependency detected: users -> addresses -> users
+```
+
+**F008 Implementation Note**: Use topological sort or DFS cycle detection.
+
+---
+
+### Edge Cases and Common Errors
+
+This section documents common schema errors and how to detect them.
+
+#### Edge Case 1: Missing Foreign Key Target
+
+**Scenario**: Foreign key references a table that doesn't exist.
+
+**Detection**: V-C006
+
+**Example**:
+```json
+{
+  "tables": [
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "foreign_key": {"table": "users", "column": "id"}
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Error**:
+```
+Table 'loans', Column 'borrower_id': Foreign key references non-existent table 'users'
+```
+
+**Fix**: Add the `users` table or change the foreign key to reference an existing table.
+
+---
+
+#### Edge Case 2: Circular Dependency
+
+**Scenario**: Two tables reference each other.
+
+**Detection**: V-G002
+
+**Example**:
+```json
+{
+  "tables": [
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "primary_address_id",
+          "type": "int",
+          "foreign_key": {"table": "addresses", "column": "id"}
+        }
+      ]
+    },
+    {
+      "name": "addresses",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "int",
+          "foreign_key": {"table": "users", "column": "id"}
+        }
+      ]
+    }
+  ],
+  "generation_order": ["users", "addresses"]
+}
+```
+
+**Error**:
+```
+Circular dependency detected: users -> addresses -> users
+```
+
+**Fix**: Remove one foreign key relationship or make it nullable and populate in a second pass (post-MVP feature).
+
+---
+
+#### Edge Case 3: Invalid Generator Parameters
+
+**Scenario**: Generator parameters don't match requirements.
+
+**Detection**: V-C004
+
+**Example**:
+```json
+{
+  "name": "credit_score",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "max": 850
+  }
+}
+```
+
+**Error**:
+```
+Table 'borrowers', Column 'credit_score': int_range requires 'min' and 'max' parameters OR 'distribution'
+```
+
+**Fix**: Add `"min": 300` to generator_params.
+
+---
+
+#### Edge Case 4: Type Mismatch in Foreign Key
+
+**Scenario**: Foreign key column type doesn't match referenced column type.
+
+**Detection**: V-R002
+
+**Example**:
+```json
+{
+  "tables": [
+    {
+      "name": "borrowers",
+      "columns": [
+        {"name": "id", "type": "bigint", "primary_key": true}
+      ]
+    },
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "foreign_key": {"table": "borrowers", "column": "id"}
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Error**:
+```
+Table 'loans', Column 'borrower_id': Foreign key type 'int' does not match referenced column type 'bigint' in 'borrowers.id'
+```
+
+**Fix**: Change `borrower_id` type to `bigint`.
+
+---
+
+#### Edge Case 5: SET NULL Without Nullable
+
+**Scenario**: Foreign key uses `SET NULL` but column is not nullable.
+
+**Detection**: V-R004
+
+**Example**:
+```json
+{
+  "name": "user_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "users",
+    "column": "id",
+    "on_delete": "SET NULL"
+  }
+}
+```
+
+**Error**:
+```
+Table 'sessions', Column 'user_id': Foreign key uses 'SET NULL' but column is not nullable. Set nullable: true
+```
+
+**Fix**: Change to `"nullable": true`.
+
+---
+
+#### Edge Case 6: Multiple Primary Keys
+
+**Scenario**: Table has more than one column marked as primary key.
+
+**Detection**: V-T004
+
+**Example**:
+```json
+{
+  "name": "borrowers",
+  "columns": [
+    {"name": "id", "type": "int", "primary_key": true},
+    {"name": "uuid", "type": "varchar(36)", "primary_key": true}
+  ]
+}
+```
+
+**Error**:
+```
+Table 'borrowers' has multiple primary keys: ['id', 'uuid']. Only one column can be primary key
+```
+
+**Fix**: Remove `"primary_key": true` from one column.
+
+---
+
+#### Edge Case 7: Empty Generation Order
+
+**Scenario**: `generation_order` is defined but empty.
+
+**Detection**: V-S007
+
+**Example**:
+```json
+{
+  "tables": [
+    {"name": "borrowers", ...}
+  ],
+  "generation_order": []
+}
+```
+
+**Error**:
+```
+Tables missing from generation_order: ['borrowers']
+```
+
+**Fix**: Add all tables to `generation_order`.
+
+---
+
+### Error Message Guidance for F008 Implementers
+
+This section provides standards for error messages to ensure they are clear, actionable, and helpful.
+
+#### Error Message Structure
+
+**Format**:
+```
+[SEVERITY] {Context}: {Problem}. {Suggestion}
+```
+
+**Components**:
+- **SEVERITY**: `ERROR` (blocks schema usage) or `WARNING` (non-blocking)
+- **Context**: Where the error occurred (table, column, field)
+- **Problem**: What is wrong
+- **Suggestion**: How to fix (when possible)
+
+**Examples**:
+
+**Good**:
+```
+ERROR Table 'loans', Column 'borrower_id': Foreign key references non-existent table 'users'. Did you mean 'borrowers'?
+```
+
+**Bad**:
+```
+Invalid foreign key
+```
+
+---
+
+#### Error Message Principles
+
+**1. Be Specific**:
+- Always include context (table name, column name, field name)
+- Quote values to distinguish them from prose
+- Use exact error locations (line numbers if available)
+
+**Good**:
+```
+Table 'borrowers', Column 'credit_score': int_range requires 'min' and 'max' parameters OR 'distribution'
+```
+
+**Bad**:
+```
+Missing parameters
+```
+
+---
+
+**2. Be Actionable**:
+- Explain what needs to be fixed
+- Suggest corrections when possible
+- Link to documentation for complex rules
+
+**Good**:
+```
+Schema name 'Fintech-Loans' must use lowercase-kebab-case format (e.g., 'fintech-loans')
+```
+
+**Bad**:
+```
+Invalid schema name
+```
+
+---
+
+**3. Be Consistent**:
+- Use consistent terminology (e.g., always "foreign key" not "FK")
+- Use consistent formatting (e.g., always quote table/column names)
+- Group related errors (e.g., all missing fields together)
+
+---
+
+**4. Provide Examples**:
+- Show correct format when rejecting incorrect format
+- Reference existing schema examples
+- Use realistic examples (not "foo", "bar")
+
+**Good**:
+```
+Schema version must follow semantic versioning (e.g., '1.0.0')
+```
+
+**Bad**:
+```
+Invalid version format
+```
+
+---
+
+**5. Prioritize Errors**:
+- Show structural errors first (missing required fields)
+- Show semantic errors second (invalid values)
+- Show cross-validation errors last (foreign key references)
+
+---
+
+**6. Suggest Corrections**:
+- Use "Did you mean?" for likely typos
+- Suggest valid values when rejecting invalid values
+- Reference similar valid schemas
+
+**Good**:
+```
+Unknown table in generation_order: 'borrower'. Did you mean 'borrowers'?
+```
+
+**Bad**:
+```
+Unknown table
+```
+
+---
+
+#### Error Message Examples by Category
+
+**Structural Errors**:
+```
+Missing required field: author
+Invalid JSON syntax at line 42: unexpected token '}'
+Field 'database_type' must be an array, got string
+```
+
+**Schema-Level Errors**:
+```
+Schema name 'Fintech_Loans' must use lowercase-kebab-case format (e.g., 'fintech-loans')
+Schema version '1.0' must follow semantic versioning (e.g., '1.0.0')
+database_type must contain at least one database type. Valid: mysql, postgres
+```
+
+**Table-Level Errors**:
+```
+Table 'borrowers' has no primary key. Exactly one column must have primary_key: true
+Table 'loans' has invalid record_count: 0. Must be > 0
+Duplicate table name: borrowers
+```
+
+**Column-Level Errors**:
+```
+Table 'borrowers', Column 'email': Invalid type 'string'. Use 'varchar(n)' or 'text'
+Table 'borrowers', Column 'credit_score': int_range requires 'min' and 'max' parameters OR 'distribution'
+Table 'borrowers': Duplicate column name: email
+```
+
+**Relationship Errors**:
+```
+Table 'loans', Column 'borrower_id': Foreign key references non-existent table 'users'. Did you mean 'borrowers'?
+Table 'loans', Column 'borrower_id': Foreign key type 'int' does not match referenced column type 'bigint' in 'borrowers.id'
+Table 'sessions', Column 'user_id': Foreign key uses 'SET NULL' but column is not nullable. Set nullable: true
+```
+
+**Generation Order Errors**:
+```
+Tables missing from generation_order: ['loans', 'payments']
+Invalid generation_order: 'loans' has foreign key to 'borrowers', but 'borrowers' appears later in generation_order
+Circular dependency detected: users -> addresses -> users
+```
+
+---
+
+#### Severity Levels
+
+**ERROR** (blocks schema usage):
+- Missing required fields
+- Invalid syntax
+- Structural violations (no primary key, circular dependencies)
+- Type mismatches
+- Invalid references (non-existent tables/columns)
+
+**WARNING** (non-blocking, but should be reviewed):
+- Using `jsonb` with MySQL (database-specific type)
+- Very large record counts (may exceed Tier 1 limits)
+- Complex distributions (may impact generation time)
+- Missing descriptions (optional but recommended)
+
+---
+
+#### Multi-Error Reporting
+
+When multiple errors exist, report them in priority order:
+
+1. **Structural errors** (JSON syntax, missing required fields)
+2. **Schema-level errors** (invalid name, version, database_type)
+3. **Table-level errors** (invalid tables, missing primary keys)
+4. **Column-level errors** (invalid columns, types, generators)
+5. **Relationship errors** (invalid foreign keys)
+6. **Generation order errors** (invalid ordering, circular dependencies)
+
+**Example multi-error output**:
+```
+Schema validation failed with 3 errors:
+
+ERROR: Missing required field: author
+ERROR: Table 'borrowers' has no primary key. Exactly one column must have primary_key: true
+ERROR: Invalid generation_order: 'loans' has foreign key to 'borrowers', but 'borrowers' appears later in generation_order
+```
+
+---
+
+### Validation Summary
+
+**Schema-Level Validation** (7 rules):
+- V-S001: Required fields present
+- V-S002: Valid schema name
+- V-S003: Valid semantic version
+- V-S004: Valid format version
+- V-S005: Valid database types
+- V-S006: At least one table
+- V-S007: Generation order includes all tables
+
+**Table-Level Validation** (4 rules):
+- V-T001: Valid table names
+- V-T002: Positive record counts
+- V-T003: At least one column
+- V-T004: Exactly one primary key
+
+**Column-Level Validation** (6 rules):
+- V-C001: Valid column names
+- V-C002: Valid data types
+- V-C003: Valid generators
+- V-C004: Valid generator parameters
+- V-C005: Valid distribution parameters
+- V-C006: Foreign keys reference existing tables/columns
+
+**Relationship-Level Validation** (4 rules):
+- V-R001: Foreign keys reference primary keys or unique columns
+- V-R002: Foreign key type matches referenced type
+- V-R003: Valid referential integrity actions
+- V-R004: SET NULL requires nullable column
+
+**Generation Order Validation** (2 rules):
+- V-G001: Parent tables before child tables
+- V-G002: No circular dependencies
+
+**Total**: 23 validation rules covering all aspects of schema correctness.
+
+---
+
 ## Versioning Strategy
 
 SourceBox schemas use a dual versioning system to separately track format evolution and content evolution. Understanding the distinction between these two version types is critical for both schema authors and schema consumers.

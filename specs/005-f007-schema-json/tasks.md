@@ -96,13 +96,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Document schema-level validation rules in schema-spec.md (unique name, at least one table, valid database_type, generation_order completeness)
-- [ ] T022 [P] [US2] Document table-level validation rules in schema-spec.md (unique name, at least one column, exactly one primary key, record_count > 0)
-- [ ] T023 [P] [US2] Document column-level validation rules in schema-spec.md (valid types, valid generators, params match requirements, foreign keys reference existing tables)
-- [ ] T024 [P] [US2] Document relationship-level validation rules in schema-spec.md (foreign keys reference primary keys, valid integrity actions CASCADE/SET NULL/RESTRICT)
-- [ ] T025 [US2] Document generation_order validation rules (parent tables first, no circular dependencies)
-- [ ] T026 [US2] Add edge case documentation (circular dependencies, missing foreign key targets, invalid generator parameters)
-- [ ] T027 [US2] Add validation error message guidance for F008 implementers
+- [X] T021 [P] [US2] Document schema-level validation rules in schema-spec.md (unique name, at least one table, valid database_type, generation_order completeness)
+- [X] T022 [P] [US2] Document table-level validation rules in schema-spec.md (unique name, at least one column, exactly one primary key, record_count > 0)
+- [X] T023 [P] [US2] Document column-level validation rules in schema-spec.md (valid types, valid generators, params match requirements, foreign keys reference existing tables)
+- [X] T024 [P] [US2] Document relationship-level validation rules in schema-spec.md (foreign keys reference primary keys, valid integrity actions CASCADE/SET NULL/RESTRICT)
+- [X] T025 [US2] Document generation_order validation rules (parent tables first, no circular dependencies)
+- [X] T026 [US2] Add edge case documentation (circular dependencies, missing foreign key targets, invalid generator parameters)
+- [X] T027 [US2] Add validation error message guidance for F008 implementers
 
 **Checkpoint**: Validation rules are complete - schema authors can self-validate their work
 
