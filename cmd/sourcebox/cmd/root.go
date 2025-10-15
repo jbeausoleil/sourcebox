@@ -15,16 +15,24 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "sourcebox",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Generate realistic, verticalized demo data instantly",
+	Long: `SourceBox generates production-like demo data for databases.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+Built for developers who need realistic demo data in seconds, not hours.
+Verticalized schemas for fintech, healthcare, retail, and more.
+
+Works entirely offline - no cloud APIs, no authentication, no network calls.`,
+	Example: `  # Seed MySQL with fintech loan data
+  sourcebox seed mysql --schema=fintech-loans --records=1000
+
+  # List all available schemas
+  sourcebox list-schemas
+
+  # Export data to SQL file instead of inserting
+  sourcebox seed postgres --schema=healthcare-patients --output=data.sql`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

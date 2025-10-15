@@ -61,12 +61,12 @@ Project uses standard Go CLI structure:
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Customize root command metadata in `cmd/sourcebox/cmd/root.go`:
+- [X] T009 [US1] Customize root command metadata in `cmd/sourcebox/cmd/root.go`:
   - Set Use: "sourcebox"
   - Set Short: "Generate realistic, verticalized demo data instantly"
   - Set Long: Multi-paragraph description from quickstart.md
-- [ ] T010 [US1] Add Example field to root command showing common usage patterns
-- [ ] T011 [US1] Verify help output contains all required fields: `go run ./cmd/sourcebox --help`
+- [X] T010 [US1] Add Example field to root command showing common usage patterns
+- [X] T011 [US1] Verify help output contains all required fields: `go run ./cmd/sourcebox --help`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can access comprehensive help documentation
 
