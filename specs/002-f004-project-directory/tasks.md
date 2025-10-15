@@ -155,11 +155,11 @@
 
 **Purpose**: Final integration, documentation, and validation
 
-- [ ] T036 Update `CLAUDE.md` with build system information (project structure, Makefile targets, build conventions)
-- [ ] T037 Verify all tasks from `quickstart.md` pass successfully
-- [ ] T038 Run full build workflow: `make clean && make test && make build && make build-all`
-- [ ] T039 Verify version injection works correctly with `./dist/sourcebox --version`
-- [ ] T040 Confirm constitutional compliance: build time < 2 min, binaries < 50MB compressed
+- [X] T036 Update `CLAUDE.md` with build system information (project structure, Makefile targets, build conventions)
+- [X] T037 Verify all tasks from `quickstart.md` pass successfully
+- [X] T038 Run full build workflow: `make clean && make test && make build && make build-all`
+- [X] T039 Verify version injection works correctly with `./dist/sourcebox --version`
+- [X] T040 Confirm constitutional compliance: build time < 2 min, binaries < 50MB compressed
 
 **Checkpoint**: Feature fully integrated, documented, and validated
 
