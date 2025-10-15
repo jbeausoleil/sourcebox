@@ -201,15 +201,15 @@
 
 **Purpose**: Final improvements, CLAUDE.md update, and validation
 
-- [ ] T057 [P] Update CLAUDE.md with schema format guidelines (overview, generator types, distribution types, foreign keys, versioning, validation rules, Tier 1 targets, creating new schemas, supported data types)
-- [ ] T058 [P] Add table of contents to schema-spec.md for easy navigation
-- [ ] T059 [P] Proofread schema-spec.md for clarity, consistency, and completeness
-- [ ] T060 [P] Verify all [TODO] and [NEEDS CLARIFICATION] markers are resolved
-- [ ] T061 Run quickstart.md validation steps (all 10 verification checks)
-- [ ] T062 Verify constitutional compliance (Tier 1 complexity, verticalized data, boring tech, implementable by F008)
-- [ ] T063 Final review of example schema for feature completeness and Tier 1 compliance
+- [X] T057 [P] Update CLAUDE.md with schema format guidelines (overview, generator types, distribution types, foreign keys, versioning, validation rules, Tier 1 targets, creating new schemas, supported data types)
+- [X] T058 [P] Add table of contents to schema-spec.md for easy navigation
+- [X] T059 [P] Proofread schema-spec.md for clarity, consistency, and completeness
+- [X] T060 [P] Verify all [TODO] and [NEEDS CLARIFICATION] markers are resolved
+- [X] T061 Run quickstart.md validation steps (all 10 verification checks)
+- [X] T062 Verify constitutional compliance (Tier 1 complexity, verticalized data, boring tech, implementable by F008)
+- [X] T063 Final review of example schema for feature completeness and Tier 1 compliance
 
-**Checkpoint**: F007 complete and ready for F008 implementation
+**Checkpoint**: F007 complete and ready for F008 implementation ✅
 
 ---
 

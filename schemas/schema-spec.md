@@ -118,23 +118,96 @@ Here's what a minimal SourceBox schema looks like:
 
 This schema defines two tables (borrowers and loans) with realistic data generation using statistical distributions. The rest of this specification explains each field in detail.
 
-### Document Structure
+## Table of Contents
 
-This specification is organized into the following sections:
-
-1. **Overview** (this section): Format rationale and purpose
-2. **Schema Structure**: Top-level JSON fields and metadata
-3. **Table Definitions**: How to define tables, columns, and constraints
-4. **Column Definitions**: Column fields, constraints, and best practices
-5. **Supported Data Types**: MySQL/PostgreSQL type compatibility and guidance
-6. **Generator Types**: Built-in and custom data generators
-7. **Distribution Types**: Statistical distributions for realistic data
-8. **Relationships**: Foreign keys and referential integrity
-9. **Validation Rules**: Schema validation requirements
-10. **Versioning Strategy**: Semantic versioning for schemas
-11. **Generation Order**: Dependency resolution and table ordering
-12. **Built-in Generators**: Complete generator reference
-13. **Examples**: Complete schema examples by industry
+- [Overview](#overview)
+  - [Why JSON?](#why-json)
+  - [Purpose](#purpose)
+  - [How Schemas Enable Verticalized Data](#how-schemas-enable-verticalized-data)
+  - [Quick Example](#quick-example)
+- [Schema Structure](#schema-structure)
+  - [Required Fields](#required-fields)
+  - [Optional Fields](#optional-fields)
+  - [Complete Structure Example](#complete-structure-example)
+  - [Field Summary](#field-summary)
+- [Table Definitions](#table-definitions)
+  - [Structure](#structure)
+  - [Required Fields](#required-fields-1)
+  - [Optional Fields](#optional-fields-1)
+  - [Complete Table Example](#complete-table-example)
+  - [Multiple Tables Example](#multiple-tables-example)
+  - [Table Naming Conventions](#table-naming-conventions)
+  - [Table Relationships and Generation Order](#table-relationships-and-generation-order)
+  - [Field Summary](#field-summary-1)
+- [Column Definitions](#column-definitions)
+  - [Structure](#structure-1)
+  - [Required Fields](#required-fields-2)
+  - [Optional Fields](#optional-fields-2)
+  - [Data Types](#data-types)
+  - [Complete Column Examples](#complete-column-examples)
+  - [Field Summary](#field-summary-2)
+  - [Column Definition Best Practices](#column-definition-best-practices)
+- [Supported Data Types](#supported-data-types)
+  - [Design Philosophy](#design-philosophy)
+  - [Type Categories](#type-categories)
+  - [Integer Types](#integer-types)
+  - [Decimal Types](#decimal-types)
+  - [String Types](#string-types)
+  - [Date/Time Types](#datetime-types)
+  - [Boolean Type](#boolean-type)
+  - [JSON Types](#json-types)
+  - [Enum Types](#enum-types)
+  - [Type Compatibility Matrix](#type-compatibility-matrix)
+  - [Data Type Best Practices Summary](#data-type-best-practices-summary)
+- [Validation Rules](#validation-rules)
+  - [Validation Philosophy](#validation-philosophy)
+  - [Validation Categories](#validation-categories)
+  - [Schema-Level Validation](#schema-level-validation)
+  - [Table-Level Validation](#table-level-validation)
+  - [Column-Level Validation](#column-level-validation)
+  - [Relationship-Level Validation](#relationship-level-validation)
+  - [Generation Order Validation](#generation-order-validation)
+  - [Edge Cases and Common Errors](#edge-cases-and-common-errors)
+  - [Error Message Guidance for F008 Implementers](#error-message-guidance-for-f008-implementers)
+  - [Validation Summary](#validation-summary)
+- [Versioning Strategy](#versioning-strategy)
+  - [Why Two Version Fields?](#why-two-version-fields)
+  - [schema_version (Format Version)](#schema_version-format-version)
+  - [version (Content Version)](#version-content-version)
+  - [Backward Compatibility Considerations](#backward-compatibility-considerations)
+  - [Version Tracking Best Practices](#version-tracking-best-practices)
+  - [Version Summary Table](#version-summary-table)
+  - [Quick Reference](#quick-reference)
+- [Generation Order](#generation-order)
+  - [Purpose](#purpose-1)
+  - [Format](#format)
+  - [How the Parser Uses generation_order](#how-the-parser-uses-generation_order)
+  - [Validation Rules](#validation-rules-1)
+  - [Relationship Patterns and Ordering](#relationship-patterns-and-ordering)
+  - [Common Mistakes and How to Fix Them](#common-mistakes-and-how-to-fix-them)
+  - [Determining Correct Ordering for Complex Schemas](#determining-correct-ordering-for-complex-schemas)
+  - [Complete Example](#complete-example)
+  - [Summary](#summary)
+- [Foreign Key Relationships](#foreign-key-relationships)
+  - [Overview](#overview-1)
+  - [Inline Foreign Key Object](#inline-foreign-key-object)
+  - [Explicit Relationships Array](#explicit-relationships-array)
+  - [Rationale for Dual Representation](#rationale-for-dual-representation)
+  - [Relationship Types](#relationship-types)
+  - [Referential Integrity Actions](#referential-integrity-actions)
+  - [Complete Example: Dual Representation](#complete-example-dual-representation)
+  - [Summary](#summary-1)
+- [Built-in Generators](#built-in-generators)
+  - [Overview](#overview-2)
+  - [Personal Data Generators](#personal-data-generators)
+  - [Company Data Generators](#company-data-generators)
+  - [Date/Time Generators](#datetime-generators)
+  - [Numeric Generators](#numeric-generators)
+  - [Custom Generators](#custom-generators)
+  - [Generator Parameters (`generator_params`)](#generator-parameters-generator_params)
+  - [Distribution Types](#distribution-types)
+  - [Parameter Validation](#parameter-validation)
+  - [Summary](#summary-2)
 
 ## Schema Structure
 
