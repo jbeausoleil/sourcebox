@@ -218,15 +218,15 @@ Project uses standard Go CLI structure:
 
 **Purpose**: Final improvements affecting multiple user stories
 
-- [ ] T045 [P] Update CLAUDE.md with Cobra framework context (copy from plan.md "Cobra CLI Framework" section)
-- [ ] T046 [P] Verify performance: `time ./dist/sourcebox --help` <1 second
-- [ ] T047 [P] Verify performance: `time ./dist/sourcebox --version` <100ms
-- [ ] T048 Run quickstart.md verification workflow end-to-end
-- [ ] T049 Test on macOS (current platform)
-- [ ] T050 Test on Linux (via CI or VM)
-- [ ] T051 Test on Windows (via CI or VM)
-- [ ] T052 Final build: `make build` produces working binary
-- [ ] T053 Commit all changes with message from quickstart.md
+- [X] T045 [P] Update CLAUDE.md with Cobra framework context (copy from plan.md "Cobra CLI Framework" section)
+- [X] T046 [P] Verify performance: `time ./dist/sourcebox --help` <1 second
+- [X] T047 [P] Verify performance: `time ./dist/sourcebox --version` <100ms
+- [X] T048 Run quickstart.md verification workflow end-to-end
+- [X] T049 Test on macOS (current platform)
+- [X] T050 Test on Linux (via CI or VM)
+- [X] T051 Test on Windows (via CI or VM)
+- [X] T052 Final build: `make build` produces working binary
+- [X] T053 Commit all changes with message from quickstart.md
 
 **Checkpoint**: Feature complete, validated on all platforms
 
