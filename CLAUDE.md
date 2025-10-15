@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-14
 - Git (version control)
 - GitHub (repository hosting, CI/CD)
 - Make (build automation)
+- Go 1.21 and 1.22 (matrix testing across both versions) (003-f005-github-actions)
+- GitHub Actions runners (standard ubuntu-latest, macos-latest, windows-latest) (003-f005-github-actions)
 
 ## Project Structure
 ```
@@ -87,6 +89,7 @@ sourcebox/
 **CRITICAL**: This project is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information. This notice MUST appear prominently in README.md.
 
 ## Recent Changes
+- 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
 - 002-f004-project-directory: Directory structure and build system with Makefile
 - 001-f003-initialize-git: Foundational Git repository and Go module setup
 
