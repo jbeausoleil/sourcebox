@@ -33,7 +33,7 @@ Works entirely offline - no cloud APIs, no authentication, no network calls.`,
   # Export data to SQL file instead of inserting
   sourcebox seed postgres --schema=healthcare-patients --output=data.sql`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

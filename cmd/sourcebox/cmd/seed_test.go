@@ -240,15 +240,15 @@ func TestSeedCommandFlagParsing(t *testing.T) {
 			assert.Equal(t, tt.expectedDryRun, dryRun, "dry-run flag should be parsed correctly")
 
 			// Reset flags for next test
-			seedCmd.Flags().Set("schema", "")
-			seedCmd.Flags().Set("records", "1000")
-			seedCmd.Flags().Set("host", "localhost")
-			seedCmd.Flags().Set("port", "0")
-			seedCmd.Flags().Set("user", "root")
-			seedCmd.Flags().Set("password", "")
-			seedCmd.Flags().Set("db-name", "demo")
-			seedCmd.Flags().Set("output", "")
-			seedCmd.Flags().Set("dry-run", "false")
+			_ = seedCmd.Flags().Set("schema", "")
+			_ = seedCmd.Flags().Set("records", "1000")
+			_ = seedCmd.Flags().Set("host", "localhost")
+			_ = seedCmd.Flags().Set("port", "0")
+			_ = seedCmd.Flags().Set("user", "root")
+			_ = seedCmd.Flags().Set("password", "")
+			_ = seedCmd.Flags().Set("db-name", "demo")
+			_ = seedCmd.Flags().Set("output", "")
+			_ = seedCmd.Flags().Set("dry-run", "false")
 		})
 	}
 }
@@ -268,7 +268,7 @@ func TestSeedCommandArgumentValidation(t *testing.T) {
 	require.NoError(t, err, "Command should not error with valid arguments")
 
 	// Reset flags
-	seedCmd.Flags().Set("schema", "")
+	_ = seedCmd.Flags().Set("schema", "")
 }
 
 // TestSeedCommandPlaceholderOutput verifies that the placeholder Run function
@@ -285,7 +285,7 @@ func TestSeedCommandPlaceholderOutput(t *testing.T) {
 	require.NoError(t, err, "Seed command should execute without error")
 
 	// Reset flags
-	seedCmd.Flags().Set("schema", "")
+	_ = seedCmd.Flags().Set("schema", "")
 }
 
 // TestSeedCommandFlagDefaults verifies that all flags have correct default values.
@@ -398,7 +398,7 @@ func TestSeedCommandWithGlobalFlags(t *testing.T) {
 			assert.Equal(t, tt.expectedQuiet, quiet, "quiet flag should be parsed correctly")
 
 			// Reset seed flags
-			seedCmd.Flags().Set("schema", "")
+			_ = seedCmd.Flags().Set("schema", "")
 		})
 	}
 }
@@ -451,7 +451,7 @@ func TestSeedCommandNegativeCases(t *testing.T) {
 			}
 
 			// Reset flags
-			seedCmd.Flags().Set("schema", "")
+			_ = seedCmd.Flags().Set("schema", "")
 		})
 	}
 }

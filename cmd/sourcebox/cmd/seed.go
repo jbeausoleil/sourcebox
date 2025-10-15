@@ -58,5 +58,5 @@ func init() {
 	seedCmd.Flags().Bool("dry-run", false, "show what would be done without executing")
 
 	// Mark schema flag as required
-	seedCmd.MarkFlagRequired("schema")
+	_ = seedCmd.MarkFlagRequired("schema")
 }
