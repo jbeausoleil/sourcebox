@@ -90,8 +90,8 @@ sourcebox/
 
 ## Recent Changes
 - 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
+- 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
 - 002-f004-project-directory: Directory structure and build system with Makefile
-- 001-f003-initialize-git: Foundational Git repository and Go module setup
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
