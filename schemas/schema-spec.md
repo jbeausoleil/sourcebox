@@ -125,12 +125,16 @@ This specification is organized into the following sections:
 1. **Overview** (this section): Format rationale and purpose
 2. **Schema Structure**: Top-level JSON fields and metadata
 3. **Table Definitions**: How to define tables, columns, and constraints
-4. **Generator Types**: Built-in and custom data generators
-5. **Distribution Types**: Statistical distributions for realistic data
-6. **Relationships**: Foreign keys and referential integrity
-7. **Validation Rules**: Schema validation requirements
-8. **Versioning Strategy**: Semantic versioning for schemas
-9. **Examples**: Complete schema examples by industry
+4. **Column Definitions**: Column fields, constraints, and best practices
+5. **Supported Data Types**: MySQL/PostgreSQL type compatibility and guidance
+6. **Generator Types**: Built-in and custom data generators
+7. **Distribution Types**: Statistical distributions for realistic data
+8. **Relationships**: Foreign keys and referential integrity
+9. **Validation Rules**: Schema validation requirements
+10. **Versioning Strategy**: Semantic versioning for schemas
+11. **Generation Order**: Dependency resolution and table ordering
+12. **Built-in Generators**: Complete generator reference
+13. **Examples**: Complete schema examples by industry
 
 ## Schema Structure
 
@@ -1753,6 +1757,1105 @@ SourceBox supports the MySQL/PostgreSQL common subset of data types to ensure cr
 - Document value ranges, units, constraints
 - Explain relationships to other columns
 - Note any special generation logic
+
+---
+
+## Supported Data Types
+
+SourceBox schemas target the **MySQL/PostgreSQL common subset** of SQL data types. This ensures that schemas can be deployed to either database platform without modification, while providing clear guidance on platform-specific differences.
+
+### Design Philosophy
+
+**Cross-Platform Portability**: Schemas should work on both MySQL and PostgreSQL without manual translation. The type system focuses on the intersection of both platforms' type systems, with documented fallback behavior for platform-specific types.
+
+**Explicit Over Implicit**: Data types must be specified exactly as they will appear in CREATE TABLE statements. Size/precision parameters are mandatory where applicable (e.g., `varchar(255)`, `decimal(10,2)`), not optional.
+
+**Parser-Friendly**: The schema parser (F008) validates types against an allowlist, rejecting unsupported or database-specific types. This prevents schemas from inadvertently becoming database-locked.
+
+**Generator-Aware**: Data types influence data generation behavior. The parser uses type information to validate generator compatibility (e.g., `email` generator requires a string type, `int_range` requires an integer type).
+
+### Type Categories
+
+SourceBox supports six categories of data types:
+
+1. **Integer Types**: Whole numbers with varying ranges
+2. **Decimal Types**: Floating-point and fixed-precision numbers
+3. **String Types**: Text with varying length constraints
+4. **Date/Time Types**: Temporal data with varying precision
+5. **Boolean Type**: True/false values with platform-specific representation
+6. **JSON Types**: Structured data with platform-specific optimizations
+7. **Enum Types**: Categorical values with platform-specific implementations
+
+Each category is documented below with MySQL/PostgreSQL compatibility notes, generator recommendations, and practical examples.
+
+---
+
+### Integer Types
+
+Integer types represent whole numbers without fractional components. SourceBox supports four integer types with varying range and storage characteristics.
+
+#### int
+
+Standard 32-bit signed integer.
+
+- **MySQL**: `INT` (alias: `INTEGER`)
+- **PostgreSQL**: `INTEGER` (alias: `INT`)
+- **Range**: -2,147,483,648 to 2,147,483,647
+- **Storage**: 4 bytes
+- **Use cases**: Primary keys, foreign keys, counts, quantities, IDs
+- **Generators**: `int_range`, custom generators returning integers
+
+**Example**:
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "borrowers",
+    "column": "id",
+    "on_delete": "CASCADE"
+  }
+}
+```
+
+**Auto-increment usage**:
+```json
+{
+  "name": "id",
+  "type": "int",
+  "constraints": ["PRIMARY KEY", "AUTO_INCREMENT"],
+  "description": "Auto-incrementing primary key"
+}
+```
+
+#### bigint
+
+64-bit signed integer for large-range values.
+
+- **MySQL**: `BIGINT`
+- **PostgreSQL**: `BIGINT`
+- **Range**: -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
+- **Storage**: 8 bytes
+- **Use cases**: Very large IDs, timestamps (Unix epoch milliseconds), large counts
+- **Generators**: `int_range` (with large min/max), custom generators
+
+**Example**:
+```json
+{
+  "name": "transaction_id",
+  "type": "bigint",
+  "nullable": false,
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1000000000000,
+    "max": 9999999999999
+  },
+  "description": "Large transaction identifier"
+}
+```
+
+**Timestamp milliseconds**:
+```json
+{
+  "name": "created_at_ms",
+  "type": "bigint",
+  "nullable": false,
+  "generator": "timestamp_past",
+  "generator_params": {
+    "days_ago": 365,
+    "format": "unix_ms"
+  },
+  "description": "Creation timestamp (Unix milliseconds)"
+}
+```
+
+#### smallint
+
+16-bit signed integer for small-range values.
+
+- **MySQL**: `SMALLINT`
+- **PostgreSQL**: `SMALLINT`
+- **Range**: -32,768 to 32,767
+- **Storage**: 2 bytes
+- **Use cases**: Small enumerations, age, small counts, flags
+- **Generators**: `int_range` (with small min/max)
+
+**Example**:
+```json
+{
+  "name": "age",
+  "type": "smallint",
+  "nullable": false,
+  "generator": "int_range",
+  "distribution": {
+    "type": "normal",
+    "params": {"mean": 35, "std_dev": 10, "min": 18, "max": 80}
+  },
+  "description": "Age in years (18-80)"
+}
+```
+
+**Status code**:
+```json
+{
+  "name": "status_code",
+  "type": "smallint",
+  "nullable": false,
+  "generator": "int_range",
+  "distribution": {
+    "type": "weighted",
+    "params": {
+      "values": [
+        {"value": 200, "weight": 0.7},
+        {"value": 404, "weight": 0.2},
+        {"value": 500, "weight": 0.1}
+      ]
+    }
+  }
+}
+```
+
+#### tinyint
+
+8-bit signed integer for very small ranges.
+
+- **MySQL**: `TINYINT`
+- **PostgreSQL**: `SMALLINT` (fallback, no native `TINYINT`)
+- **Range (MySQL)**: -128 to 127
+- **Range (PostgreSQL fallback)**: -32,768 to 32,767 (same as `SMALLINT`)
+- **Storage**: 1 byte (MySQL), 2 bytes (PostgreSQL)
+- **Use cases**: Small flags, single-digit values, percentage integers (0-100)
+- **Generators**: `int_range` (with very small min/max)
+
+**Platform note**: PostgreSQL does not have a native `TINYINT` type. SourceBox schemas using `tinyint` will map to `SMALLINT` in PostgreSQL, which has a larger range but maintains data integrity.
+
+**Example**:
+```json
+{
+  "name": "priority",
+  "type": "tinyint",
+  "nullable": false,
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1,
+    "max": 5
+  },
+  "description": "Priority level (1-5)"
+}
+```
+
+**Percentage**:
+```json
+{
+  "name": "completion_pct",
+  "type": "tinyint",
+  "nullable": false,
+  "generator": "int_range",
+  "generator_params": {
+    "min": 0,
+    "max": 100
+  },
+  "description": "Completion percentage (0-100)"
+}
+```
+
+#### Integer Type Selection Guide
+
+| Type | Range | Storage | Use When |
+|------|-------|---------|----------|
+| `tinyint` | -128 to 127 | 1 byte | Very small values (0-100, 1-10) |
+| `smallint` | -32K to 32K | 2 bytes | Small values (ages, small counts, HTTP codes) |
+| `int` | -2B to 2B | 4 bytes | Standard IDs, counts, most integer data |
+| `bigint` | -9Q to 9Q | 8 bytes | Very large IDs, Unix timestamps (ms), large counts |
+
+**Best practices**:
+- Use `int` for primary keys and foreign keys (default choice)
+- Use `bigint` for Unix timestamps in milliseconds
+- Use `smallint` for ages, small enumerations, status codes
+- Use `tinyint` for single-digit ranges (1-10, 0-100)
+- Avoid unsigned integers (not portable to PostgreSQL)
+
+---
+
+### Decimal Types
+
+Decimal types represent numbers with fractional components. SourceBox supports three decimal types: fixed-precision (`decimal`) and floating-point (`float`, `double`).
+
+#### decimal(p,s)
+
+Fixed-precision decimal number with exact representation.
+
+- **MySQL**: `DECIMAL(p,s)` (alias: `NUMERIC(p,s)`)
+- **PostgreSQL**: `DECIMAL(p,s)` (alias: `NUMERIC(p,s)`)
+- **Parameters**:
+  - `p` (precision): Total number of digits (1-65)
+  - `s` (scale): Number of digits after decimal point (0 to p)
+- **Storage**: Variable (depends on precision)
+- **Use cases**: Currency, financial calculations, exact math
+- **Generators**: `decimal_range`, custom generators returning decimals
+
+**Critical**: Use `decimal` for currency to avoid floating-point rounding errors. Never use `float` or `double` for money.
+
+**Example (currency)**:
+```json
+{
+  "name": "loan_amount",
+  "type": "decimal(10,2)",
+  "nullable": false,
+  "generator": "decimal_range",
+  "distribution": {
+    "type": "lognormal",
+    "params": {"median": 15000.00, "min": 1000.00, "max": 50000.00}
+  },
+  "description": "Loan amount in USD (10 digits total, 2 decimal places)"
+}
+```
+
+**Example (precise percentage)**:
+```json
+{
+  "name": "interest_rate",
+  "type": "decimal(5,4)",
+  "nullable": false,
+  "generator": "decimal_range",
+  "distribution": {
+    "type": "ranges",
+    "params": {
+      "ranges": [
+        {"min": 0.0350, "max": 0.0599, "weight": 0.4},
+        {"min": 0.0600, "max": 0.0899, "weight": 0.4},
+        {"min": 0.0900, "max": 0.1500, "weight": 0.2}
+      ]
+    }
+  },
+  "description": "Annual interest rate (e.g., 0.0575 = 5.75%)"
+}
+```
+
+**Precision/scale constraints**:
+- Scale must be ≤ precision (`s <= p`)
+- Example: `decimal(10,2)` allows up to 99,999,999.99
+- Example: `decimal(5,4)` allows up to 9.9999
+
+#### float
+
+32-bit floating-point number (approximate precision).
+
+- **MySQL**: `FLOAT`
+- **PostgreSQL**: `REAL` (equivalent to `FLOAT(24)`)
+- **Precision**: ~7 decimal digits
+- **Storage**: 4 bytes
+- **Use cases**: Measurements, scientific data, approximate values
+- **Generators**: `float_range`, custom generators returning floats
+
+**Warning**: Floating-point types use approximate representation. Not suitable for exact calculations (use `decimal` instead).
+
+**Example (measurements)**:
+```json
+{
+  "name": "temperature",
+  "type": "float",
+  "nullable": false,
+  "generator": "float_range",
+  "distribution": {
+    "type": "normal",
+    "params": {"mean": 72.5, "std_dev": 5.0, "min": 60.0, "max": 85.0}
+  },
+  "description": "Temperature in Fahrenheit"
+}
+```
+
+**Example (coordinates)**:
+```json
+{
+  "name": "latitude",
+  "type": "float",
+  "nullable": false,
+  "generator": "float_range",
+  "generator_params": {
+    "min": -90.0,
+    "max": 90.0
+  },
+  "description": "Latitude coordinate"
+}
+```
+
+#### double
+
+64-bit floating-point number (higher precision than `float`).
+
+- **MySQL**: `DOUBLE`
+- **PostgreSQL**: `DOUBLE PRECISION` (alias: `FLOAT`)
+- **Precision**: ~15 decimal digits
+- **Storage**: 8 bytes
+- **Use cases**: High-precision measurements, scientific calculations, large-range floats
+- **Generators**: `float_range` (used for both `float` and `double`)
+
+**Example (precise measurements)**:
+```json
+{
+  "name": "distance_km",
+  "type": "double",
+  "nullable": false,
+  "generator": "float_range",
+  "generator_params": {
+    "min": 0.0,
+    "max": 100000.0
+  },
+  "description": "Distance in kilometers (high precision)"
+}
+```
+
+**Example (scientific data)**:
+```json
+{
+  "name": "particle_velocity",
+  "type": "double",
+  "nullable": false,
+  "generator": "float_range",
+  "distribution": {
+    "type": "normal",
+    "params": {"mean": 299792.458, "std_dev": 1000.0}
+  },
+  "description": "Particle velocity in km/s"
+}
+```
+
+#### Decimal Type Selection Guide
+
+| Type | Precision | Use When | DO NOT Use For |
+|------|-----------|----------|----------------|
+| `decimal(p,s)` | Exact | Currency, financial data, exact math | Approximations, scientific notation |
+| `float` | ~7 digits | Measurements, coordinates, approx values | Currency, exact calculations |
+| `double` | ~15 digits | High-precision science, large-range floats | Currency, exact calculations |
+
+**Best practices**:
+- **Always use `decimal` for currency** (e.g., `decimal(10,2)` for USD)
+- Use `float` for measurements that don't require exact precision
+- Use `double` for scientific data requiring high precision
+- Specify precision/scale explicitly for `decimal` (e.g., `decimal(10,2)`, not `decimal`)
+- Avoid floating-point types for exact calculations (accounting, inventory counts)
+
+---
+
+### String Types
+
+String types represent text data with varying length constraints. SourceBox supports three string types: fixed-length (`char`), variable-length (`varchar`), and unlimited-length (`text`).
+
+#### varchar(n)
+
+Variable-length string with maximum length constraint.
+
+- **MySQL**: `VARCHAR(n)`
+- **PostgreSQL**: `VARCHAR(n)` (alias: `CHARACTER VARYING(n)`)
+- **Parameters**:
+  - `n` (length): Maximum number of characters (1-65,535 in MySQL, 1-10,485,760 in PostgreSQL)
+- **Storage**: Actual string length + 1-2 bytes (length prefix)
+- **Use cases**: Emails, names, short descriptions, URLs, codes
+- **Generators**: `email`, `first_name`, `last_name`, `full_name`, `phone`, `company_name`, custom generators
+
+**Critical**: Always specify the length parameter (e.g., `varchar(255)`, not `varchar`). The parser will reject unparameterized `varchar`.
+
+**Example (email)**:
+```json
+{
+  "name": "email",
+  "type": "varchar(255)",
+  "nullable": false,
+  "unique": true,
+  "generator": "email",
+  "description": "Primary contact email"
+}
+```
+
+**Example (name)**:
+```json
+{
+  "name": "full_name",
+  "type": "varchar(200)",
+  "nullable": false,
+  "generator": "full_name",
+  "description": "Full name (first + last)"
+}
+```
+
+**Example (status code)**:
+```json
+{
+  "name": "status",
+  "type": "varchar(20)",
+  "nullable": false,
+  "generator": "weighted",
+  "distribution": {
+    "type": "weighted",
+    "params": {
+      "values": [
+        {"value": "active", "weight": 0.7},
+        {"value": "paid_off", "weight": 0.25},
+        {"value": "delinquent", "weight": 0.05}
+      ]
+    }
+  },
+  "description": "Loan status"
+}
+```
+
+**Length guidelines**:
+- Emails: `varchar(255)` (max length per RFC 5321)
+- Names: `varchar(100)` (first/last), `varchar(200)` (full name)
+- Phone: `varchar(20)` (international format with country code)
+- URLs: `varchar(2048)` (max browser URL length)
+- Short codes: `varchar(20)` (status, category, type)
+- Medium text: `varchar(500)` (short descriptions)
+
+#### text
+
+Unlimited-length text field.
+
+- **MySQL**: `TEXT` (max 65,535 bytes), `MEDIUMTEXT` (16MB), `LONGTEXT` (4GB)
+- **PostgreSQL**: `TEXT` (unlimited, up to 1GB)
+- **Storage**: Actual string length + overhead
+- **Use cases**: Long descriptions, comments, notes, content, JSON strings
+- **Generators**: Custom generators returning long text, `lorem_ipsum` (if implemented)
+
+**Platform note**: MySQL has multiple `TEXT` variants (`TEXT`, `MEDIUMTEXT`, `LONGTEXT`). SourceBox schemas use `text` which maps to `TEXT` in both MySQL and PostgreSQL. For very large text (>64KB), consider database-specific schema variants or document storage.
+
+**Example (description)**:
+```json
+{
+  "name": "description",
+  "type": "text",
+  "nullable": true,
+  "generator": "lorem_ipsum",
+  "generator_params": {
+    "paragraphs": 3
+  },
+  "description": "Long-form description"
+}
+```
+
+**Example (notes)**:
+```json
+{
+  "name": "notes",
+  "type": "text",
+  "nullable": true,
+  "description": "Internal notes (nullable, no generator)"
+}
+```
+
+#### char(n)
+
+Fixed-length string (space-padded).
+
+- **MySQL**: `CHAR(n)`
+- **PostgreSQL**: `CHAR(n)` (alias: `CHARACTER(n)`)
+- **Parameters**:
+  - `n` (length): Fixed number of characters (1-255)
+- **Storage**: Exactly n bytes (space-padded if shorter)
+- **Use cases**: Fixed-length codes (country codes, state codes, SKU formats)
+- **Generators**: Custom generators returning fixed-length strings
+
+**Warning**: `CHAR` fields are space-padded to the specified length. Use `VARCHAR` unless you specifically need fixed-length storage.
+
+**Example (country code)**:
+```json
+{
+  "name": "country_code",
+  "type": "char(2)",
+  "nullable": false,
+  "generator": "country_code",
+  "description": "ISO 3166-1 alpha-2 country code (e.g., US, CA, GB)"
+}
+```
+
+**Example (state code)**:
+```json
+{
+  "name": "state_code",
+  "type": "char(2)",
+  "nullable": false,
+  "generator": "state_code",
+  "description": "US state code (e.g., CA, NY, TX)"
+}
+```
+
+#### String Type Selection Guide
+
+| Type | Length | Storage | Use When |
+|------|--------|---------|----------|
+| `char(n)` | Fixed | n bytes (padded) | Fixed-length codes (ISO codes, state codes) |
+| `varchar(n)` | Variable (max n) | Actual + 1-2 bytes | Most text fields (names, emails, descriptions) |
+| `text` | Unlimited | Actual + overhead | Long content (articles, notes, JSON strings) |
+
+**Best practices**:
+- **Default to `varchar(n)` for most text fields** (names, emails, codes)
+- Use `text` for long-form content with no predetermined max length
+- Use `char(n)` only for truly fixed-length data (ISO codes)
+- Always specify explicit lengths for `varchar` and `char`
+- Choose appropriate `varchar` lengths (don't default to 255 for everything)
+- Index considerations: `varchar(255)` is fully indexable in MySQL, `text` may have index limitations
+
+---
+
+### Date/Time Types
+
+Date/time types represent temporal data with varying precision. SourceBox supports three date/time types: date-only (`date`), date+time (`datetime`), and timestamp (`timestamp`).
+
+#### date
+
+Date without time (year, month, day).
+
+- **MySQL**: `DATE`
+- **PostgreSQL**: `DATE`
+- **Format**: `YYYY-MM-DD` (e.g., `2023-10-15`)
+- **Range**: `1000-01-01` to `9999-12-31` (MySQL), `4713-01-01 BC` to `5874897-12-31 AD` (PostgreSQL)
+- **Storage**: 3 bytes (MySQL), 4 bytes (PostgreSQL)
+- **Use cases**: Birth dates, event dates, deadlines (no time component needed)
+- **Generators**: `date_of_birth`, `date_between`, custom generators
+
+**Example (birth date)**:
+```json
+{
+  "name": "date_of_birth",
+  "type": "date",
+  "nullable": false,
+  "generator": "date_of_birth",
+  "generator_params": {
+    "min_age": 18,
+    "max_age": 80
+  },
+  "description": "Date of birth (YYYY-MM-DD)"
+}
+```
+
+**Example (event date)**:
+```json
+{
+  "name": "event_date",
+  "type": "date",
+  "nullable": false,
+  "generator": "date_between",
+  "generator_params": {
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31"
+  },
+  "description": "Event date in 2023"
+}
+```
+
+#### datetime
+
+Date and time without timezone awareness.
+
+- **MySQL**: `DATETIME`
+- **PostgreSQL**: `TIMESTAMP WITHOUT TIME ZONE` (alias: `TIMESTAMP`)
+- **Format**: `YYYY-MM-DD HH:MM:SS` (e.g., `2023-10-15 14:30:00`)
+- **Precision**: 1 second (default), microseconds available (e.g., `datetime(6)` for MySQL)
+- **Range**: `1000-01-01 00:00:00` to `9999-12-31 23:59:59` (MySQL), `4713-01-01 BC` to `294276 AD` (PostgreSQL)
+- **Storage**: 5 bytes (MySQL), 8 bytes (PostgreSQL)
+- **Use cases**: Created/updated timestamps, scheduled times, event timestamps (when timezone not needed)
+- **Generators**: `timestamp_past`, `timestamp_future`, `date_between` (with time)
+
+**Platform note**: MySQL's `DATETIME` does not store timezone information and does not adjust for DST. PostgreSQL's `TIMESTAMP` is equivalent to `TIMESTAMP WITHOUT TIME ZONE`.
+
+**Example (created timestamp)**:
+```json
+{
+  "name": "created_at",
+  "type": "datetime",
+  "nullable": false,
+  "generator": "timestamp_past",
+  "generator_params": {
+    "days_ago": 365,
+    "format": "datetime"
+  },
+  "description": "Record creation timestamp"
+}
+```
+
+**Example (scheduled time)**:
+```json
+{
+  "name": "scheduled_at",
+  "type": "datetime",
+  "nullable": true,
+  "generator": "timestamp_future",
+  "generator_params": {
+    "days_ahead": 30,
+    "format": "datetime"
+  },
+  "description": "Scheduled execution time (nullable)"
+}
+```
+
+#### timestamp
+
+Date and time with automatic timezone handling.
+
+- **MySQL**: `TIMESTAMP` (timezone-aware, converts to UTC)
+- **PostgreSQL**: `TIMESTAMP WITH TIME ZONE` (alias: `TIMESTAMPTZ`)
+- **Format**: `YYYY-MM-DD HH:MM:SS` (displayed in local timezone)
+- **Precision**: 1 second (default), microseconds available
+- **Range**: `1970-01-01 00:00:01` UTC to `2038-01-19 03:14:07` UTC (MySQL), `4713-01-01 BC` to `294276 AD` (PostgreSQL)
+- **Storage**: 4 bytes (MySQL), 8 bytes (PostgreSQL)
+- **Use cases**: User activity timestamps, API request times, event logs (when timezone matters)
+- **Generators**: `timestamp_past`, `timestamp_future`
+
+**Platform note**: MySQL's `TIMESTAMP` converts values to UTC for storage and back to local timezone for retrieval. PostgreSQL's `TIMESTAMP WITH TIME ZONE` stores the UTC equivalent and displays in the session's timezone.
+
+**Critical**: MySQL's `TIMESTAMP` has a limited range (1970-2038) due to Unix epoch constraints. For dates outside this range, use `DATETIME` instead.
+
+**Example (user activity)**:
+```json
+{
+  "name": "last_login",
+  "type": "timestamp",
+  "nullable": true,
+  "generator": "timestamp_past",
+  "generator_params": {
+    "days_ago": 30,
+    "format": "timestamp"
+  },
+  "description": "Last login timestamp (timezone-aware)"
+}
+```
+
+**Example (API request)**:
+```json
+{
+  "name": "request_time",
+  "type": "timestamp",
+  "nullable": false,
+  "generator": "timestamp_past",
+  "generator_params": {
+    "days_ago": 7,
+    "format": "timestamp"
+  },
+  "description": "API request timestamp"
+}
+```
+
+#### Date/Time Type Selection Guide
+
+| Type | Components | Timezone | Range | Use When |
+|------|------------|----------|-------|----------|
+| `date` | Date only | N/A | 1000-9999 | Birth dates, event dates (no time needed) |
+| `datetime` | Date + time | No | 1000-9999 | Created/updated timestamps (timezone not needed) |
+| `timestamp` | Date + time | Yes | 1970-2038 (MySQL) | User activity, API logs (timezone matters) |
+
+**Best practices**:
+- Use `timestamp` for user-generated events (login times, activity logs)
+- Use `datetime` for system-generated timestamps (created_at, updated_at) when timezone not critical
+- Use `date` for dates without time component (birth dates, deadlines)
+- **Beware MySQL's `TIMESTAMP` 2038 limit** (use `DATETIME` for future dates)
+- Always use `YYYY-MM-DD` format in generator params
+- Consider `TIMESTAMP WITH TIME ZONE` (PostgreSQL) for multi-timezone applications
+- Use `datetime` for historical data spanning wide date ranges
+
+---
+
+### Boolean Type
+
+Boolean type represents true/false values with platform-specific implementations.
+
+#### boolean
+
+Logical true/false value.
+
+- **MySQL**: `BOOLEAN` (alias for `TINYINT(1)`, values 0 or 1)
+- **PostgreSQL**: `BOOLEAN` (native type, values `TRUE` or `FALSE`)
+- **Storage**: 1 byte
+- **Use cases**: Flags, status toggles, yes/no fields
+- **Generators**: `boolean_random`, custom generators returning true/false
+
+**Platform differences**:
+- **MySQL**: `BOOLEAN` is an alias for `TINYINT(1)`. Stores `0` (false) or `1` (true). Accepts any integer (0 is false, non-zero is true).
+- **PostgreSQL**: `BOOLEAN` is a native type. Stores `TRUE`, `FALSE`, or `NULL`. Accepts various representations (`TRUE`, `'t'`, `'true'`, `'yes'`, `'on'`, `1` for true; `FALSE`, `'f'`, `'false'`, `'no'`, `'off'`, `0` for false).
+
+**SourceBox behavior**: Schemas using `boolean` will work on both platforms. Generators produce `TRUE`/`FALSE` (PostgreSQL format) or `0`/`1` (MySQL format) based on the target database.
+
+**Example (flag)**:
+```json
+{
+  "name": "is_verified",
+  "type": "boolean",
+  "nullable": false,
+  "default": false,
+  "generator": "boolean_random",
+  "generator_params": {
+    "probability_true": 0.8
+  },
+  "description": "Email verification status (80% verified)"
+}
+```
+
+**Example (feature toggle)**:
+```json
+{
+  "name": "is_active",
+  "type": "boolean",
+  "nullable": false,
+  "default": true,
+  "description": "Account active status (defaults to true)"
+}
+```
+
+**Best practices**:
+- Use `boolean` for true/false flags (not `TINYINT` or `INT`)
+- Provide meaningful names (e.g., `is_verified`, `has_permission`, `is_active`)
+- Set explicit `default` values for clarity
+- Use `nullable: false` unless NULL has semantic meaning (unknown state)
+- Document what `true` and `false` mean (e.g., "true = verified, false = unverified")
+
+---
+
+### JSON Types
+
+JSON types store structured data as JSON documents. SourceBox supports `json` (both platforms) and `jsonb` (PostgreSQL-specific with binary optimization).
+
+#### json
+
+JSON document stored as text.
+
+- **MySQL**: `JSON` (native type, validates JSON syntax)
+- **PostgreSQL**: `JSON` (native type, stores exact text representation)
+- **Storage**: Variable (stored as text)
+- **Use cases**: Configuration objects, metadata, nested data structures
+- **Generators**: Custom generators returning valid JSON strings
+
+**Platform notes**:
+- **MySQL**: Validates JSON syntax on insert, stores in optimized binary format internally, supports JSON functions (`JSON_EXTRACT`, `JSON_SET`, etc.)
+- **PostgreSQL**: Stores exact text representation (preserves whitespace, key order), validates syntax, supports JSON operators (`->`, `->>`, `@>`, etc.)
+
+**Example (metadata)**:
+```json
+{
+  "name": "metadata",
+  "type": "json",
+  "nullable": true,
+  "generator": "json_object",
+  "generator_params": {
+    "schema": {
+      "source": "string",
+      "tags": "array",
+      "priority": "integer"
+    }
+  },
+  "description": "Flexible metadata object"
+}
+```
+
+**Example (configuration)**:
+```json
+{
+  "name": "settings",
+  "type": "json",
+  "nullable": false,
+  "default": "{}",
+  "generator": "json_object",
+  "generator_params": {
+    "schema": {
+      "theme": {"values": ["light", "dark"]},
+      "notifications": "boolean",
+      "language": {"values": ["en", "es", "fr"]}
+    }
+  },
+  "description": "User settings (JSON object)"
+}
+```
+
+#### jsonb
+
+JSON document stored in binary format (PostgreSQL-only).
+
+- **MySQL**: **Not supported** (fallback to `JSON`)
+- **PostgreSQL**: `JSONB` (binary format, optimized for querying)
+- **Storage**: Variable (binary representation, more efficient than `JSON`)
+- **Use cases**: High-performance JSON querying, indexable JSON fields
+- **Generators**: Same as `json`
+
+**Platform differences**:
+- **PostgreSQL**: `JSONB` decomposes JSON into binary format, removes whitespace/duplicate keys, faster for querying, supports GIN indexes
+- **MySQL**: No `JSONB` equivalent. SourceBox schemas using `jsonb` will **fall back to `JSON`** in MySQL.
+
+**Fallback behavior**: When a schema specifies `jsonb` and targets MySQL, the parser will automatically substitute `JSON`. Data generation is identical, but performance characteristics differ.
+
+**Example (PostgreSQL-optimized)**:
+```json
+{
+  "name": "attributes",
+  "type": "jsonb",
+  "nullable": true,
+  "generator": "json_object",
+  "generator_params": {
+    "schema": {
+      "color": "string",
+      "size": "string",
+      "tags": "array"
+    }
+  },
+  "description": "Product attributes (JSONB for fast querying)"
+}
+```
+
+#### JSON Type Selection Guide
+
+| Type | MySQL | PostgreSQL | Use When |
+|------|-------|------------|----------|
+| `json` | `JSON` | `JSON` | Cross-platform compatibility, exact text preservation |
+| `jsonb` | `JSON` (fallback) | `JSONB` | PostgreSQL-only, high query performance, indexing |
+
+**Best practices**:
+- Use `json` for cross-platform compatibility (works identically on both platforms)
+- Use `jsonb` for PostgreSQL-specific schemas requiring high query performance
+- Validate JSON syntax in generators (invalid JSON will fail on insert)
+- Document JSON schema in `description` field (structure, expected keys)
+- Use JSON types for flexible/evolving schemas (metadata, settings, attributes)
+- Avoid JSON for highly normalized data (use proper columns instead)
+- Consider indexing JSON fields in PostgreSQL (`GIN` indexes on `JSONB`)
+
+---
+
+### Enum Types
+
+Enum types define columns with a restricted set of allowed values. Platform-specific implementations differ significantly.
+
+#### enum
+
+Enumerated list of allowed string values.
+
+- **MySQL**: `ENUM('value1', 'value2', ...)` (native type, stored as integers)
+- **PostgreSQL**: **Not natively supported in column definition** (use `CHECK` constraint or custom type)
+- **Storage**: 1-2 bytes (MySQL), varies (PostgreSQL)
+- **Use cases**: Status fields, categories, types with fixed values
+- **Generators**: Custom generators returning enum values, `weighted` distribution
+
+**Platform differences**:
+
+**MySQL**:
+- Native `ENUM` type: `ENUM('active', 'inactive', 'suspended')`
+- Stored as integer (index of value in list), displayed as string
+- Efficient storage (1-2 bytes regardless of string length)
+- Column-level definition (part of `CREATE TABLE`)
+
+**PostgreSQL**:
+- **No column-level `ENUM`** syntax (requires custom type or `CHECK` constraint)
+- **Custom type approach** (requires `CREATE TYPE` statement):
+  ```sql
+  CREATE TYPE status_enum AS ENUM ('active', 'inactive', 'suspended');
+  ```
+  Then use in column: `status status_enum`
+- **CHECK constraint approach** (column-level):
+  ```sql
+  status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'suspended'))
+  ```
+
+**SourceBox approach**: Schemas using `enum` types will:
+1. **MySQL**: Generate native `ENUM` column
+2. **PostgreSQL**: Generate `VARCHAR(n) CHECK (...)` constraint (no custom types)
+
+This ensures cross-platform compatibility without requiring separate PostgreSQL setup steps.
+
+**Example (MySQL format)**:
+```json
+{
+  "name": "status",
+  "type": "enum('active', 'inactive', 'suspended')",
+  "nullable": false,
+  "generator": "weighted",
+  "distribution": {
+    "type": "weighted",
+    "params": {
+      "values": [
+        {"value": "active", "weight": 0.7},
+        {"value": "inactive", "weight": 0.2},
+        {"value": "suspended", "weight": 0.1}
+      ]
+    }
+  },
+  "description": "Account status"
+}
+```
+
+**PostgreSQL translation**:
+```sql
+-- SourceBox generates this for PostgreSQL:
+status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'inactive', 'suspended'))
+```
+
+**Example (loan status)**:
+```json
+{
+  "name": "loan_status",
+  "type": "enum('pending', 'approved', 'disbursed', 'paid_off', 'delinquent', 'default')",
+  "nullable": false,
+  "generator": "weighted",
+  "distribution": {
+    "type": "weighted",
+    "params": {
+      "values": [
+        {"value": "approved", "weight": 0.4},
+        {"value": "disbursed", "weight": 0.3},
+        {"value": "paid_off", "weight": 0.2},
+        {"value": "pending", "weight": 0.05},
+        {"value": "delinquent", "weight": 0.04},
+        {"value": "default", "weight": 0.01}
+      ]
+    }
+  },
+  "description": "Loan lifecycle status"
+}
+```
+
+#### Enum Best Practices
+
+**1. Format**:
+- Use MySQL `ENUM` syntax: `enum('value1', 'value2', ...)`
+- Single quotes around values: `enum('active', 'inactive')`
+- No spaces around commas: `enum('a','b','c')` (consistent formatting)
+
+**2. Value naming**:
+- Use lowercase with underscores: `paid_off`, `not_started`
+- Avoid special characters (except underscore)
+- Keep values short (enum values are stored repeatedly)
+
+**3. Length considerations**:
+- Parser calculates max value length for PostgreSQL `VARCHAR(n)`
+- Example: `enum('active', 'inactive')` → `VARCHAR(8)` (longest value)
+
+**4. When to use enum**:
+- Fixed set of values unlikely to change (statuses, types, categories)
+- Small number of values (2-10 recommended)
+- Values used repeatedly across many rows
+
+**5. When NOT to use enum**:
+- Values may change frequently (use lookup table instead)
+- Large number of values (>20) (use lookup table instead)
+- Values need descriptions/metadata (use lookup table instead)
+- Schema needs to be fully database-agnostic (use `VARCHAR` + `CHECK` explicitly)
+
+**6. Migration considerations**:
+- Adding enum values requires `ALTER TABLE` (can be expensive)
+- Removing enum values requires careful migration
+- Consider using `VARCHAR` + `CHECK` for evolving value sets
+
+---
+
+### Type Compatibility Matrix
+
+This matrix documents how SourceBox data types map to MySQL and PostgreSQL, including platform-specific notes and fallback behavior.
+
+| SourceBox Type | MySQL | PostgreSQL | Notes |
+|----------------|-------|------------|-------|
+| **Integer Types** |
+| `int` | `INT` | `INTEGER` | Identical behavior |
+| `bigint` | `BIGINT` | `BIGINT` | Identical behavior |
+| `smallint` | `SMALLINT` | `SMALLINT` | Identical behavior |
+| `tinyint` | `TINYINT` | `SMALLINT` | PostgreSQL fallback (wider range) |
+| **Decimal Types** |
+| `decimal(p,s)` | `DECIMAL(p,s)` | `DECIMAL(p,s)` | Identical behavior (alias `NUMERIC`) |
+| `float` | `FLOAT` | `REAL` | Equivalent precision (~7 digits) |
+| `double` | `DOUBLE` | `DOUBLE PRECISION` | Identical behavior |
+| **String Types** |
+| `varchar(n)` | `VARCHAR(n)` | `VARCHAR(n)` | Identical behavior |
+| `text` | `TEXT` | `TEXT` | MySQL 64KB limit, PostgreSQL 1GB |
+| `char(n)` | `CHAR(n)` | `CHAR(n)` | Identical behavior (space-padded) |
+| **Date/Time Types** |
+| `date` | `DATE` | `DATE` | Different ranges, same format |
+| `datetime` | `DATETIME` | `TIMESTAMP` | MySQL no TZ, PostgreSQL no TZ |
+| `timestamp` | `TIMESTAMP` | `TIMESTAMPTZ` | MySQL UTC conversion, PostgreSQL TZ-aware |
+| **Boolean Type** |
+| `boolean` | `TINYINT(1)` | `BOOLEAN` | MySQL 0/1, PostgreSQL TRUE/FALSE |
+| **JSON Types** |
+| `json` | `JSON` | `JSON` | MySQL binary optimized, PostgreSQL text |
+| `jsonb` | `JSON` | `JSONB` | **Fallback to `JSON` in MySQL** |
+| **Enum Types** |
+| `enum('a','b')` | `ENUM('a','b')` | `VARCHAR(n) CHECK` | PostgreSQL uses CHECK constraint |
+
+#### Platform-Specific Compatibility Notes
+
+**MySQL → PostgreSQL**:
+- `TINYINT` → `SMALLINT` (wider range, same behavior)
+- `DATETIME` → `TIMESTAMP` (equivalent, both no timezone)
+- `TIMESTAMP` → `TIMESTAMPTZ` (both timezone-aware)
+- `BOOLEAN` → `BOOLEAN` (syntax differs, semantics identical)
+- `ENUM` → `VARCHAR + CHECK` (no custom types)
+
+**PostgreSQL → MySQL**:
+- `JSONB` → `JSON` (loses binary optimization, keeps functionality)
+- `TIMESTAMP` → `DATETIME` (if no timezone needed)
+- `TIMESTAMPTZ` → `TIMESTAMP` (timezone-aware)
+- `BOOLEAN` → `TINYINT(1)` (0/1 instead of TRUE/FALSE)
+
+**Unsupported Types** (not in common subset):
+- MySQL-specific: `TINYTEXT`, `MEDIUMTEXT`, `LONGTEXT`, `YEAR`, `SET`, `BIT(n > 1)`
+- PostgreSQL-specific: `SERIAL`, `BIGSERIAL`, `UUID`, `INET`, `CIDR`, `MACADDR`, `ARRAY`, `HSTORE`, `JSONPATH`
+- Spatial types: `GEOMETRY`, `POINT`, `LINESTRING`, etc. (future expansion)
+
+#### Schema Author Guidance
+
+**For maximum portability**:
+1. Use types from the common subset (avoid platform-specific types)
+2. Test schemas on both MySQL and PostgreSQL before releasing
+3. Document any platform-specific behavior in schema descriptions
+4. Use `json` (not `jsonb`) for cross-platform compatibility
+5. Avoid MySQL `TIMESTAMP` for dates outside 1970-2038 range
+
+**For platform-specific optimization**:
+1. Use `jsonb` in PostgreSQL-only schemas (faster querying)
+2. Use `ENUM` in MySQL-only schemas (efficient storage)
+3. Document platform requirements in schema metadata
+4. Consider providing separate schema variants for each platform
+
+**Parser validation**:
+- Parser rejects unsupported types (e.g., `UUID`, `SERIAL`, `INET`)
+- Parser validates type parameters (e.g., `varchar(n)` requires `n`)
+- Parser enforces `decimal(p,s)` constraints (`s <= p`)
+- Parser detects platform-specific types and warns/rejects
+
+---
+
+### Data Type Best Practices Summary
+
+**1. Choose types based on semantics, not just storage**:
+- Currency → `decimal(10,2)` (exact precision)
+- Measurements → `float` or `double` (approximate precision)
+- IDs → `int` or `bigint` (depending on scale)
+- Flags → `boolean` (not `TINYINT` or `INT`)
+
+**2. Be explicit about size/precision**:
+- Always specify: `varchar(255)`, `decimal(10,2)`, `char(2)`
+- Never omit: `varchar` (invalid), `decimal` (invalid)
+
+**3. Consider platform differences**:
+- Use common subset for portability
+- Document platform-specific behavior
+- Test on both MySQL and PostgreSQL
+
+**4. Match generators to types**:
+- String types → `email`, `full_name`, custom string generators
+- Integer types → `int_range`, custom integer generators
+- Decimal types → `decimal_range`, `float_range`
+- Date types → `date_of_birth`, `timestamp_past`, `date_between`
+- Boolean → `boolean_random`
+- JSON → `json_object` (custom)
+- Enum → `weighted` distribution
+
+**5. Document type choices**:
+- Explain why `decimal` vs `float` (currency vs measurement)
+- Document value ranges, units, constraints
+- Note platform-specific behavior (e.g., "Uses PostgreSQL `JSONB` for performance")
+
+**6. Validate before generating**:
+- Parser validates types against allowlist
+- Parser checks type parameters (length, precision, scale)
+- Parser ensures generator compatibility with types
+
+---
+
+_End of Supported Data Types section._
 
 ---
 

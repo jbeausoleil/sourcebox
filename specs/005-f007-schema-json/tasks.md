@@ -120,15 +120,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Document built-in personal data generators in schema-spec.md (first_name, last_name, full_name, email, phone, address, ssn, date_of_birth)
-- [ ] T029 [P] [US3] Document built-in company data generators in schema-spec.md (company_name, job_title, company_email, domain)
-- [ ] T030 [P] [US3] Document built-in date/time generators in schema-spec.md (timestamp_past, timestamp_future, date_between with parameters)
-- [ ] T031 [P] [US3] Document built-in numeric generators in schema-spec.md (int_range, float_range, decimal_range)
-- [ ] T032 [US3] Document custom generator pattern (how schemas define custom generators like credit_score, loan_amount)
-- [ ] T033 [US3] Document generator_params structure and format
-- [ ] T034 [US3] Document distribution types: uniform (min, max), normal (mean, std_dev, min, max), lognormal (median, min, max), weighted (values array), ranges (ranges array)
-- [ ] T035 [US3] Add copyable examples for each distribution type with realistic use cases
-- [ ] T036 [US3] Document parameter types and validation (required vs optional parameters)
+- [X] T028 [P] [US3] Document built-in personal data generators in schema-spec.md (first_name, last_name, full_name, email, phone, address, ssn, date_of_birth)
+- [X] T029 [P] [US3] Document built-in company data generators in schema-spec.md (company_name, job_title, company_email, domain)
+- [X] T030 [P] [US3] Document built-in date/time generators in schema-spec.md (timestamp_past, timestamp_future, date_between with parameters)
+- [X] T031 [P] [US3] Document built-in numeric generators in schema-spec.md (int_range, float_range, decimal_range)
+- [X] T032 [US3] Document custom generator pattern (how schemas define custom generators like credit_score, loan_amount)
+- [X] T033 [US3] Document generator_params structure and format
+- [X] T034 [US3] Document distribution types: uniform (min, max), normal (mean, std_dev, min, max), lognormal (median, min, max), weighted (values array), ranges (ranges array)
+- [X] T035 [US3] Add copyable examples for each distribution type with realistic use cases
+- [X] T036 [US3] Document parameter types and validation (required vs optional parameters)
 
 **Checkpoint**: Generator documentation is complete - developers understand all available generators and how to configure them
 
@@ -146,12 +146,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T037 [US5] Document semantic versioning (semver) strategy in schema-spec.md
-- [ ] T038 [US5] Define major version rules (breaking changes: table removal, type changes, foreign key changes)
-- [ ] T039 [US5] Define minor version rules (backward-compatible: new tables, new columns, new generators)
-- [ ] T040 [US5] Define patch version rules (bug fixes: distribution improvements, parameter tuning, docs updates)
-- [ ] T041 [US5] Add versioning examples (when to bump 1.0.0 → 1.1.0 vs 1.0.0 → 2.0.0)
-- [ ] T042 [US5] Document backward compatibility guidelines for minor versions
+- [X] T037 [US5] Document semantic versioning (semver) strategy in schema-spec.md
+- [X] T038 [US5] Define major version rules (breaking changes: table removal, type changes, foreign key changes)
+- [X] T039 [US5] Define minor version rules (backward-compatible: new tables, new columns, new generators)
+- [X] T040 [US5] Define patch version rules (bug fixes: distribution improvements, parameter tuning, docs updates)
+- [X] T041 [US5] Add versioning examples (when to bump 1.0.0 → 1.1.0 vs 1.0.0 → 2.0.0)
+- [X] T042 [US5] Document backward compatibility guidelines for minor versions
 
 **Checkpoint**: Versioning strategy is documented - schema maintainers understand how to evolve schemas safely
 
@@ -165,14 +165,14 @@
 
 ### Implementation
 
-- [ ] T043 [P] [Cross] Document integer types in schema-spec.md (int, bigint, smallint, tinyint)
-- [ ] T044 [P] [Cross] Document decimal types in schema-spec.md (decimal(p,s), float, double)
-- [ ] T045 [P] [Cross] Document string types in schema-spec.md (varchar(n), text, char(n))
-- [ ] T046 [P] [Cross] Document date/time types in schema-spec.md (date, datetime, timestamp)
-- [ ] T047 [P] [Cross] Document boolean type in schema-spec.md (boolean for PostgreSQL, bit for MySQL)
-- [ ] T048 [P] [Cross] Document JSON types in schema-spec.md (json for both, jsonb for PostgreSQL, document fallback behavior)
-- [ ] T049 [P] [Cross] Document enum types in schema-spec.md (enum format, MySQL vs PostgreSQL differences)
-- [ ] T050 [Cross] Add platform-specific guidance (type compatibility matrix for MySQL and PostgreSQL)
+- [X] T043 [P] [Cross] Document integer types in schema-spec.md (int, bigint, smallint, tinyint)
+- [X] T044 [P] [Cross] Document decimal types in schema-spec.md (decimal(p,s), float, double)
+- [X] T045 [P] [Cross] Document string types in schema-spec.md (varchar(n), text, char(n))
+- [X] T046 [P] [Cross] Document date/time types in schema-spec.md (date, datetime, timestamp)
+- [X] T047 [P] [Cross] Document boolean type in schema-spec.md (boolean for PostgreSQL, bit for MySQL)
+- [X] T048 [P] [Cross] Document JSON types in schema-spec.md (json for both, jsonb for PostgreSQL, document fallback behavior)
+- [X] T049 [P] [Cross] Document enum types in schema-spec.md (enum format, MySQL vs PostgreSQL differences)
+- [X] T050 [Cross] Add platform-specific guidance (type compatibility matrix for MySQL and PostgreSQL)
 
 **Checkpoint**: Data types are fully documented - developers know what types are supported and how they map across databases
 
