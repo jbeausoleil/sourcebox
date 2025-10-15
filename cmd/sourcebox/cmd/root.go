@@ -12,6 +12,7 @@ import (
 // Global flag variables for output control
 var verbose bool
 var quiet bool
+var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -54,4 +55,5 @@ func init() {
 	// Global flags available to all commands
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path (default: ~/.sourcebox.yaml)")
 }

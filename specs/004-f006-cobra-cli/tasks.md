@@ -118,10 +118,10 @@ Project uses standard Go CLI structure:
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Add config flag variable in `cmd/sourcebox/cmd/root.go`: `var cfgFile string`
-- [ ] T021 [US4] Add PersistentFlag in root command init():
+- [X] T020 [US4] Add config flag variable in `cmd/sourcebox/cmd/root.go`: `var cfgFile string`
+- [X] T021 [US4] Add PersistentFlag in root command init():
   - `rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path (default: ~/.sourcebox.yaml)")`
-- [ ] T022 [US4] Verify config flag parses correctly: `go run ./cmd/sourcebox --config=/tmp/test.yaml --help`
+- [X] T022 [US4] Verify config flag parses correctly: `go run ./cmd/sourcebox --config=/tmp/test.yaml --help`
 
 **Checkpoint**: All P1, P2, and P3 user stories should now be independently functional
 
