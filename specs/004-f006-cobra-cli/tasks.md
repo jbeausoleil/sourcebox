@@ -232,6 +232,33 @@ Project uses standard Go CLI structure:
 
 ---
 
+## Phase 10: Technical Debt Resolution (Post-Completion)
+
+**Purpose**: Address technical debt and documentation gaps identified during implementation
+
+- [X] T054 [Technical Debt] Investigate and resolve test state pollution in cmd package
+  - **Issue**: Tests pass individually but some fail when run together via `go test ./cmd/sourcebox/cmd/...`
+  - **Impact**: CI reliability risk, potential flaky tests
+  - **Options**:
+    1. Fix: Investigate shared state, add test isolation (estimate: 1-2 hours)
+    2. Accept: Document as known limitation, tests pass in CI isolation
+  - **Decision required**: Fix or accept with justification
+  - **Source**: Session T023-T038 risk audit
+
+- [X] T055 [Documentation] Document test coverage calculation methodology
+  - **Issue**: Coverage shows 76.2% (includes main.go) vs 84.2% (cmd package only)
+  - **Files**: Create `docs/testing.md` or add section to existing docs
+  - **Content**:
+    - Explain main.go exclusion rationale (untestable entry point)
+    - Document coverage targets per package type
+    - Clarify which metric to use for constitutional compliance (>80%)
+  - **Estimate**: 0.5 hours
+  - **Source**: Session T045-T053 risk audit
+
+**Checkpoint**: Technical debt either resolved or explicitly accepted with documentation
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -365,8 +392,9 @@ Tasks mapped to success criteria from spec.md:
 - **Phase 7 (US5 - Commands)**: 16 tasks
 - **Phase 8 (Tests)**: 6 tasks
 - **Phase 9 (Polish)**: 9 tasks
+- **Phase 10 (Technical Debt)**: 2 tasks
 
-**Total**: 53 tasks
+**Total**: 55 tasks
 
 **MVP Scope** (P1 stories only): T001-T015, T023-T038, T045-T053 = 42 tasks
 
