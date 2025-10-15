@@ -18,6 +18,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-14
 - Cobra v1.8+ (CLI framework) (004-f006-cobra-cli)
 - cobra-cli v1.3+ (CLI scaffolding tool) (004-f006-cobra-cli)
 - testify (testing assertions) (004-f006-cobra-cli)
+- Go 1.21+ (existing project configuration from F003/F004) (006-f008-schema-parser)
+- Schemas loaded from files (development) or `embed.FS` (production binary) (006-f008-schema-parser)
 
 ## Project Structure
 ```
@@ -276,14 +278,9 @@ SourceBox uses JSON-based schema definitions to describe database schemas, data 
 - Enum: `enum('val1','val2')` (MySQL format)
 
 ## Recent Changes
+- 006-f008-schema-parser: Added Go 1.21+ (existing project configuration from F003/F004)
+- 006-f008-schema-parser: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 005-f007-schema-json: Completed schema JSON format specification (schema_version 1.0)
-- 005-f007-schema-json: Added generator types (built-in: personal/company/date/numeric, custom: per-schema)
-- 005-f007-schema-json: Added distribution types (uniform, normal, lognormal, weighted, ranges)
-- 005-f007-schema-json: Defined foreign key dual representation (inline for code, explicit for docs)
-- 005-f007-schema-json: Established semantic versioning strategy (major/minor/patch)
-- 005-f007-schema-json: Documented Tier 1 complexity targets (<5,000 records, <30s)
-- 004-f006-cobra-cli: Added Cobra v1.8+ CLI framework integration
-- 004-f006-cobra-cli: Added cobra-cli v1.3+ scaffolding tool
 
 ## Known Technical Debt (004-f006-cobra-cli)
 - T054: Test state pollution (tests pass individually, some fail in full suite) - decision pending
