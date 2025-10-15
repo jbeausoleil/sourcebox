@@ -703,6 +703,13 @@ func TestRootCommandFlagsIntegration(t *testing.T) {
 	require.NotNil(t, quietFlag, "quiet flag should be defined")
 	assert.Equal(t, "q", quietFlag.Shorthand, "quiet shorthand should be 'q'")
 	assert.Equal(t, "suppress non-error output", quietFlag.Usage, "quiet usage text should match")
+
+	// Check that config flag is defined (T020)
+	configFlag := rootCmd.PersistentFlags().Lookup("config")
+	require.NotNil(t, configFlag, "config flag should be defined")
+	assert.Equal(t, "", configFlag.Shorthand, "config flag should not have a shorthand")
+	assert.Contains(t, configFlag.Usage, "config file path", "config usage text should mention config file path")
+	assert.Contains(t, configFlag.Usage, "~/.sourcebox.yaml", "config usage text should mention default path")
 }
 
 // TestFlagDefaultValues verifies that flags have the correct default values.
@@ -716,6 +723,287 @@ func TestFlagDefaultValues(t *testing.T) {
 	quietFlag := rootCmd.PersistentFlags().Lookup("quiet")
 	require.NotNil(t, quietFlag, "quiet flag should be defined")
 	assert.Equal(t, "false", quietFlag.DefValue, "quiet should default to false")
+
+	// Check config flag default (T021)
+	configFlag := rootCmd.PersistentFlags().Lookup("config")
+	require.NotNil(t, configFlag, "config flag should be defined")
+	assert.Equal(t, "", configFlag.DefValue, "config should default to empty string")
+}
+
+// TestConfigFlagParsing verifies that the --config flag parses correctly
+// with various path formats (T021).
+func TestConfigFlagParsing(t *testing.T) {
+	tests := []struct {
+		name          string
+		args          []string
+		expectedValue string
+	}{
+		{
+			name:          "config flag with absolute path",
+			args:          []string{"--config", "/etc/sourcebox/config.yaml"},
+			expectedValue: "/etc/sourcebox/config.yaml",
+		},
+		{
+			name:          "config flag with relative path",
+			args:          []string{"--config", "./config.yaml"},
+			expectedValue: "./config.yaml",
+		},
+		{
+			name:          "config flag with home directory",
+			args:          []string{"--config", "~/.sourcebox.yaml"},
+			expectedValue: "~/.sourcebox.yaml",
+		},
+		{
+			name:          "config flag with equals syntax",
+			args:          []string{"--config=/tmp/config.yaml"},
+			expectedValue: "/tmp/config.yaml",
+		},
+		{
+			name:          "no config flag provided",
+			args:          []string{},
+			expectedValue: "",
+		},
+		{
+			name:          "config flag with spaces in path",
+			args:          []string{"--config", "/path/with spaces/config.yaml"},
+			expectedValue: "/path/with spaces/config.yaml",
+		},
+		{
+			name:          "config flag with json extension",
+			args:          []string{"--config", "./config.json"},
+			expectedValue: "./config.json",
+		},
+		{
+			name:          "config flag with other args",
+			args:          []string{"--config", "/tmp/config.yaml", "somecommand"},
+			expectedValue: "/tmp/config.yaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+			cfgFile = ""
+
+			// Create a fresh command to avoid state pollution
+			cmd := &cobra.Command{
+				Use: "sourcebox",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op, we're just testing flag parsing
+				},
+			}
+			cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path")
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			// Execute command
+			err := cmd.Execute()
+
+			// We expect no error for valid flag combinations
+			// (invalid commands are fine, we're testing flag parsing)
+			if err != nil && !strings.Contains(err.Error(), "unknown command") {
+				require.NoError(t, err, "Unexpected error: %v", err)
+			}
+
+			// Verify flag value
+			assert.Equal(t, tt.expectedValue, cfgFile,
+				"config flag should be set to expected value")
+		})
+	}
+}
+
+// TestConfigFlagInHelp verifies that the config flag appears in help output (T020).
+func TestConfigFlagInHelp(t *testing.T) {
+	// Reset flags
+	verbose = false
+	quiet = false
+	cfgFile = ""
+
+	// Capture help output
+	buf := new(bytes.Buffer)
+	rootCmd.SetOut(buf)
+	rootCmd.SetErr(buf)
+	rootCmd.SetArgs([]string{"--help"})
+
+	err := rootCmd.Execute()
+	require.NoError(t, err, "Help command should not error")
+
+	output := buf.String()
+
+	// Verify config flag appears in help
+	assert.Contains(t, output, "--config", "Help should contain --config flag")
+	assert.Contains(t, output, "config file path", "Help should contain config flag description")
+	assert.Contains(t, output, "~/.sourcebox.yaml", "Help should contain default config path in description")
+}
+
+// TestConfigFlagPersistence verifies that config flag is properly registered
+// as a persistent flag and works with subcommands (T022).
+func TestConfigFlagPersistence(t *testing.T) {
+	tests := []struct {
+		name          string
+		args          []string
+		expectedValue string
+	}{
+		{
+			name:          "config flag before subcommand",
+			args:          []string{"--config", "/tmp/config.yaml", "subcommand"},
+			expectedValue: "/tmp/config.yaml",
+		},
+		{
+			name:          "config flag after subcommand",
+			args:          []string{"subcommand", "--config", "/tmp/config.yaml"},
+			expectedValue: "/tmp/config.yaml",
+		},
+		{
+			name:          "config with verbose and quiet flags",
+			args:          []string{"--config", "/tmp/config.yaml", "-v", "-q", "subcommand"},
+			expectedValue: "/tmp/config.yaml",
+		},
+		{
+			name:          "config flag interleaved with other flags",
+			args:          []string{"-v", "--config", "/tmp/config.yaml", "-q"},
+			expectedValue: "/tmp/config.yaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+			cfgFile = ""
+
+			// Create root command with persistent flags
+			rootCmd := &cobra.Command{
+				Use: "sourcebox",
+			}
+			rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path")
+			rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+			rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+
+			// Add a subcommand
+			subCmd := &cobra.Command{
+				Use: "subcommand",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op, we're testing flag inheritance
+				},
+			}
+			rootCmd.AddCommand(subCmd)
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			rootCmd.SetOut(buf)
+			rootCmd.SetErr(buf)
+			rootCmd.SetArgs(tt.args)
+
+			// Execute command
+			err := rootCmd.Execute()
+			require.NoError(t, err, "Unexpected error: %v", err)
+
+			// Verify config flag was parsed correctly
+			assert.Equal(t, tt.expectedValue, cfgFile,
+				"config flag should be set to expected value")
+		})
+	}
+}
+
+// TestAllGlobalFlagsTogether verifies that all three global flags
+// (verbose, quiet, config) work together correctly.
+func TestAllGlobalFlagsTogether(t *testing.T) {
+	tests := []struct {
+		name            string
+		args            []string
+		expectedVerbose bool
+		expectedQuiet   bool
+		expectedConfig  string
+	}{
+		{
+			name:            "all three flags together",
+			args:            []string{"--verbose", "--quiet", "--config", "/tmp/config.yaml"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+		{
+			name:            "all flags with short forms where available",
+			args:            []string{"-v", "-q", "--config", "/tmp/config.yaml"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+		{
+			name:            "combined short flags with config",
+			args:            []string{"-vq", "--config=/tmp/config.yaml"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+		{
+			name:            "only config flag",
+			args:            []string{"--config", "/tmp/config.yaml"},
+			expectedVerbose: false,
+			expectedQuiet:   false,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+		{
+			name:            "verbose and config",
+			args:            []string{"-v", "--config", "/tmp/config.yaml"},
+			expectedVerbose: true,
+			expectedQuiet:   false,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+		{
+			name:            "quiet and config",
+			args:            []string{"-q", "--config", "/tmp/config.yaml"},
+			expectedVerbose: false,
+			expectedQuiet:   true,
+			expectedConfig:  "/tmp/config.yaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+			cfgFile = ""
+
+			// Create a fresh command
+			cmd := &cobra.Command{
+				Use: "sourcebox",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op
+				},
+			}
+			cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+			cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+			cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path")
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			// Execute command
+			err := cmd.Execute()
+			require.NoError(t, err, "Unexpected error: %v", err)
+
+			// Verify all flags
+			assert.Equal(t, tt.expectedVerbose, verbose,
+				"verbose flag should be set to expected value")
+			assert.Equal(t, tt.expectedQuiet, quiet,
+				"quiet flag should be set to expected value")
+			assert.Equal(t, tt.expectedConfig, cfgFile,
+				"config flag should be set to expected value")
+		})
+	}
 }
 
 // TestExecuteFunction verifies that Execute() function works correctly.

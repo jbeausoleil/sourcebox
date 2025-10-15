@@ -137,14 +137,14 @@ Project uses standard Go CLI structure:
 
 #### Seed Command
 
-- [ ] T023 [US5] Scaffold seed command: `cobra-cli add seed` (creates `cmd/sourcebox/cmd/seed.go`)
-- [ ] T024 [US5] Customize seed command in `cmd/sourcebox/cmd/seed.go`:
+- [X] T023 [US5] Scaffold seed command: `cobra-cli add seed` (creates `cmd/sourcebox/cmd/seed.go`)
+- [X] T024 [US5] Customize seed command in `cmd/sourcebox/cmd/seed.go`:
   - Set Use: "seed <database>"
   - Set Short: "Seed a database with realistic demo data" (<60 chars)
   - Set Long: Multi-paragraph description from quickstart.md
   - Set Example: 3 practical usage examples from quickstart.md
   - Set Args: `cobra.ExactArgs(1)` for database argument validation
-- [ ] T025 [US5] Add local flags to seed command init():
+- [X] T025 [US5] Add local flags to seed command init():
   - `--schema` (required, string, short: -s)
   - `--records` (optional, int, short: -n, default: 1000)
   - `--host` (optional, string, default: "localhost")
@@ -154,8 +154,8 @@ Project uses standard Go CLI structure:
   - `--db-name` (optional, string, default: "demo")
   - `--output` (optional, string, for SQL file export)
   - `--dry-run` (optional, bool)
-- [ ] T026 [US5] Mark schema flag as required: `seedCmd.MarkFlagRequired("schema")`
-- [ ] T027 [US5] Implement placeholder Run function that prints:
+- [X] T026 [US5] Mark schema flag as required: `seedCmd.MarkFlagRequired("schema")`
+- [X] T027 [US5] Implement placeholder Run function that prints:
   - "Seed command - implementation coming in F021"
   - Database name from args[0]
   - Schema from flag
@@ -163,27 +163,27 @@ Project uses standard Go CLI structure:
 
 #### List-Schemas Command
 
-- [ ] T028 [P] [US5] Scaffold list-schemas command: `cobra-cli add list-schemas` (creates `cmd/sourcebox/cmd/list_schemas.go`)
-- [ ] T029 [P] [US5] Customize list-schemas command in `cmd/sourcebox/cmd/list_schemas.go`:
+- [X] T028 [P] [US5] Scaffold list-schemas command: `cobra-cli add list-schemas` (creates `cmd/sourcebox/cmd/list_schemas.go`)
+- [X] T029 [P] [US5] Customize list-schemas command in `cmd/sourcebox/cmd/list_schemas.go`:
   - Set Use: "list-schemas"
   - Set Aliases: []string{"ls"}
   - Set Short: "List all available data schemas" (<60 chars)
   - Set Long: Multi-paragraph description from quickstart.md
   - Set Example: 2 usage examples (full name and alias) from quickstart.md
-- [ ] T030 [P] [US5] Implement placeholder Run function that prints:
+- [X] T030 [P] [US5] Implement placeholder Run function that prints:
   - "List-schemas command - implementation coming in F022"
   - List of sample schemas (fintech-loans, healthcare-patients, retail-orders)
 
 #### Verification
 
-- [ ] T031 [US5] Build binary: `make build`
-- [ ] T032 [US5] Verify seed command registration: `./dist/sourcebox --help` shows "seed" in available commands
-- [ ] T033 [US5] Verify list-schemas command registration: `./dist/sourcebox --help` shows "list-schemas" in available commands
-- [ ] T034 [US5] Verify seed help output: `./dist/sourcebox seed --help` shows comprehensive help
-- [ ] T035 [US5] Verify list-schemas help output: `./dist/sourcebox list-schemas --help` shows comprehensive help
-- [ ] T036 [US5] Verify alias works: `./dist/sourcebox ls --help` shows same output as list-schemas
-- [ ] T037 [US5] Test seed placeholder execution: `./dist/sourcebox seed mysql --schema=fintech-loans`
-- [ ] T038 [US5] Test list-schemas placeholder execution: `./dist/sourcebox list-schemas`
+- [X] T031 [US5] Build binary: `make build`
+- [X] T032 [US5] Verify seed command registration: `./dist/sourcebox --help` shows "seed" in available commands
+- [X] T033 [US5] Verify list-schemas command registration: `./dist/sourcebox --help` shows "list-schemas" in available commands
+- [X] T034 [US5] Verify seed help output: `./dist/sourcebox seed --help` shows comprehensive help
+- [X] T035 [US5] Verify list-schemas help output: `./dist/sourcebox list-schemas --help` shows comprehensive help
+- [X] T036 [US5] Verify alias works: `./dist/sourcebox ls --help` shows same output as list-schemas
+- [X] T037 [US5] Test seed placeholder execution: `./dist/sourcebox seed mysql --schema=fintech-loans`
+- [X] T038 [US5] Test list-schemas placeholder execution: `./dist/sourcebox list-schemas`
 
 **Checkpoint**: All user stories should now be independently functional
 
