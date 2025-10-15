@@ -50,18 +50,17 @@ func TestTypesInstantiation(t *testing.T) {
 		{
 			name: "Column",
 			instance: &Column{
-				Name:          "test_column",
-				Type:          "varchar(255)",
-				Nullable:      false,
-				PrimaryKey:    false,
-				AutoIncrement: false,
-				Default:       nil,
-				Unique:        false,
-				Description:   "Test column",
-				Generator:     "uuid",
-				Distribution:  "uniform",
-				Params:        map[string]interface{}{},
-				ForeignKey:    nil,
+				Name:            "test_column",
+				Type:            "varchar(255)",
+				Nullable:        false,
+				PrimaryKey:      false,
+				AutoIncrement:   false,
+				Default:         nil,
+				Unique:          false,
+				Description:     "Test column",
+				Generator:       "uuid",
+				GeneratorParams: map[string]interface{}{},
+				ForeignKey:      nil,
 			},
 		},
 		{
@@ -146,12 +145,12 @@ func TestColumnWithForeignKey(t *testing.T) {
 	assert.Equal(t, "CASCADE", col.ForeignKey.OnUpdate)
 }
 
-// TestColumnParams verifies that column params can hold various types.
+// TestColumnParams verifies that column generator params can hold various types.
 func TestColumnParams(t *testing.T) {
 	col := Column{
-		Name:   "test_col",
-		Type:   "decimal(10,2)",
-		Params: map[string]interface{}{
+		Name: "test_col",
+		Type: "decimal(10,2)",
+		GeneratorParams: map[string]interface{}{
 			"min":     0.0,
 			"max":     1000.0,
 			"mean":    500.0,
@@ -159,8 +158,8 @@ func TestColumnParams(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, 0.0, col.Params["min"])
-	assert.Equal(t, 1000.0, col.Params["max"])
-	assert.Equal(t, 500.0, col.Params["mean"])
-	assert.Equal(t, 100.0, col.Params["std_dev"])
+	assert.Equal(t, 0.0, col.GeneratorParams["min"])
+	assert.Equal(t, 1000.0, col.GeneratorParams["max"])
+	assert.Equal(t, 500.0, col.GeneratorParams["mean"])
+	assert.Equal(t, 100.0, col.GeneratorParams["std_dev"])
 }

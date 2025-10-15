@@ -18,9 +18,10 @@ type Schema struct {
 
 // SchemaMetadata contains metadata about the schema.
 type SchemaMetadata struct {
-	Industry     string   `json:"industry"`
-	Tags         []string `json:"tags"`
-	TotalRecords int      `json:"total_records"`
+	Industry       string   `json:"industry"`
+	Tags           []string `json:"tags"`
+	TotalRecords   int      `json:"total_records"`
+	ComplexityTier int      `json:"complexity_tier"`
 }
 
 // Table represents a database table definition.
@@ -34,18 +35,17 @@ type Table struct {
 
 // Column represents a database column definition.
 type Column struct {
-	Name          string                 `json:"name"`
-	Type          string                 `json:"type"`
-	Nullable      bool                   `json:"nullable"`
-	PrimaryKey    bool                   `json:"primary_key"`
-	AutoIncrement bool                   `json:"auto_increment"`
-	Default       *string                `json:"default,omitempty"`
-	Unique        bool                   `json:"unique"`
-	Description   string                 `json:"description"`
-	Generator     string                 `json:"generator"`
-	Distribution  string                 `json:"distribution"`
-	Params        map[string]interface{} `json:"params"`
-	ForeignKey    *ForeignKey            `json:"foreign_key,omitempty"`
+	Name            string                 `json:"name"`
+	Type            string                 `json:"type"`
+	Nullable        bool                   `json:"nullable"`
+	PrimaryKey      bool                   `json:"primary_key"`
+	AutoIncrement   bool                   `json:"auto_increment"`
+	Default         *string                `json:"default,omitempty"`
+	Unique          bool                   `json:"unique"`
+	Description     string                 `json:"description"`
+	Generator       string                 `json:"generator"`
+	GeneratorParams map[string]interface{} `json:"generator_params"`
+	ForeignKey      *ForeignKey            `json:"foreign_key,omitempty"`
 }
 
 // ForeignKey represents a foreign key constraint on a column.
@@ -60,6 +60,7 @@ type ForeignKey struct {
 type Index struct {
 	Name    string   `json:"name"`
 	Columns []string `json:"columns"`
+	Type    string   `json:"type"`
 	Unique  bool     `json:"unique"`
 }
 
@@ -79,4 +80,5 @@ type Relationship struct {
 type ValidationRule struct {
 	Rule        string `json:"rule"`
 	Description string `json:"description"`
+	Severity    string `json:"severity"`
 }
