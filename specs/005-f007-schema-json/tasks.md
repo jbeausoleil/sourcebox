@@ -44,13 +44,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Create `schemas/schema-spec.md` with overview section explaining JSON format rationale
-- [ ] T004 [US1] Document schema structure section (schema_version, name, description, author, version, database_type, metadata, tables, relationships, generation_order, validation_rules)
-- [ ] T005 [US1] Document table definition format (name, description, record_count, columns, indexes)
-- [ ] T006 [US1] Document column definition format (name, type, nullable, primary_key, unique, default, generator, generator_params, foreign_key)
-- [ ] T007 [US1] Add copyable JSON examples for each schema element in schema-spec.md
-- [ ] T008 [US1] Document dual versioning strategy (schema_version vs version fields)
-- [ ] T009 [US1] Document generation_order purpose and format (parent tables first)
+- [X] T003 [US1] Create `schemas/schema-spec.md` with overview section explaining JSON format rationale
+- [X] T004 [US1] Document schema structure section (schema_version, name, description, author, version, database_type, metadata, tables, relationships, generation_order, validation_rules)
+- [X] T005 [US1] Document table definition format (name, description, record_count, columns, indexes)
+- [X] T006 [US1] Document column definition format (name, type, nullable, primary_key, unique, default, generator, generator_params, foreign_key)
+- [X] T007 [US1] Add copyable JSON examples for each schema element in schema-spec.md
+- [X] T008 [US1] Document dual versioning strategy (schema_version vs version fields)
+- [X] T009 [US1] Document generation_order purpose and format (parent tables first)
 
 **Checkpoint**: At this point, User Story 1 (Understanding Schema Format) should be complete - developers can understand the basic structure
 
