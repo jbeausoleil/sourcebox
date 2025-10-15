@@ -80,10 +80,10 @@ Project uses standard Go CLI structure:
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Update Makefile to add VERSION variable: `VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")`
-- [ ] T013 [US2] Update Makefile build target to add LDFLAGS: `LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION)"`
-- [ ] T014 [US2] Update Makefile build command to use LDFLAGS: `go build $(LDFLAGS) -o dist/sourcebox ./cmd/sourcebox`
-- [ ] T015 [US2] Build and verify version injection: `make build && ./dist/sourcebox --version`
+- [X] T012 [US2] Update Makefile to add VERSION variable: `VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")`
+- [X] T013 [US2] Update Makefile build target to add LDFLAGS: `LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION)"`
+- [X] T014 [US2] Update Makefile build command to use LDFLAGS: `go build $(LDFLAGS) -o dist/sourcebox ./cmd/sourcebox`
+- [X] T015 [US2] Build and verify version injection: `make build && ./dist/sourcebox --version`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
