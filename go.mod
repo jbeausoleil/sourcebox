@@ -1,3 +1,3 @@
 module github.com/jbeausoleil/sourcebox
 
-go 1.25.2
+go 1.21

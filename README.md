@@ -1,10 +1,13 @@
 # SourceBox
 
-[![Build Status](https://github.com/jbeausoleil/sourcebox/workflows/CI/badge.svg)](https://github.com/jbeausoleil/sourcebox/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org/dl/)
+[![CI](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml/badge.svg)](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jbeausoleil/sourcebox/branch/main/graph/badge.svg)](https://codecov.io/gh/jbeausoleil/sourcebox)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/jbeausoleil/sourcebox)](go.mod)
 
 > Verticalized demo data for developers in 30 seconds
+
+<!-- Test comment for PR workflow validation -->
 
 ## Legal Notice
 
@@ -66,3 +69,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Project Status**: Early development (Week 3 - Foundational Setup)
 
 **Current Focus**: Repository initialization, Go module setup, and project structure
+# Cache Test
