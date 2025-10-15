@@ -23,10 +23,10 @@
 
 **Purpose**: Project initialization and basic Go package structure
 
-- [ ] T001 Create pkg/schema/ directory structure
-- [ ] T002 [P] Create pkg/schema/types.go stub file (Go structs for Schema, Table, Column, ForeignKey, Index, Relationship, ValidationRule)
-- [ ] T003 [P] Create pkg/schema/parser.go stub file (functions: ParseSchema, LoadSchema)
-- [ ] T004 [P] Create pkg/schema/parser_test.go file with package declaration and testify imports
+- [X] T001 Create pkg/schema/ directory structure
+- [X] T002 [P] Create pkg/schema/types.go stub file (Go structs for Schema, Table, Column, ForeignKey, Index, Relationship, ValidationRule)
+- [X] T003 [P] Create pkg/schema/parser.go stub file (functions: ParseSchema, LoadSchema)
+- [X] T004 [P] Create pkg/schema/parser_test.go file with package declaration and testify imports
 
 ---
 
