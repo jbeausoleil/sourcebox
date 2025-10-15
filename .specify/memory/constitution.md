@@ -34,9 +34,9 @@
 
 **Mission**: Provide developers with instant access to realistic, verticalized demo data through CLI tools and Docker images.
 
-**Vision**: Make demo data effortless so developers can focus on building instead of seeding databases. Transform the 5-10 hours per week developers waste on creating demo data into 30 seconds of automated, production-like data generation.
+**Vision**: Make demo data effortless so developers can focus on building instead of seeding databases. Transform the days to weeks developers waste per data provisioning cycle into 30 seconds of automated, production-like data generation.
 
-**Core Problem**: Developers waste 5-10 hours per week creating realistic demo data. Faker is too generic ("John Doe", "Acme Corp"), manual SQL is tedious, and production dumps are a security nightmare. There's no tool for spinning up databases with realistic, verticalized data in 30 seconds.
+**Core Problem**: Developers waste days to weeks provisioning realistic demo data for each environment. Faker is too generic ("John Doe", "Acme Corp"), manual SQL is tedious, and production dumps are a security nightmare. Data provisioning can take 30+ minutes for simple apps or an entire week for complex data masking with referential integrity. There's no tool for spinning up databases with realistic, verticalized data in 30 seconds.
 
 **Target Users**: Backend developers, data engineers, Sales Engineers, QA engineers, DevRel engineers at tech companies building data-intensive applications.
 
@@ -100,11 +100,38 @@ CLI and Docker images MUST be free forever, MIT license, no proprietary extensio
 
 **Rationale**: Open source ensures no employer can claim ownership, enables community contributions, builds trust with developers, and creates viral distribution. Monetization comes from cloud convenience (Phase 2), not from locking down core functionality.
 
+**Research Validation:** Market analysis shows no multi-vertical, open-source, affordable competitor exists. Competitors are either:
+- Free but generic (Faker.js: "John Doe" problem)
+- Specialized but expensive (Tonic: $3K/year, Gretel: $3.5K/year)
+- Open but single-vertical (Synthea: healthcare only)
+
+SourceBox's unique position: Free + Verticalized + Multi-industry = No direct competitor.
+
 **Licensing Requirements**:
 - MIT license for all CLI and Docker code (maximum permissiveness)
 - No CLA (Contributor License Agreement) required — MIT covers it
 - Cloud version source code (Phase 2) MAY be closed source (optional monetization)
 - Schema definitions MUST be open source and community-contributed
+
+#### The Synthea Model: Open Source as Competitive Moat
+
+**Insight from Research:** Synthea (open-source healthcare simulator) became the industry standard NOT despite being free, but BECAUSE it was free. Hospitals, researchers, and developers adopted it universally because there was no barrier to experimentation.
+
+**SourceBox Strategy:** Apply Synthea's model across EVERY vertical (fintech, healthcare, retail, logistics, etc.)
+
+**Why This is a Moat:**
+- Competitors (Tonic, Gretel, Hazy) are proprietary and expensive ($3K-38K/year)
+- Generic tools (Faker.js) are free but unrealistic ("John Doe" problem)
+- Specialized tools (Synthea) are free AND realistic but single-vertical only
+- **SourceBox is the ONLY:** Free + Realistic + Multi-vertical tool
+
+**Competitive Advantages:**
+1. **Viral adoption:** Developers try without budget approval, tell their teams
+2. **Community contributions:** Domain experts contribute schemas (Workday consultants, healthcare engineers)
+3. **Cannot be replicated:** Competitors can't easily open-source proprietary codebases
+4. **Network effects:** More schemas → more users → more contributors → more schemas
+
+**Positioning:** "The Synthea for every industry" - proven model, validated by research
 
 ### VI. Developer-First Design
 
@@ -138,13 +165,36 @@ CLI-first (not web UI), Docker-native (one command to run), zero config (works o
 
 ### 1. Performance (NON-NEGOTIABLE)
 
-- **Database seeding**: < 30 seconds for 1,000 records (measured on 2020 MacBook Pro)
+- **Database seeding**: < 30 seconds for Tier 1 schemas, < 2 minutes for Tier 2, < 5 minutes for Tier 3 (measured on 2020 MacBook Pro)
 - **Docker spin-up**: < 10 seconds from `docker run` to queryable database
 - **CLI install**: < 5 seconds from `npm install -g sourcebox` or `brew install sourcebox`
 - **Memory footprint**: < 100MB RAM for CLI, < 200MB for Docker container
 - **Disk space**: < 50MB per Docker image (compressed)
 
 **Why**: Speed is the core value proposition. Break these thresholds and developers abandon the tool.
+
+#### Performance Tiers by Schema Complexity
+
+**Tier 1 - Simple Schemas** (<30 seconds, MVP focus)
+- 1-5 entities with straightforward relationships
+- Examples: fintech loans, retail orders, basic user profiles
+- Target: < 30 seconds for 1,000 records
+- Use case: Backend developers, quick prototypes
+
+**Tier 2 - Medium Schemas** (<2 minutes, Phase 2)
+- 10-50 entities with moderate complexity
+- Examples: healthcare patients (with visits/prescriptions), SaaS analytics, e-commerce (orders + inventory + customers)
+- Target: < 2 minutes for 1,000 records
+- Use case: Sales Engineers, QA environments
+
+**Tier 3 - Complex Schemas** (<5 minutes, Community-driven)
+- 100+ entities with deep referential integrity
+- Examples: Workday HCM, SAP ERP, enterprise CRM
+- Target: < 5 minutes for complete environment setup
+- Use case: Implementation consultants, enterprise demos
+- **Strategy:** Community-contributed, not MVP scope
+
+**Constitutional Constraint:** The "<30 seconds" requirement applies to **Tier 1 schemas only**. Tier 2/3 schemas may take longer while still providing massive time savings vs manual provisioning (which takes days/weeks).
 
 ### 2. Distribution Channels (REQUIRED)
 
@@ -218,9 +268,28 @@ CLI and Docker MUST be free forever. Cloud version (Phase 2) is optional freemiu
 
 **Monetization Model**:
 - Phase 1: $0 (free forever, open source, MIT license)
-- Phase 2: Freemium SaaS ($0 → $20/mo → $200/mo for cloud-hosted databases)
+- Phase 2: Freemium SaaS with **dual monetization** (cloud-hosted databases + API access)
 - Phase 2 trigger: After MVP validation (1K stars, 10K pulls, NPS 50+)
 - Unit economics: < $2/user/month infra cost (98%+ gross margin target)
+
+**Phase 2 Offerings:**
+
+**A. Hosted Databases** (for persistent demo environments)
+- Pre-seeded databases (Postgres, MySQL) on-demand
+- Persistent URLs: `demo-db-abc123.sourcebox.dev:5432`
+- Team collaboration: Multiple developers share demo environment
+- **Use case:** Sales Engineers with multiple demos per week
+
+**B. API Access** (for programmatic data generation)
+- Generate realistic data via REST API: `POST /api/generate/fintech-loans`
+- Use cases:
+  - E2E testing: Generate test data in CI/CD pipelines
+  - Synthetic data for ML: Train models with realistic data
+  - Load testing: Generate millions of records on-demand
+  - Data masking: Replace production data with synthetic equivalents
+- **Use case:** QA automation, ML engineers, performance testing
+
+**Research Validation:** Tonic ($299/mo), Gretel ($295/mo) both charge premium for API access. Market validates high-margin opportunity.
 
 ### 3. Developer-Centric: CLI-First, Docker-Native
 
@@ -414,11 +483,40 @@ CLI and Docker MUST be free forever. MIT license. No paywalls, no feature gates,
 **Trigger**: Only build cloud version after MVP validation (1K GitHub stars, 10K Docker pulls, NPS 50+)
 
 **Pricing Model**:
-- Free: CLI/Docker (self-hosted, local development)
-- $20/mo: Cloud-hosted databases (Postgres/MySQL on-demand, API access, 10 GB storage)
-- $200/mo: Teams (SSO, collaboration, audit logs, 100 GB storage)
+- **Free Tier:**
+  - CLI/Docker (unlimited, self-hosted)
+  - Community schemas (unlimited)
+  - API: 10K requests/mo (hobbyist/experimentation)
 
-**Unit Economics Target**: < $2/user/month infrastructure cost (98%+ gross margin)
+- **$20/mo Starter:**
+  - 1 hosted database (Postgres or MySQL)
+  - 10 GB storage
+  - API access: 100K requests/mo
+  - Persistent demo URLs
+  - **Target:** Individual Sales Engineers, freelancers, solo developers
+
+- **$50/mo Developer:**
+  - 3 hosted databases
+  - API access: 1M requests/mo (for CI/CD integration)
+  - Priority support
+  - **Target:** QA teams, ML engineers, automation-heavy teams
+
+- **$200/mo Teams:**
+  - 10 hosted databases
+  - API access: 10M requests/mo
+  - 100 GB storage
+  - SSO, team collaboration, audit logs
+  - **Target:** Sales orgs (10-50 SEs), DevRel teams
+
+**Unit Economics Target**:
+- Infrastructure: $2/user/mo (AWS RDS + API gateway)
+- Gross margin: 90% on Starter, 95% on Developer/Teams
+- API calls are near-zero marginal cost (highest margin product)
+
+**Revenue Model at Scale:**
+- 10K free users → 500 paid (5% conversion)
+- 300 Starter ($20) + 100 Developer ($50) + 100 Teams ($200) = **$31K MRR**
+- 95% margin = **$29K gross profit/mo** = sustainable indie business
 
 ### 3. Indie Project (Until $5K MRR or Strong Validation)
 

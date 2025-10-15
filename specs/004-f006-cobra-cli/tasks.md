@@ -195,20 +195,20 @@ Project uses standard Go CLI structure:
 
 **Note**: These tests validate framework behavior, not business logic (commands are placeholders for F021/F022)
 
-- [ ] T039 [P] Create `cmd/sourcebox/cmd/root_test.go`:
+- [X] T039 [P] Create `cmd/sourcebox/cmd/root_test.go`:
   - Test root command help output contains expected text
   - Test version flag displays version correctly
   - Test commands are registered (seed, list-schemas)
-- [ ] T040 [P] Create `cmd/sourcebox/cmd/seed_test.go`:
+- [X] T040 [P] Create `cmd/sourcebox/cmd/seed_test.go`:
   - Test seed help output contains comprehensive information
   - Test required schema flag validation
   - Test flag parsing (valid and invalid combinations)
-- [ ] T041 [P] Create `cmd/sourcebox/cmd/list_schemas_test.go`:
+- [X] T041 [P] Create `cmd/sourcebox/cmd/list_schemas_test.go`:
   - Test list-schemas help output
   - Test alias (ls) works correctly
-- [ ] T042 Run all tests: `go test ./cmd/sourcebox/cmd/... -v`
-- [ ] T043 Check test coverage: `go test ./cmd/sourcebox/cmd/... -coverprofile=coverage.txt && go tool cover -func=coverage.txt`
-- [ ] T044 Verify coverage >80% for cmd/ package (excluding init() and static help text)
+- [X] T042 Run all tests: `go test ./cmd/sourcebox/cmd/... -v`
+- [X] T043 Check test coverage: `go test ./cmd/sourcebox/cmd/... -coverprofile=coverage.txt && go tool cover -func=coverage.txt`
+- [X] T044 Verify coverage >80% for cmd/ package (excluding init() and static help text)
 
 **Checkpoint**: All tests passing, coverage target met
 

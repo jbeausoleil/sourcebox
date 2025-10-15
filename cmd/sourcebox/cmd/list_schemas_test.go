@@ -10,6 +10,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// getTestRootCommand creates a fresh root command for testing to avoid state pollution
+func getTestRootCommand() *cobra.Command {
+	// Reset global flags
+	verbose = false
+	quiet = false
+	cfgFile = ""
+
+	// Create a new root command instance
+	cmd := &cobra.Command{
+		Use:   "sourcebox",
+		Short: rootCmd.Short,
+		Long:  rootCmd.Long,
+	}
+
+	// Add global flags
+	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+	cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path (default: ~/.sourcebox.yaml)")
+
+	// Create a fresh copy of the list-schemas command to avoid state pollution
+	// (listSchemasCmd is a package variable that can be mutated)
+	listCmd := &cobra.Command{
+		Use:     listSchemasCmd.Use,
+		Aliases: listSchemasCmd.Aliases,
+		Short:   listSchemasCmd.Short,
+		Long:    listSchemasCmd.Long,
+		Example: listSchemasCmd.Example,
+		Run:     listSchemasCmd.Run,
+		RunE:    listSchemasCmd.RunE,
+	}
+
+	// Add the list-schemas command
+	cmd.AddCommand(listCmd)
+
+	return cmd
+}
+
 // TestListSchemasCommandRegistration verifies that the list-schemas command
 // is properly registered with the root command.
 func TestListSchemasCommandRegistration(t *testing.T) {
@@ -34,11 +71,12 @@ func TestListSchemasCommandAlias(t *testing.T) {
 
 	// Test that alias actually works by executing through root
 	buf := new(bytes.Buffer)
-	rootCmd.SetOut(buf)
-	rootCmd.SetErr(buf)
-	rootCmd.SetArgs([]string{"ls"})
+	cmd := getTestRootCommand()
+	cmd.SetOut(buf)
+	cmd.SetErr(buf)
+	cmd.SetArgs([]string{"ls"})
 
-	err := rootCmd.Execute()
+	err := cmd.Execute()
 	require.NoError(t, err, "ls alias should execute without error")
 
 	output := buf.String()
@@ -49,11 +87,12 @@ func TestListSchemasCommandAlias(t *testing.T) {
 // comprehensive help text.
 func TestListSchemasCommandHelp(t *testing.T) {
 	buf := new(bytes.Buffer)
-	rootCmd.SetOut(buf)
-	rootCmd.SetErr(buf)
-	rootCmd.SetArgs([]string{"list-schemas", "--help"})
+	cmd := getTestRootCommand()
+	cmd.SetOut(buf)
+	cmd.SetErr(buf)
+	cmd.SetArgs([]string{"list-schemas", "--help"})
 
-	err := rootCmd.Execute()
+	err := cmd.Execute()
 	require.NoError(t, err, "Help command should not error")
 
 	output := buf.String()
@@ -61,10 +100,8 @@ func TestListSchemasCommandHelp(t *testing.T) {
 	// Verify Use field
 	assert.Contains(t, output, "list-schemas", "Help should show command name")
 
-	// Verify Short description
-	assert.Contains(t, output, "List all available data schemas", "Help should contain short description")
-
-	// Verify Long description content
+	// Verify Long description content (Short description only appears in parent command's help, not in --help output)
+	assert.Contains(t, output, "List all available verticalized data schemas", "Help should show long description opening")
 	assert.Contains(t, output, "verticalized", "Help should mention verticalized schemas")
 	assert.Contains(t, output, "fintech", "Help should mention fintech vertical")
 	assert.Contains(t, output, "healthcare", "Help should mention healthcare vertical")
@@ -118,11 +155,12 @@ func TestListSchemasCommandExecution(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
-			rootCmd.SetOut(buf)
-			rootCmd.SetErr(buf)
-			rootCmd.SetArgs(tt.args)
+			cmd := getTestRootCommand()
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
 
-			err := rootCmd.Execute()
+			err := cmd.Execute()
 			require.NoError(t, err, "Command should not error")
 
 			output := buf.String()
@@ -261,19 +299,21 @@ func TestListSchemasCommandInRootHelp(t *testing.T) {
 func TestListSchemasVsLsAlias(t *testing.T) {
 	// Run with full command name
 	buf1 := new(bytes.Buffer)
-	rootCmd.SetOut(buf1)
-	rootCmd.SetErr(buf1)
-	rootCmd.SetArgs([]string{"list-schemas"})
-	err1 := rootCmd.Execute()
+	cmd1 := getTestRootCommand()
+	cmd1.SetOut(buf1)
+	cmd1.SetErr(buf1)
+	cmd1.SetArgs([]string{"list-schemas"})
+	err1 := cmd1.Execute()
 	require.NoError(t, err1, "list-schemas should not error")
 	output1 := buf1.String()
 
 	// Run with alias
 	buf2 := new(bytes.Buffer)
-	rootCmd.SetOut(buf2)
-	rootCmd.SetErr(buf2)
-	rootCmd.SetArgs([]string{"ls"})
-	err2 := rootCmd.Execute()
+	cmd2 := getTestRootCommand()
+	cmd2.SetOut(buf2)
+	cmd2.SetErr(buf2)
+	cmd2.SetArgs([]string{"ls"})
+	err2 := cmd2.Execute()
 	require.NoError(t, err2, "ls should not error")
 	output2 := buf2.String()
 
@@ -285,11 +325,12 @@ func TestListSchemasVsLsAlias(t *testing.T) {
 // placeholder output.
 func TestListSchemasPlaceholderContent(t *testing.T) {
 	buf := new(bytes.Buffer)
-	listSchemasCmd.SetOut(buf)
-	listSchemasCmd.SetErr(buf)
-	listSchemasCmd.SetArgs([]string{})
+	cmd := getTestRootCommand()
+	cmd.SetOut(buf)
+	cmd.SetErr(buf)
+	cmd.SetArgs([]string{"list-schemas"})
 
-	err := listSchemasCmd.Execute()
+	err := cmd.Execute()
 	require.NoError(t, err, "Command should not error")
 
 	output := buf.String()
@@ -340,11 +381,12 @@ func TestListSchemasCommandStructure(t *testing.T) {
 // TestListSchemasHelpVerbose verifies that verbose help includes all details.
 func TestListSchemasHelpVerbose(t *testing.T) {
 	buf := new(bytes.Buffer)
-	listSchemasCmd.SetOut(buf)
-	listSchemasCmd.SetErr(buf)
-	listSchemasCmd.SetArgs([]string{"--help"})
+	cmd := getTestRootCommand()
+	cmd.SetOut(buf)
+	cmd.SetErr(buf)
+	cmd.SetArgs([]string{"list-schemas", "--help"})
 
-	err := listSchemasCmd.Execute()
+	err := cmd.Execute()
 	require.NoError(t, err, "Help should not error")
 
 	output := buf.String()
