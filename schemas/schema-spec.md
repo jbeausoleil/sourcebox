@@ -4578,3 +4578,1627 @@ Here is a complete schema with a realistic `generation_order`:
 ---
 
 _Subsequent sections will be added in tasks T010-T012._
+
+## Built-in Generators
+
+### Overview
+
+SourceBox provides a comprehensive library of built-in data generators that produce realistic, production-quality test data. These generators are available in all schemas without any configuration and cover the most common data generation needs across industries.
+
+**Key features**:
+- **No configuration required**: Use generators by name in column definitions
+- **Realistic data**: Generates plausible values that mimic real-world patterns
+- **Distribution support**: All generators support distribution parameters for fine-grained control
+- **Type-safe**: Generators are compatible with their corresponding database column types
+- **Extensible**: Custom generators can be defined for schema-specific needs
+
+**Generator categories**:
+1. **Personal Data**: Names, contact information, identifiers
+2. **Company Data**: Business names, job titles, corporate emails
+3. **Date/Time**: Timestamps, date ranges, time-based data
+4. **Numeric**: Integers, floats, decimals with various distributions
+
+---
+
+### Personal Data Generators
+
+These generators produce data related to individual people, including names, contact information, and personal identifiers.
+
+#### `first_name`
+
+Generates realistic first names from a diverse pool of common names.
+
+**Type**: `varchar(50)` or `varchar(100)`  
+**Parameters**: None (uses uniform distribution by default)  
+**Example values**: "Sarah", "Michael", "Aisha", "Wei", "Carlos"
+
+```json
+{
+  "name": "first_name",
+  "type": "varchar(50)",
+  "generator": "first_name"
+}
+```
+
+**With distribution** (weighted for common names):
+```json
+{
+  "name": "first_name",
+  "type": "varchar(50)",
+  "generator": "first_name",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "John", "weight": 0.15},
+      {"value": "Mary", "weight": 0.15},
+      {"value": "Michael", "weight": 0.10},
+      {"value": "Sarah", "weight": 0.10},
+      {"value": "Other", "weight": 0.50}
+    ]
+  }
+}
+```
+
+---
+
+#### `last_name`
+
+Generates realistic last names from a diverse pool of common surnames.
+
+**Type**: `varchar(100)`  
+**Parameters**: None (uses uniform distribution by default)  
+**Example values**: "Smith", "Garcia", "Chen", "Patel", "Johnson"
+
+```json
+{
+  "name": "last_name",
+  "type": "varchar(100)",
+  "generator": "last_name"
+}
+```
+
+---
+
+#### `full_name`
+
+Generates complete names in "First Last" format. Combines first and last names intelligently.
+
+**Type**: `varchar(200)`  
+**Parameters**: None  
+**Example values**: "Sarah Johnson", "Michael Chen", "Aisha Patel", "Wei Garcia"
+
+```json
+{
+  "name": "full_name",
+  "type": "varchar(200)",
+  "generator": "full_name"
+}
+```
+
+**Use case**: Customer names, employee names, contact lists
+
+---
+
+#### `email`
+
+Generates realistic email addresses with valid format (username@domain.tld).
+
+**Type**: `varchar(255)`  
+**Parameters**: None  
+**Example values**: "sarah.johnson@example.com", "m.chen@testmail.org", "aisha_p@demo.net"
+
+```json
+{
+  "name": "email",
+  "type": "varchar(255)",
+  "generator": "email",
+  "constraints": ["unique"]
+}
+```
+
+**Format patterns**:
+- `firstname.lastname@domain.com` (most common)
+- `firstinitial.lastname@domain.com`
+- `firstname_lastname@domain.com`
+- `firstnamelastname@domain.com`
+
+**Common domains**: example.com, testmail.org, demo.net, sample.io
+
+---
+
+#### `phone`
+
+Generates phone numbers in US format: (XXX) XXX-XXXX.
+
+**Type**: `varchar(20)`  
+**Parameters**: 
+- `format` (optional): Phone number format pattern
+  - `"us"` (default): (555) 123-4567
+  - `"international"`: +1-555-123-4567
+  - `"digits"`: 5551234567
+
+**Example values**: "(555) 234-5678", "(555) 987-6543"
+
+```json
+{
+  "name": "phone",
+  "type": "varchar(20)",
+  "generator": "phone"
+}
+```
+
+**With custom format**:
+```json
+{
+  "name": "phone_international",
+  "type": "varchar(20)",
+  "generator": "phone",
+  "generator_params": {
+    "format": "international"
+  }
+}
+```
+
+---
+
+#### `address`
+
+Generates complete US-style street addresses.
+
+**Type**: `varchar(500)` or `text`  
+**Parameters**: None  
+**Example values**: "123 Main Street, Apt 4B", "456 Oak Avenue", "789 Elm Boulevard, Suite 200"
+
+```json
+{
+  "name": "street_address",
+  "type": "varchar(500)",
+  "generator": "address"
+}
+```
+
+**Format**: `[Number] [Street Name] [Street Type][, Unit]`
+- Street numbers: 1-9999
+- Street names: Common names (Main, Oak, Maple, Park, etc.)
+- Street types: Street, Avenue, Boulevard, Drive, Lane, Road
+- Units (30% probability): Apt, Suite, Unit
+
+---
+
+#### `ssn`
+
+Generates Social Security Numbers in US format: XXX-XX-XXXX.
+
+**Type**: `varchar(11)` or `char(11)`  
+**Parameters**: None  
+**Example values**: "123-45-6789", "987-65-4321"
+
+```json
+{
+  "name": "ssn",
+  "type": "varchar(11)",
+  "generator": "ssn",
+  "constraints": ["unique"]
+}
+```
+
+**Warning**: Generated SSNs are random and do NOT represent real individuals. Always use constraints to ensure uniqueness in databases with PII requirements.
+
+---
+
+#### `date_of_birth`
+
+Generates birth dates for realistic age distributions.
+
+**Type**: `date`  
+**Parameters**:
+- `min_age` (optional, default: 18): Minimum age in years
+- `max_age` (optional, default: 80): Maximum age in years
+- `distribution` (optional): Age distribution type
+
+**Example values**: "1985-07-15", "1992-03-22", "1978-11-30"
+
+```json
+{
+  "name": "birth_date",
+  "type": "date",
+  "generator": "date_of_birth",
+  "generator_params": {
+    "min_age": 21,
+    "max_age": 65
+  }
+}
+```
+
+**With normal distribution** (realistic workforce ages):
+```json
+{
+  "name": "birth_date",
+  "type": "date",
+  "generator": "date_of_birth",
+  "generator_params": {
+    "min_age": 22,
+    "max_age": 70,
+    "distribution": "normal",
+    "mean": 42,
+    "std_dev": 12
+  }
+}
+```
+
+**Use cases**:
+- Customer demographics (wide age range)
+- Employee records (working age population)
+- Healthcare (age-specific conditions)
+- Age-gated services (min_age enforcement)
+
+---
+
+### Company Data Generators
+
+These generators produce business-related data including company names, job titles, and corporate contact information.
+
+#### `company_name`
+
+Generates realistic company names using common patterns.
+
+**Type**: `varchar(200)`  
+**Parameters**: None  
+**Example values**: "Acme Corporation", "TechVision Inc.", "Global Solutions LLC", "Innovate Systems"
+
+```json
+{
+  "name": "company_name",
+  "type": "varchar(200)",
+  "generator": "company_name"
+}
+```
+
+**Name patterns**:
+- `[Word] Corporation`
+- `[Word] Inc.`
+- `[Word] LLC`
+- `[Word] Systems`
+- `[Word] Solutions`
+- `[Word][Word]` (compound names like "DataVault", "CloudSync")
+
+**Use cases**: B2B customer lists, vendor databases, employer records
+
+---
+
+#### `job_title`
+
+Generates realistic job titles across various industries and seniority levels.
+
+**Type**: `varchar(150)`  
+**Parameters**: 
+- `level` (optional): Seniority level filter
+  - `"entry"`: Junior, Associate, Coordinator
+  - `"mid"`: Senior, Lead, Manager
+  - `"senior"`: Director, VP, C-level
+
+**Example values**: "Senior Software Engineer", "Marketing Manager", "Financial Analyst", "VP of Operations"
+
+```json
+{
+  "name": "job_title",
+  "type": "varchar(150)",
+  "generator": "job_title"
+}
+```
+
+**With level filter** (senior roles only):
+```json
+{
+  "name": "executive_title",
+  "type": "varchar(150)",
+  "generator": "job_title",
+  "generator_params": {
+    "level": "senior"
+  }
+}
+```
+
+**Title categories**:
+- Engineering: Engineer, Developer, Architect, DevOps
+- Management: Manager, Director, VP, President
+- Finance: Analyst, Accountant, Controller, CFO
+- Marketing: Specialist, Manager, Director, CMO
+- Operations: Coordinator, Manager, VP Operations
+- Sales: Representative, Manager, VP Sales
+
+---
+
+#### `company_email`
+
+Generates corporate email addresses using company domain patterns.
+
+**Type**: `varchar(255)`  
+**Parameters**:
+- `domain` (optional): Specific domain to use (default: generates random corporate domain)
+
+**Example values**: "john.doe@acmecorp.com", "sarah.smith@techvision.io", "m.chen@globalsolutions.net"
+
+```json
+{
+  "name": "work_email",
+  "type": "varchar(255)",
+  "generator": "company_email",
+  "constraints": ["unique"]
+}
+```
+
+**With fixed domain**:
+```json
+{
+  "name": "work_email",
+  "type": "varchar(255)",
+  "generator": "company_email",
+  "generator_params": {
+    "domain": "mycompany.com"
+  }
+}
+```
+
+**Format**: `firstname.lastname@companydomain.tld`
+**Common TLDs**: .com, .io, .net, .org, .co
+
+---
+
+#### `domain`
+
+Generates realistic corporate domain names (without protocol).
+
+**Type**: `varchar(100)`  
+**Parameters**: None  
+**Example values**: "acmecorp.com", "techvision.io", "globalsolutions.net"
+
+```json
+{
+  "name": "website",
+  "type": "varchar(100)",
+  "generator": "domain"
+}
+```
+
+**Format**: `[company-name].[tld]`
+**Use cases**: Website fields, email domain references, tenant identifiers in SaaS
+
+---
+
+### Date/Time Generators
+
+These generators produce timestamps, dates, and time-based data with flexible range controls.
+
+#### `timestamp_past`
+
+Generates timestamps in the past relative to the current time.
+
+**Type**: `datetime`, `timestamp`  
+**Parameters**:
+- `max_days_ago` (required): Maximum days in the past
+- `min_days_ago` (optional, default: 0): Minimum days in the past
+
+**Example values**: "2024-01-15 14:32:18", "2024-09-22 09:15:47"
+
+```json
+{
+  "name": "created_at",
+  "type": "timestamp",
+  "generator": "timestamp_past",
+  "generator_params": {
+    "max_days_ago": 365
+  }
+}
+```
+
+**With range** (between 30 and 90 days ago):
+```json
+{
+  "name": "last_login",
+  "type": "timestamp",
+  "generator": "timestamp_past",
+  "generator_params": {
+    "min_days_ago": 30,
+    "max_days_ago": 90
+  }
+}
+```
+
+**Use cases**:
+- Creation timestamps (max_days_ago: 365 for year-old data)
+- Activity logs (max_days_ago: 30 for recent activity)
+- Historical events (max_days_ago: 1825 for 5-year history)
+
+---
+
+#### `timestamp_future`
+
+Generates timestamps in the future relative to the current time.
+
+**Type**: `datetime`, `timestamp`  
+**Parameters**:
+- `max_days_ahead` (required): Maximum days in the future
+- `min_days_ahead` (optional, default: 0): Minimum days in the future
+
+**Example values**: "2025-03-15 10:00:00", "2025-12-31 23:59:59"
+
+```json
+{
+  "name": "due_date",
+  "type": "timestamp",
+  "generator": "timestamp_future",
+  "generator_params": {
+    "max_days_ahead": 180
+  }
+}
+```
+
+**With range** (appointments between 7 and 60 days out):
+```json
+{
+  "name": "appointment_time",
+  "type": "timestamp",
+  "generator": "timestamp_future",
+  "generator_params": {
+    "min_days_ahead": 7,
+    "max_days_ahead": 60
+  }
+}
+```
+
+**Use cases**:
+- Subscription expiration dates
+- Loan maturity dates
+- Scheduled appointments
+- Contract end dates
+
+---
+
+#### `date_between`
+
+Generates dates within a specific date range (absolute dates, not relative).
+
+**Type**: `date`, `datetime`  
+**Parameters**:
+- `start_date` (required): Start date in YYYY-MM-DD format
+- `end_date` (required): End date in YYYY-MM-DD format
+
+**Example values**: "2023-06-15", "2023-09-22", "2023-12-01"
+
+```json
+{
+  "name": "transaction_date",
+  "type": "date",
+  "generator": "date_between",
+  "generator_params": {
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31"
+  }
+}
+```
+
+**Use cases**:
+- Historical data within a specific fiscal year
+- Event dates within a known time window
+- Backdated testing data for specific periods
+
+**Note**: For relative date ranges (e.g., "last 90 days"), use `timestamp_past` or `timestamp_future` instead.
+
+---
+
+### Numeric Generators
+
+These generators produce numeric values with precise control over ranges, precision, and distributions.
+
+#### `int_range`
+
+Generates random integers within a specified range.
+
+**Type**: `int`, `bigint`, `smallint`, `tinyint`  
+**Parameters**:
+- `min` (required): Minimum value (inclusive)
+- `max` (required): Maximum value (inclusive)
+
+**Example values**: 1, 42, 99, 256
+
+```json
+{
+  "name": "quantity",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1,
+    "max": 100
+  }
+}
+```
+
+**With normal distribution** (values cluster around mean):
+```json
+{
+  "name": "age",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "min": 18,
+    "max": 80,
+    "distribution": "normal",
+    "mean": 42,
+    "std_dev": 12
+  }
+}
+```
+
+**Use cases**:
+- Quantities (min: 1, max: 1000)
+- Ages (min: 18, max: 100)
+- Counts (min: 0, max: 1000000)
+- IDs (when not using auto-increment)
+
+---
+
+#### `float_range`
+
+Generates random floating-point numbers within a specified range.
+
+**Type**: `float`, `double`  
+**Parameters**:
+- `min` (required): Minimum value (inclusive)
+- `max` (required): Maximum value (inclusive)
+- `precision` (optional, default: 2): Number of decimal places
+
+**Example values**: 12.45, 99.99, 0.01, 1234.56
+
+```json
+{
+  "name": "price",
+  "type": "float",
+  "generator": "float_range",
+  "generator_params": {
+    "min": 0.01,
+    "max": 9999.99,
+    "precision": 2
+  }
+}
+```
+
+**With lognormal distribution** (naturally skewed data like prices):
+```json
+{
+  "name": "transaction_amount",
+  "type": "float",
+  "generator": "float_range",
+  "generator_params": {
+    "min": 1.00,
+    "max": 10000.00,
+    "precision": 2,
+    "distribution": "lognormal",
+    "median": 50.00
+  }
+}
+```
+
+**Use cases**:
+- Prices (min: 0.01, max: 999999.99, precision: 2)
+- Percentages (min: 0.00, max: 100.00, precision: 2)
+- Measurements (min: 0.0, max: 1000.0, precision: 1)
+
+---
+
+#### `decimal_range`
+
+Generates precise decimal numbers (recommended for financial calculations).
+
+**Type**: `decimal(p,s)`  
+**Parameters**:
+- `min` (required): Minimum value (inclusive)
+- `max` (required): Maximum value (inclusive)
+- `precision` (required): Total digits (must match column definition)
+- `scale` (required): Decimal places (must match column definition)
+
+**Example values**: 1234.56, 99.99, 10000.00
+
+```json
+{
+  "name": "loan_amount",
+  "type": "decimal(10,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1000.00,
+    "max": 50000.00,
+    "precision": 10,
+    "scale": 2
+  }
+}
+```
+
+**With lognormal distribution** (realistic loan amounts):
+```json
+{
+  "name": "loan_amount",
+  "type": "decimal(10,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1000.00,
+    "max": 500000.00,
+    "precision": 10,
+    "scale": 2,
+    "distribution": "lognormal",
+    "median": 15000.00
+  }
+}
+```
+
+**Use cases**:
+- Financial amounts (precision: 10, scale: 2)
+- Interest rates (precision: 5, scale: 4)
+- Currency values (precision: 15, scale: 2)
+
+**Important**: Always use `decimal_range` (not `float_range`) for financial data to avoid floating-point precision errors.
+
+---
+
+### Custom Generators
+
+SourceBox allows schemas to define **custom generators** for industry-specific or domain-specific data that isn't covered by built-in generators. Custom generators extend the generator library on a per-schema basis.
+
+#### When to Use Custom Generators
+
+Use custom generators when:
+- Data is industry-specific (e.g., `credit_score`, `diagnosis_code`, `sku`)
+- Values follow domain-specific rules (e.g., `loan_status`, `risk_tier`)
+- You need repeatable custom logic (e.g., `account_number` with specific format)
+
+**Don't create custom generators for**:
+- Data covered by built-in generators (use those instead)
+- One-off columns (use inline `generator_params` instead)
+- Simple ranges (use `int_range`, `float_range`, `decimal_range`)
+
+---
+
+#### Defining Custom Generators
+
+Custom generators are defined in a **separate `custom_generators` section** at the schema level (sibling to `tables`).
+
+**Schema structure**:
+```json
+{
+  "schema_version": "1.0",
+  "name": "fintech-loans",
+  "tables": [...],
+  "custom_generators": {
+    "credit_score": {
+      "type": "int",
+      "description": "FICO credit score (300-850)",
+      "generator": "int_range",
+      "generator_params": {
+        "min": 300,
+        "max": 850,
+        "distribution": "normal",
+        "mean": 680,
+        "std_dev": 70
+      }
+    },
+    "loan_amount": {
+      "type": "decimal",
+      "description": "Loan principal amount",
+      "generator": "decimal_range",
+      "generator_params": {
+        "min": 1000.00,
+        "max": 500000.00,
+        "precision": 10,
+        "scale": 2,
+        "distribution": "lognormal",
+        "median": 15000.00
+      }
+    }
+  }
+}
+```
+
+**Then reference in columns**:
+```json
+{
+  "name": "credit_score",
+  "type": "int",
+  "generator": "credit_score"
+}
+```
+
+---
+
+#### Custom Generator Structure
+
+Each custom generator definition includes:
+
+1. **`type`** (required): Base data type (`int`, `decimal`, `varchar`, etc.)
+2. **`description`** (required): Human-readable explanation
+3. **`generator`** (required): Underlying built-in generator to use
+4. **`generator_params`** (required): Parameters for the underlying generator
+
+**Example - Loan Status** (categorical):
+```json
+"loan_status": {
+  "type": "varchar(20)",
+  "description": "Current loan status",
+  "generator": "weighted",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "active", "weight": 0.70},
+      {"value": "paid_off", "weight": 0.25},
+      {"value": "delinquent", "weight": 0.05}
+    ]
+  }
+}
+```
+
+**Example - Account Number** (formatted string):
+```json
+"account_number": {
+  "type": "varchar(20)",
+  "description": "10-digit account number with checksum",
+  "generator": "account_number_generator",
+  "generator_params": {
+    "format": "XXXX-XXXX-XX"
+  }
+}
+```
+
+**Example - Risk Tier** (ranges):
+```json
+"risk_tier": {
+  "type": "varchar(10)",
+  "description": "Credit risk classification",
+  "generator": "weighted",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "low", "weight": 0.40},
+      {"value": "medium", "weight": 0.45},
+      {"value": "high", "weight": 0.15}
+    ]
+  }
+}
+```
+
+---
+
+#### Custom Generator Best Practices
+
+**Naming**:
+- Use snake_case: `credit_score`, `loan_amount`, `risk_tier`
+- Be descriptive: `diagnosis_code` not `dx`, `interest_rate` not `rate`
+- Avoid conflicts with built-in generators
+
+**Documentation**:
+- Always include a clear `description`
+- Document units (e.g., "in dollars", "as percentage")
+- Explain distributions if non-obvious
+
+**Reusability**:
+- Define once, use in multiple columns
+- Group related generators (e.g., all fintech generators in one schema)
+- Consider extracting to shared schema library for multi-schema projects
+
+**Validation**:
+- Ensure `type` matches column type
+- Verify `generator_params` are valid for the underlying generator
+- Test generator output before committing schema
+
+**Example - Complete Custom Generator Section**:
+```json
+"custom_generators": {
+  "credit_score": {
+    "type": "int",
+    "description": "FICO credit score (300-850), normally distributed around 680",
+    "generator": "int_range",
+    "generator_params": {
+      "min": 300,
+      "max": 850,
+      "distribution": "normal",
+      "mean": 680,
+      "std_dev": 70
+    }
+  },
+  "loan_amount": {
+    "type": "decimal",
+    "description": "Loan principal in USD, lognormal distribution (median $15k)",
+    "generator": "decimal_range",
+    "generator_params": {
+      "min": 1000.00,
+      "max": 500000.00,
+      "precision": 10,
+      "scale": 2,
+      "distribution": "lognormal",
+      "median": 15000.00
+    }
+  },
+  "interest_rate": {
+    "type": "decimal",
+    "description": "Annual percentage rate (APR), ranges by risk tier",
+    "generator": "decimal_range",
+    "generator_params": {
+      "min": 3.50,
+      "max": 29.99,
+      "precision": 5,
+      "scale": 2,
+      "distribution": "ranges",
+      "ranges": [
+        {"min": 3.50, "max": 7.99, "weight": 0.30},
+        {"min": 8.00, "max": 15.99, "weight": 0.50},
+        {"min": 16.00, "max": 29.99, "weight": 0.20}
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Generator Parameters (`generator_params`)
+
+The `generator_params` object controls how data is generated for a column. It supports both generator-specific parameters and distribution parameters.
+
+#### Structure
+
+```json
+{
+  "generator_params": {
+    // Generator-specific parameters (vary by generator)
+    "min": 1,
+    "max": 100,
+    "precision": 2,
+    
+    // Distribution parameters (optional, apply to most generators)
+    "distribution": "normal",
+    "mean": 50,
+    "std_dev": 15
+  }
+}
+```
+
+#### Generator-Specific Parameters
+
+Each generator has its own required and optional parameters:
+
+**Numeric generators** (`int_range`, `float_range`, `decimal_range`):
+- `min` (required): Minimum value
+- `max` (required): Maximum value
+- `precision` (required for `decimal_range`): Total digits
+- `scale` (required for `decimal_range`): Decimal places
+
+**Date/time generators** (`timestamp_past`, `timestamp_future`):
+- `max_days_ago` / `max_days_ahead` (required)
+- `min_days_ago` / `min_days_ahead` (optional)
+
+**Date range generator** (`date_between`):
+- `start_date` (required): YYYY-MM-DD format
+- `end_date` (required): YYYY-MM-DD format
+
+**Phone generator** (`phone`):
+- `format` (optional): `"us"`, `"international"`, `"digits"`
+
+**Job title generator** (`job_title`):
+- `level` (optional): `"entry"`, `"mid"`, `"senior"`
+
+**Company email generator** (`company_email`):
+- `domain` (optional): Fixed domain name
+
+#### Distribution Parameters
+
+Distribution parameters modify how values are selected within the generator's range. All numeric and date generators support distributions.
+
+**Available distributions**:
+1. **`uniform`** (default): Equal probability across range
+2. **`normal`**: Bell curve distribution
+3. **`lognormal`**: Right-skewed distribution
+4. **`weighted`**: Specific values with probabilities
+5. **`ranges`**: Multiple ranges with weights
+
+See the **Distribution Types** section below for detailed documentation on each distribution.
+
+---
+
+### Distribution Types
+
+Distributions control the statistical pattern of generated values. They transform uniform random generation into realistic data patterns.
+
+**When to use distributions**:
+- **Uniform**: When all values are equally likely (random IDs, equal categories)
+- **Normal**: When values cluster around a mean (heights, test scores, ages)
+- **Lognormal**: When values are naturally right-skewed (incomes, prices, loan amounts)
+- **Weighted**: When specific values have known probabilities (statuses, categories)
+- **Ranges**: When values cluster in tiers or bands (interest rates by risk, pricing tiers)
+
+---
+
+#### Distribution: `uniform`
+
+**Equal probability distribution** across the entire range. Every value between min and max is equally likely.
+
+**Parameters**:
+- `min` (required): Minimum value
+- `max` (required): Maximum value
+
+**Example - Random quantity**:
+```json
+{
+  "name": "quantity",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1,
+    "max": 100,
+    "distribution": "uniform"
+  }
+}
+```
+
+**Visualization**:
+```
+Probability
+    |
+    |  ████████████████████████████
+    |  ████████████████████████████
+    |  ████████████████████████████
+    +------------------------------- Value
+       min                    max
+```
+
+**Use cases**:
+- Random IDs or SKUs
+- Equally probable categories
+- Test data without statistical bias
+- Dice rolls, random selection
+
+**Note**: `uniform` is the default distribution, so you can omit `"distribution": "uniform"` if no other parameters are needed.
+
+---
+
+#### Distribution: `normal`
+
+**Bell curve distribution** where values cluster around a mean with symmetric spread defined by standard deviation.
+
+**Parameters**:
+- `min` (required): Minimum value (hard limit)
+- `max` (required): Maximum value (hard limit)
+- `mean` (required): Center of distribution
+- `std_dev` (required): Standard deviation (spread)
+
+**Example - Credit score** (mean 680, std_dev 70):
+```json
+{
+  "name": "credit_score",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "min": 300,
+    "max": 850,
+    "distribution": "normal",
+    "mean": 680,
+    "std_dev": 70
+  }
+}
+```
+
+**Visualization**:
+```
+Probability
+    |       ████
+    |     ████████
+    |   ████████████
+    |  ██████████████
+    | ████████████████
+    +-------------------------------- Value
+      300   680    850
+           mean
+```
+
+**Distribution characteristics**:
+- 68% of values within 1 std_dev of mean (610-750 for credit scores)
+- 95% of values within 2 std_dev of mean (540-820 for credit scores)
+- 99.7% of values within 3 std_dev of mean (470-850, capped at max)
+
+**Use cases**:
+- Human measurements (height, weight, IQ)
+- Test scores (SAT, GRE, standardized tests)
+- Credit scores (FICO, VantageScore)
+- Age distributions (workforce, customers)
+- Normally distributed natural phenomena
+
+**Best practices**:
+- Set `mean` to the realistic average for your domain
+- Use `std_dev` to control spread (smaller = tighter cluster)
+- Ensure `min` and `max` are far enough from `mean` to avoid truncation (at least 3 std_dev)
+- For credit scores: mean=680, std_dev=70 (US average)
+- For ages: mean=42, std_dev=12 (workforce)
+- For test scores: mean=100, std_dev=15 (IQ scale)
+
+---
+
+#### Distribution: `lognormal`
+
+**Right-skewed distribution** where most values are low with a long tail of high values. Natural for data that can't be negative and has multiplicative effects (prices, incomes, sizes).
+
+**Parameters**:
+- `min` (required): Minimum value (hard limit)
+- `max` (required): Maximum value (hard limit)
+- `median` (required): Middle value (50th percentile)
+
+**Example - Loan amount** (median $15,000):
+```json
+{
+  "name": "loan_amount",
+  "type": "decimal(10,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1000.00,
+    "max": 500000.00,
+    "precision": 10,
+    "scale": 2,
+    "distribution": "lognormal",
+    "median": 15000.00
+  }
+}
+```
+
+**Visualization**:
+```
+Probability
+    | ████
+    | ████
+    | ████
+    | ██
+    | █
+    | █
+    +-------------------------------- Value
+      1k  15k             500k
+         median
+```
+
+**Distribution characteristics**:
+- **Median**: 50% of values below, 50% above
+- **Mean**: Higher than median (pulled up by long tail)
+- **Mode**: Most common value (lower than median)
+- **Tail**: Long tail extends toward max
+- **Example**: Median $15k means 50% of loans <$15k, but some reach $500k
+
+**Use cases**:
+- **Financial**: Loan amounts, income, net worth, investment returns
+- **Pricing**: Product prices, transaction amounts, cart values
+- **Business**: Company revenue, deal sizes, customer lifetime value
+- **Web**: File sizes, page load times, session durations
+- **Real estate**: Property prices, rent amounts
+
+**Realistic examples**:
+
+**Personal loans** (most small, some large):
+```json
+{
+  "generator_params": {
+    "min": 1000.00,
+    "max": 50000.00,
+    "distribution": "lognormal",
+    "median": 5000.00
+  }
+}
+```
+
+**E-commerce transaction amounts** (most <$100, rare >$1000):
+```json
+{
+  "generator_params": {
+    "min": 5.00,
+    "max": 5000.00,
+    "distribution": "lognormal",
+    "median": 75.00
+  }
+}
+```
+
+**Annual income** (median $60k, some >$200k):
+```json
+{
+  "generator_params": {
+    "min": 20000.00,
+    "max": 500000.00,
+    "distribution": "lognormal",
+    "median": 60000.00
+  }
+}
+```
+
+**Best practices**:
+- Use for naturally right-skewed data (prices, incomes, sizes)
+- Set `median` to the realistic middle value (50th percentile)
+- Don't use for symmetric data (use `normal` instead)
+- Don't use for categorical data (use `weighted` instead)
+
+---
+
+#### Distribution: `weighted`
+
+**Specific values with explicit probabilities**. Each value has a defined weight (probability). Ideal for categorical data or discrete choices.
+
+**Parameters**:
+- `values` (required): Array of value-weight pairs
+  - `value` (required): The actual value
+  - `weight` (required): Probability weight (0.0-1.0)
+
+**Weights must sum to 1.0** (100%).
+
+**Example - Loan status** (70% active, 25% paid, 5% delinquent):
+```json
+{
+  "name": "status",
+  "type": "varchar(20)",
+  "generator": "weighted",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "active", "weight": 0.70},
+      {"value": "paid_off", "weight": 0.25},
+      {"value": "delinquent", "weight": 0.05}
+    ]
+  }
+}
+```
+
+**Visualization**:
+```
+Probability
+    |
+70% | ███████████████████████
+    |
+25% | ████████
+    |
+ 5% | █
+    +------------------------
+       active  paid  delinq
+```
+
+**Example - Risk tier** (40% low, 45% medium, 15% high):
+```json
+{
+  "name": "risk_tier",
+  "type": "varchar(10)",
+  "generator": "weighted",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "low", "weight": 0.40},
+      {"value": "medium", "weight": 0.45},
+      {"value": "high", "weight": 0.15}
+    ]
+  }
+}
+```
+
+**Example - Payment method** (50% card, 30% bank, 15% check, 5% cash):
+```json
+{
+  "name": "payment_method",
+  "type": "varchar(20)",
+  "generator": "weighted",
+  "generator_params": {
+    "distribution": "weighted",
+    "values": [
+      {"value": "credit_card", "weight": 0.50},
+      {"value": "bank_transfer", "weight": 0.30},
+      {"value": "check", "weight": 0.15},
+      {"value": "cash", "weight": 0.05}
+    ]
+  }
+}
+```
+
+**Use cases**:
+- Categorical statuses (active, inactive, pending)
+- Classification tiers (low, medium, high)
+- Payment methods (card, bank, cash)
+- Product categories (electronics, clothing, food)
+- User roles (admin, user, guest)
+
+**Best practices**:
+- Always ensure weights sum to 1.0 (validate with parser)
+- Use realistic probabilities from domain knowledge or analytics
+- Order values by weight (highest first) for readability
+- Use descriptive value names (not codes) for clarity
+- Document weight rationale in schema description
+
+**Validation**:
+```json
+// VALID: Weights sum to 1.0
+{"values": [
+  {"value": "A", "weight": 0.5},
+  {"value": "B", "weight": 0.3},
+  {"value": "C", "weight": 0.2}
+]}
+
+// INVALID: Weights sum to 1.1
+{"values": [
+  {"value": "A", "weight": 0.5},
+  {"value": "B", "weight": 0.4},
+  {"value": "C", "weight": 0.2}
+]}
+```
+
+---
+
+#### Distribution: `ranges`
+
+**Multiple ranges with weights**. Each range has a min, max, and probability weight. Values within each range are uniformly distributed. Ideal for tiered or banded data.
+
+**Parameters**:
+- `ranges` (required): Array of range-weight objects
+  - `min` (required): Range minimum
+  - `max` (required): Range maximum
+  - `weight` (required): Probability weight (0.0-1.0)
+
+**Weights must sum to 1.0** (100%).
+
+**Example - Interest rate by risk tier**:
+```json
+{
+  "name": "interest_rate",
+  "type": "decimal(5,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 3.50,
+    "max": 29.99,
+    "precision": 5,
+    "scale": 2,
+    "distribution": "ranges",
+    "ranges": [
+      {"min": 3.50, "max": 7.99, "weight": 0.30},
+      {"min": 8.00, "max": 15.99, "weight": 0.50},
+      {"min": 16.00, "max": 29.99, "weight": 0.20}
+    ]
+  }
+}
+```
+
+**Interpretation**:
+- 30% of loans: 3.50%-7.99% (low risk)
+- 50% of loans: 8.00%-15.99% (medium risk)
+- 20% of loans: 16.00%-29.99% (high risk)
+
+**Visualization**:
+```
+Probability
+    |
+30% | ██████ (3.5-7.99%)
+    |
+50% | ██████████ (8.0-15.99%)
+    |
+20% | ████ (16.0-29.99%)
+    +---------------------------
+       3.5     8.0    16.0  29.99
+```
+
+**Example - Pricing tiers**:
+```json
+{
+  "name": "product_price",
+  "type": "decimal(8,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1.00,
+    "max": 1000.00,
+    "precision": 8,
+    "scale": 2,
+    "distribution": "ranges",
+    "ranges": [
+      {"min": 1.00, "max": 19.99, "weight": 0.50},
+      {"min": 20.00, "max": 99.99, "weight": 0.35},
+      {"min": 100.00, "max": 1000.00, "weight": 0.15}
+    ]
+  }
+}
+```
+
+**Interpretation**:
+- 50% of products: $1-$19.99 (budget tier)
+- 35% of products: $20-$99.99 (mid-range tier)
+- 15% of products: $100-$1000 (premium tier)
+
+**Example - Age groups**:
+```json
+{
+  "name": "age",
+  "type": "int",
+  "generator": "int_range",
+  "generator_params": {
+    "min": 18,
+    "max": 80,
+    "distribution": "ranges",
+    "ranges": [
+      {"min": 18, "max": 30, "weight": 0.25},
+      {"min": 31, "max": 50, "weight": 0.45},
+      {"min": 51, "max": 80, "weight": 0.30}
+    ]
+  }
+}
+```
+
+**Use cases**:
+- **Financial**: Interest rates by risk tier, loan amounts by product type
+- **Pricing**: Product price bands, subscription tiers
+- **Demographics**: Age groups, income brackets
+- **Performance**: Response time SLAs, latency tiers
+- **Inventory**: Stock levels by category (low/medium/high stock)
+
+**Best practices**:
+- Ensure ranges don't overlap (parser may validate this)
+- Ensure ranges cover full min-max span (no gaps)
+- Use realistic tier boundaries from domain knowledge
+- Order ranges by min value (ascending) for readability
+- Document tier rationale in schema description
+
+**Validation**:
+```json
+// VALID: No overlaps, weights sum to 1.0
+{"ranges": [
+  {"min": 1, "max": 10, "weight": 0.5},
+  {"min": 11, "max": 20, "weight": 0.3},
+  {"min": 21, "max": 30, "weight": 0.2}
+]}
+
+// INVALID: Overlapping ranges (10-20 and 15-25)
+{"ranges": [
+  {"min": 1, "max": 20, "weight": 0.5},
+  {"min": 15, "max": 30, "weight": 0.5}
+]}
+
+// INVALID: Weights sum to 1.1
+{"ranges": [
+  {"min": 1, "max": 10, "weight": 0.6},
+  {"min": 11, "max": 20, "weight": 0.5}
+]}
+```
+
+**Ranges vs. Weighted**:
+- Use `ranges` for continuous numeric data with tiers (prices, rates, ages)
+- Use `weighted` for discrete categorical data (statuses, types, categories)
+
+---
+
+### Parameter Validation
+
+SourceBox validates all generator parameters to ensure schema correctness before data generation. Understanding validation rules helps catch errors early.
+
+#### Required vs. Optional Parameters
+
+**Required parameters** must be present for the generator to function:
+- Missing required parameters = validation error
+- Parser will reject schema with helpful error message
+
+**Optional parameters** have sensible defaults:
+- Omitting optional parameters = uses default value
+- Explicitly setting to default = no effect
+
+#### Validation by Generator
+
+**Numeric generators** (`int_range`, `float_range`, `decimal_range`):
+- `min` (required): Must be numeric, must be < max
+- `max` (required): Must be numeric, must be > min
+- `precision` (required for `decimal_range`): Must be positive integer
+- `scale` (required for `decimal_range`): Must be positive integer, must be <= precision
+
+**Date/time generators** (`timestamp_past`, `timestamp_future`):
+- `max_days_ago` / `max_days_ahead` (required): Must be positive integer
+- `min_days_ago` / `min_days_ahead` (optional): Must be positive integer, must be < max
+
+**Date range generator** (`date_between`):
+- `start_date` (required): Must be valid YYYY-MM-DD format
+- `end_date` (required): Must be valid YYYY-MM-DD format, must be >= start_date
+
+**Personal/company generators** (most):
+- No required parameters (use defaults)
+- Optional parameters validated if present
+
+#### Validation by Distribution
+
+**`uniform`**:
+- No additional parameters (uses generator's min/max)
+
+**`normal`**:
+- `mean` (required): Must be numeric, ideally between min and max
+- `std_dev` (required): Must be positive number
+- Recommendation: `mean ± 3*std_dev` should fit within `[min, max]` to avoid excessive truncation
+
+**`lognormal`**:
+- `median` (required): Must be positive number, ideally between min and max
+- Recommendation: `median` should be closer to `min` than `max` (right-skewed)
+
+**`weighted`**:
+- `values` (required): Must be array with at least 1 element
+- Each element must have `value` and `weight`
+- Weights must sum to 1.0 (±0.001 tolerance for floating-point precision)
+- Values must match column type (string for varchar, number for int/decimal)
+
+**`ranges`**:
+- `ranges` (required): Must be array with at least 1 element
+- Each element must have `min`, `max`, `weight`
+- `min` must be < `max` for each range
+- Weights must sum to 1.0 (±0.001 tolerance)
+- Ranges should not overlap (may be validated or warned)
+- Ranges should cover full `[min, max]` span (optional, best practice)
+
+#### Common Validation Errors
+
+**Error: Missing required parameter**
+```json
+// INVALID: Missing "max"
+{
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1
+  }
+}
+
+// FIX: Add missing parameter
+{
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1,
+    "max": 100
+  }
+}
+```
+
+**Error: Weights don't sum to 1.0**
+```json
+// INVALID: Weights sum to 0.9
+{
+  "distribution": "weighted",
+  "values": [
+    {"value": "A", "weight": 0.5},
+    {"value": "B", "weight": 0.4}
+  ]
+}
+
+// FIX: Ensure weights sum to 1.0
+{
+  "distribution": "weighted",
+  "values": [
+    {"value": "A", "weight": 0.5},
+    {"value": "B", "weight": 0.5}
+  ]
+}
+```
+
+**Error: min >= max**
+```json
+// INVALID: min equals max
+{
+  "generator": "int_range",
+  "generator_params": {
+    "min": 100,
+    "max": 100
+  }
+}
+
+// FIX: Ensure max > min
+{
+  "generator": "int_range",
+  "generator_params": {
+    "min": 1,
+    "max": 100
+  }
+}
+```
+
+**Error: Precision/scale mismatch**
+```json
+// INVALID: scale > precision
+{
+  "type": "decimal(5,6)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1.00,
+    "max": 100.00,
+    "precision": 5,
+    "scale": 6
+  }
+}
+
+// FIX: Ensure scale <= precision
+{
+  "type": "decimal(10,2)",
+  "generator": "decimal_range",
+  "generator_params": {
+    "min": 1.00,
+    "max": 100.00,
+    "precision": 10,
+    "scale": 2
+  }
+}
+```
+
+**Error: Invalid date format**
+```json
+// INVALID: Wrong date format
+{
+  "generator": "date_between",
+  "generator_params": {
+    "start_date": "01/01/2023",
+    "end_date": "12/31/2023"
+  }
+}
+
+// FIX: Use YYYY-MM-DD format
+{
+  "generator": "date_between",
+  "generator_params": {
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31"
+  }
+}
+```
+
+#### Validation Best Practices
+
+1. **Run parser validation** after editing schemas
+2. **Test generators** with small `record_count` before full generation
+3. **Document parameter choices** in schema descriptions
+4. **Use realistic values** based on domain knowledge
+5. **Avoid edge cases** (e.g., min=max, extremely large std_dev)
+6. **Check weight sums** manually before committing
+7. **Validate date formats** with a tool or regex
+
+#### Parser Validation Output
+
+When validation fails, the parser provides helpful error messages:
+
+```
+Error: Invalid schema "fintech-loans.json"
+  - Column "credit_score" (borrowers table): Missing required parameter "max" for generator "int_range"
+  - Column "loan_amount" (loans table): Weights sum to 1.1, must equal 1.0
+  - Column "status" (loans table): Invalid value type "integer" for weighted distribution, expected "string" for varchar column
+```
+
+---
+
+### Summary
+
+**Built-in generators** provide production-ready data generation for common use cases:
+- **Personal data**: Names, emails, phones, addresses, SSNs, birth dates
+- **Company data**: Company names, job titles, corporate emails, domains
+- **Date/time**: Past timestamps, future timestamps, date ranges
+- **Numeric**: Integers, floats, decimals with precise control
+
+**Custom generators** extend the library for domain-specific needs:
+- Define in `custom_generators` section
+- Reference by name in column definitions
+- Reuse across multiple columns
+
+**Generator parameters** control data generation:
+- Required parameters (must be present)
+- Optional parameters (sensible defaults)
+- Validated by parser before generation
+
+**Distributions** transform uniform randomness into realistic patterns:
+- **uniform**: Equal probability (default)
+- **normal**: Bell curve (credit scores, ages, test scores)
+- **lognormal**: Right-skewed (prices, incomes, loan amounts)
+- **weighted**: Specific values with probabilities (statuses, categories)
+- **ranges**: Tiered ranges with weights (interest rates, pricing tiers)
+
+**Best practices**:
+- Use built-in generators when available (don't reinvent the wheel)
+- Create custom generators for repeatable domain-specific logic
+- Choose distributions based on real-world data patterns
+- Validate schemas with parser before committing
+- Document parameter rationale in descriptions
+
+**What's next**:
+- See **Validation Rules** for schema-wide validation (T021-T027)
+- See **Relationships** for foreign key patterns (documented earlier)
+- See **Examples** for complete schema samples (T010-T020)
+
+---
+
+_End of Built-in Generators section (User Story 3)._
