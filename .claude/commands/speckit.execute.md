@@ -135,20 +135,22 @@ Apply this decision tree for EVERY task:
 ```
 1. ML/AI features? → ai-engineer
 2. New multi-component feature/scaffold? → rapid-prototyper
-3. Server/API/database? → backend-architect
-4. UI/components/pages? → frontend-developer
-5. CI/CD/infrastructure? → devops-automator
-6. Mobile native features? → mobile-app-builder
-7. Design system? → ui-designer
-8. Privacy/compliance? → legal-compliance-checker
-9. UX research? → ux-researcher
-10. Default: frontend-developer
+3. CLI tools/terminal interfaces? → cli-developer
+4. Server/API/database? → backend-architect
+5. UI/components/pages? → frontend-developer
+6. CI/CD/infrastructure? → devops-automator
+7. Mobile native features? → mobile-app-builder
+8. Design system? → ui-designer
+9. Privacy/compliance? → legal-compliance-checker
+10. UX research? → ux-researcher
+11. Default: frontend-developer
 ```
 
 #### Primary Implementation Agents (Choose ONE per task)
 
 **frontend-developer**: React components, Next.js pages, styling, client state
 **backend-architect**: API endpoints, database, migrations, auth, server logic
+**cli-developer**: CLI frameworks, command structure, terminal UX, help text, shell completion
 **ai-engineer**: ML models, AI integrations, forecasting, OpenAI API
 **rapid-prototyper**: New feature scaffolding, MVPs, proof-of-concepts
 **devops-automator**: CI/CD, deployment, monitoring, build optimization
@@ -553,6 +555,12 @@ These agents are mutually exclusive based on the task's primary technical domain
 - **File patterns:** `supabase/migrations/`, `supabase/functions/`, `src/lib/api/`, `*.sql`
 - **Example tasks:** "Create transaction CRUD API", "Implement RLS policies for budget sharing", "Set up database triggers for audit logging"
 
+**cli-developer** - CLI Framework & Terminal UX Implementation
+- **Use for:** CLI frameworks (Cobra, Click, Clap), command-line tools, terminal interfaces, help text design, flag validation, shell completion, man pages, CLI performance optimization
+- **Task indicators:** "CLI", "command", "flag", "help text", "terminal", "shell", "completion", "Cobra", "argparse", "subcommand", "Use/Short/Long/Example"
+- **File patterns:** `cmd/`, `cli/`, `*_cli.go`, `*.sh` (completion scripts), man page files, CLI configuration
+- **Example tasks:** "Implement Cobra CLI framework integration", "Add global flags with validation", "Design command hierarchy", "Write comprehensive help text", "Generate shell completions", "Optimize CLI startup time (<100ms)"
+
 **ai-engineer** - ML/AI Feature Implementation
 - **Use for:** ML models, AI integrations, forecasting algorithms, sentiment analysis, recommendation engines, OpenAI API integration
 - **Task indicators:** "ML", "AI", "forecast", "predict", "sentiment", "inference", "model", "OpenAI"
@@ -612,33 +620,37 @@ Use this decision tree when selecting an agent for a task:
    YES → rapid-prototyper
    NO → Continue
 
-3. Does the task primarily involve server-side logic, APIs, or database?
+3. Does the task involve CLI tools, command frameworks, or terminal interfaces?
+   YES → cli-developer
+   NO → Continue
+
+4. Does the task primarily involve server-side logic, APIs, or database?
    YES → backend-architect
    NO → Continue
 
-4. Does the task primarily involve UI components, pages, or styling?
+5. Does the task primarily involve UI components, pages, or styling?
    YES → frontend-developer
    NO → Continue
 
-5. Does the task involve CI/CD, deployment, or infrastructure?
+6. Does the task involve CI/CD, deployment, or infrastructure?
    YES → devops-automator
    NO → Continue
 
-6. Does the task involve mobile-specific native features?
+7. Does the task involve mobile-specific native features?
    YES → mobile-app-builder
    NO → Continue
 
-7. Does the task involve design system or visual design implementation?
+8. Does the task involve design system or visual design implementation?
    YES → ui-designer
    NO → Continue
 
-8. Does the task involve privacy/compliance features?
+9. Does the task involve privacy/compliance features?
    YES → legal-compliance-checker
    NO → Continue
 
-9. Does the task involve UX research validation?
-   YES → ux-researcher
-   NO → frontend-developer (default for unspecified implementation)
+10. Does the task involve UX research validation?
+    YES → ux-researcher
+    NO → frontend-developer (default for unspecified implementation)
 ```
 
 ### Automatic Support Agents (Context Only)

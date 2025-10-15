@@ -1,31 +1,31 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version Change: 1.0.0 → 2.0.0
-  Date: 2025-10-14
+  Version Change: 2.0.0 → 3.0.0
+  Date: 2025-01-15
 
-  Major Changes:
-  - Initial constitution creation for SourceBox project
-  - Established 7 core principles (verticalization, speed, local-first, boring tech, open source, developer-first, ship fast)
-  - Defined 7 technical constraints (performance, distribution, cost, licensing)
-  - Added 5 product philosophy statements
-  - Established 7 development practices (TDD, Spec-Kit driven, manual QA)
-  - Created 5 UX principles (zero config, transparent progress, graceful failures)
-  - Defined 5 business constraints (phased monetization, indie constraints)
-  - Added 5 critical legal constraints (independent development protection)
-  - Established 4 GTM philosophy statements
-  - Listed 8 anti-patterns to explicitly avoid
+  Major Changes (Market Research-Driven Amendments):
+  - Updated time savings claim from "5-10 hours/week" to "days to weeks" (lines 37, 39) based on K2View TDM Report validation
+  - Added schema complexity tiers: Tier 1 (<30s), Tier 2 (<2min), Tier 3 (<5min) to avoid overpromising on complex schemas (lines 176-197)
+  - Added "The Synthea Model" subsection emphasizing open source as competitive moat (lines 116-134)
+  - Updated "Open Source Forever" principle with research validation showing no multi-vertical competitor exists (lines 103-108)
+  - Replaced Phase 2 cloud-hosted-only monetization with dual monetization strategy (databases + API) (lines 275-292)
+  - Simplified Business Constraints section to focus on principles that drive design decisions (lines 473-502)
+  - Simplified Market Research Validation section to strategic summary with reference to internal-docs for tactical details (lines 870-889)
+  - Updated constitution version to 3.0.0 with amendment rationale (line 1011)
 
   Templates Status:
-  ✅ plan-template.md - Constitution Check section now enforces speed, verticalization, local-first
-  ✅ spec-template.md - User scenarios must align with developer-first, independently testable principles
-  ✅ tasks-template.md - Task organization must support TDD-first, Spec-Kit workflow
+  ✅ plan-template.md - Constitution Check section now enforces tiered performance constraints
+  ✅ spec-template.md - User scenarios must validate against appropriate schema tier (Tier 1 for MVP)
+  ✅ tasks-template.md - Implementation tasks must reference Market Research Validation for strategic decisions
 
   Follow-up Actions:
-  - None - all principles clearly defined with concrete values
+  - Update README.md problem statement to reflect "days to weeks" time savings (line 18)
+  - Update CLAUDE.md if any principle changes affect development guidelines
+  - Template updates pending for schema complexity tier validation in planning phase
 
   Version Bump Rationale:
-  - MAJOR (1.0.0 → 2.0.0): First complete constitution defining all governance rules from scratch
+  - MAJOR (2.0.0 → 3.0.0): Strategic shift from cloud-hosted-only to dual monetization (databases + API), validated by market research showing API access is premium feature. Breaking change to Phase 2 monetization strategy. Separated tactical business details into gitignored internal-docs/business-strategy.md.
 -->
 
 # SourceBox Constitution
@@ -34,9 +34,9 @@
 
 **Mission**: Provide developers with instant access to realistic, verticalized demo data through CLI tools and Docker images.
 
-**Vision**: Make demo data effortless so developers can focus on building instead of seeding databases. Transform the 5-10 hours per week developers waste on creating demo data into 30 seconds of automated, production-like data generation.
+**Vision**: Make demo data effortless so developers can focus on building instead of seeding databases. Transform the days to weeks developers waste per data provisioning cycle into 30 seconds of automated, production-like data generation.
 
-**Core Problem**: Developers waste 5-10 hours per week creating realistic demo data. Faker is too generic ("John Doe", "Acme Corp"), manual SQL is tedious, and production dumps are a security nightmare. There's no tool for spinning up databases with realistic, verticalized data in 30 seconds.
+**Core Problem**: Developers waste days to weeks provisioning realistic demo data for each environment. Faker is too generic ("John Doe", "Acme Corp"), manual SQL is tedious, and production dumps are a security nightmare. Data provisioning can take 30+ minutes for simple apps or an entire week for complex data masking with referential integrity. There's no tool for spinning up databases with realistic, verticalized data in 30 seconds.
 
 **Target Users**: Backend developers, data engineers, Sales Engineers, QA engineers, DevRel engineers at tech companies building data-intensive applications.
 
@@ -100,11 +100,38 @@ CLI and Docker images MUST be free forever, MIT license, no proprietary extensio
 
 **Rationale**: Open source ensures no employer can claim ownership, enables community contributions, builds trust with developers, and creates viral distribution. Monetization comes from cloud convenience (Phase 2), not from locking down core functionality.
 
+**Research Validation:** Market analysis shows no multi-vertical, open-source, affordable competitor exists. Competitors are either:
+- Free but generic (Faker.js: "John Doe" problem)
+- Specialized but expensive (Tonic: $3K/year, Gretel: $3.5K/year)
+- Open but single-vertical (Synthea: healthcare only)
+
+SourceBox's unique position: Free + Verticalized + Multi-industry = No direct competitor.
+
 **Licensing Requirements**:
 - MIT license for all CLI and Docker code (maximum permissiveness)
 - No CLA (Contributor License Agreement) required — MIT covers it
 - Cloud version source code (Phase 2) MAY be closed source (optional monetization)
 - Schema definitions MUST be open source and community-contributed
+
+#### The Synthea Model: Open Source as Competitive Moat
+
+**Insight from Research:** Synthea (open-source healthcare simulator) became the industry standard NOT despite being free, but BECAUSE it was free. Hospitals, researchers, and developers adopted it universally because there was no barrier to experimentation.
+
+**SourceBox Strategy:** Apply Synthea's model across EVERY vertical (fintech, healthcare, retail, logistics, etc.)
+
+**Why This is a Moat:**
+- Competitors (Tonic, Gretel, Hazy) are proprietary and expensive ($3K-38K/year)
+- Generic tools (Faker.js) are free but unrealistic ("John Doe" problem)
+- Specialized tools (Synthea) are free AND realistic but single-vertical only
+- **SourceBox is the ONLY:** Free + Realistic + Multi-vertical tool
+
+**Competitive Advantages:**
+1. **Viral adoption:** Developers try without budget approval, tell their teams
+2. **Community contributions:** Domain experts contribute schemas (Workday consultants, healthcare engineers)
+3. **Cannot be replicated:** Competitors can't easily open-source proprietary codebases
+4. **Network effects:** More schemas → more users → more contributors → more schemas
+
+**Positioning:** "The Synthea for every industry" - proven model, validated by research
 
 ### VI. Developer-First Design
 
@@ -138,13 +165,36 @@ CLI-first (not web UI), Docker-native (one command to run), zero config (works o
 
 ### 1. Performance (NON-NEGOTIABLE)
 
-- **Database seeding**: < 30 seconds for 1,000 records (measured on 2020 MacBook Pro)
+- **Database seeding**: < 30 seconds for Tier 1 schemas, < 2 minutes for Tier 2, < 5 minutes for Tier 3 (measured on 2020 MacBook Pro)
 - **Docker spin-up**: < 10 seconds from `docker run` to queryable database
 - **CLI install**: < 5 seconds from `npm install -g sourcebox` or `brew install sourcebox`
 - **Memory footprint**: < 100MB RAM for CLI, < 200MB for Docker container
 - **Disk space**: < 50MB per Docker image (compressed)
 
 **Why**: Speed is the core value proposition. Break these thresholds and developers abandon the tool.
+
+#### Performance Tiers by Schema Complexity
+
+**Tier 1 - Simple Schemas** (<30 seconds, MVP focus)
+- 1-5 entities with straightforward relationships
+- Examples: fintech loans, retail orders, basic user profiles
+- Target: < 30 seconds for 1,000 records
+- Use case: Backend developers, quick prototypes
+
+**Tier 2 - Medium Schemas** (<2 minutes, Phase 2)
+- 10-50 entities with moderate complexity
+- Examples: healthcare patients (with visits/prescriptions), SaaS analytics, e-commerce (orders + inventory + customers)
+- Target: < 2 minutes for 1,000 records
+- Use case: Sales Engineers, QA environments
+
+**Tier 3 - Complex Schemas** (<5 minutes, Community-driven)
+- 100+ entities with deep referential integrity
+- Examples: Workday HCM, SAP ERP, enterprise CRM
+- Target: < 5 minutes for complete environment setup
+- Use case: Implementation consultants, enterprise demos
+- **Strategy:** Community-contributed, not MVP scope
+
+**Constitutional Constraint:** The "<30 seconds" requirement applies to **Tier 1 schemas only**. Tier 2/3 schemas may take longer while still providing massive time savings vs manual provisioning (which takes days/weeks).
 
 ### 2. Distribution Channels (REQUIRED)
 
@@ -218,9 +268,28 @@ CLI and Docker MUST be free forever. Cloud version (Phase 2) is optional freemiu
 
 **Monetization Model**:
 - Phase 1: $0 (free forever, open source, MIT license)
-- Phase 2: Freemium SaaS ($0 → $20/mo → $200/mo for cloud-hosted databases)
+- Phase 2: Freemium SaaS with **dual monetization** (cloud-hosted databases + API access)
 - Phase 2 trigger: After MVP validation (1K stars, 10K pulls, NPS 50+)
 - Unit economics: < $2/user/month infra cost (98%+ gross margin target)
+
+**Phase 2 Offerings:**
+
+**A. Hosted Databases** (for persistent demo environments)
+- Pre-seeded databases (Postgres, MySQL) on-demand
+- Persistent URLs: `demo-db-abc123.sourcebox.dev:5432`
+- Team collaboration: Multiple developers share demo environment
+- **Use case:** Sales Engineers with multiple demos per week
+
+**B. API Access** (for programmatic data generation)
+- Generate realistic data via REST API: `POST /api/generate/fintech-loans`
+- Use cases:
+  - E2E testing: Generate test data in CI/CD pipelines
+  - Synthetic data for ML: Train models with realistic data
+  - Load testing: Generate millions of records on-demand
+  - Data masking: Replace production data with synthetic equivalents
+- **Use case:** QA automation, ML engineers, performance testing
+
+**Research Validation:** Tonic ($299/mo), Gretel ($295/mo) both charge premium for API access. Market validates high-margin opportunity.
 
 ### 3. Developer-Centric: CLI-First, Docker-Native
 
@@ -405,55 +474,42 @@ Functional, fast, reliable > flashy animations, colors, emoji. Developers value 
 
 ### 1. Phase 1: Free Forever (Non-Negotiable)
 
-CLI and Docker MUST be free forever. MIT license. No paywalls, no feature gates, no "premium" versions of local tools. Open source is legal protection, community trust, and viral distribution.
+CLI and Docker MUST be free forever. MIT license. No paywalls, no feature gates, no "premium" versions of local tools.
 
-**Monetization**: Phase 1 has zero revenue. This is validation phase, not monetization phase.
+**Why**: Open source is legal protection, community trust, and viral distribution.
 
-### 2. Phase 2: Freemium SaaS (After Validation)
+**Architecture Impact**: Phase 1 features must be fully self-contained with no cloud dependencies.
 
-**Trigger**: Only build cloud version after MVP validation (1K GitHub stars, 10K Docker pulls, NPS 50+)
+### 2. Phase 2: Cloud Optional (After Validation)
 
-**Pricing Model**:
-- Free: CLI/Docker (self-hosted, local development)
-- $20/mo: Cloud-hosted databases (Postgres/MySQL on-demand, API access, 10 GB storage)
-- $200/mo: Teams (SSO, collaboration, audit logs, 100 GB storage)
+Cloud-hosted features (databases, API access) MAY be built ONLY after MVP validation. Phase 2 is optional convenience, not required functionality.
 
-**Unit Economics Target**: < $2/user/month infrastructure cost (98%+ gross margin)
+**Why**: Validate local demand before investing in cloud infrastructure. Avoid building what users don't want.
 
-### 3. Indie Project (Until $5K MRR or Strong Validation)
+**Architecture Impact**: Cloud features must be additive, not replacing local functionality. System must work fully offline.
 
-SourceBox is an indie project until:
-- $5K MRR (monthly recurring revenue from cloud version), OR
-- Strong validation (10K GitHub stars, 50K Docker pulls, 1K paying users)
+### 3. Indie Development Constraints
 
-**Development Constraints**:
 - 10-15 hours/week maximum (outside work hours)
 - Personal equipment only (no employer resources)
-- Solo development (no hiring until validation)
-- < $100/month operating costs (free tiers for hosting, CI/CD)
+- Solo development (no hiring until after validation)
+- < $100/month operating costs (free tiers only)
 
 **Why**: Legal protection (independent development), capital efficiency (no burn rate), sustainable pace (avoid burnout).
 
-### 4. Unit Economics (Cloud Version - Phase 2)
+**Development Impact**: Scope must fit indie constraints. Reject features requiring >15 hrs/week maintenance or cloud spend.
 
-**Target**: 98%+ gross margin for cloud version
+**Business Strategy**: See `internal-docs/business-strategy.md` for monetization plans, pricing model, revenue projections, and go-to-market tactics.
 
-**Cost Breakdown** (per user/month):
-- Database hosting: $1.00 (AWS RDS or Supabase)
-- Storage: $0.50 (S3 or equivalent)
-- Networking: $0.30 (data transfer)
-- Auth/API: $0.20 (Supabase or Auth0)
-- **Total**: < $2.00/user/month
+---
 
-**Revenue Target**: $20/mo base tier → $18/mo gross profit (90% margin)
+## Legal Constraints (CRITICAL - NON-NEGOTIABLE)
 
-**Why**: High gross margin enables sustainability without venture funding. Capital-efficient business model.
+### 1. Independent Development Only
 
-### 5. Legal Protection: Independent Development Only
+This project is developed **independently** on personal equipment (MacBook, personal GitHub account), outside of work hours (evenings, weekends, 10-15 hours/week), with **no use of employer resources or proprietary information**.
 
-**CRITICAL**: This project is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information.
-
-**Legal Constraints** (See next section for full details):
+**Requirements**:
 - Personal equipment only (MacBook, personal GitHub account)
 - Outside work hours only (10-15 hours/week)
 - No employer resources (no cloud credits, no internal tools, no proprietary knowledge)
@@ -792,11 +848,31 @@ For day-to-day development guidance beyond constitutional principles, refer to:
 - **docs/architecture.md**: Technical architecture, design decisions
 - **Spec-Kit templates**: Feature specification, implementation planning, task generation
 
+### Market Research Validation
+
+**Status**: Constitutional principles validated through market research (January 2025).
+
+**Strategic Validations**:
+1. **Pain Magnitude**: Days-to-weeks provisioning time validated (not hours) → Updated time savings claim (lines 37, 39)
+2. **Competitive Gap**: No multi-vertical, open-source, affordable competitor exists → Validates Core Principles I & V
+3. **Market Position**: Gap between free-generic tools and expensive proprietary platforms → Validates freemium strategy
+4. **Monetization Path**: API access validated as premium feature → Added dual monetization (databases + API, lines 275-292)
+5. **Local-First Demand**: Developer preference for self-hosted solutions → Validates Core Principle III (Local-First, Cloud Optional)
+
+**Constitutional Impact**:
+- **Amendment 1**: Schema complexity tiers (Tier 1 <30s, Tier 2 <2min, Tier 3 <5min) to avoid overpromising on complex schemas
+- **Amendment 2**: "The Synthea Model" subsection (lines 116-134) - open source as competitive moat
+- **Amendment 3**: Dual monetization strategy (cloud databases + API access) replacing cloud-hosted-only approach
+
+**Competitive Position**: SourceBox occupies unique space (Free + Verticalized + Multi-industry + Open Source) with no direct competitor.
+
+**Research Details**: See `internal-docs/business-strategy.md` for detailed market analysis, competitor pricing, confidence assessments, and tactical implications.
+
 ---
 
-**Version**: 2.0.0
+**Version**: 3.0.0
 **Ratified**: 2025-01-14
-**Last Amended**: 2025-01-14
+**Last Amended**: 2025-01-15
 
 ---
 

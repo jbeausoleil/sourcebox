@@ -15,6 +15,9 @@ Auto-generated from all feature plans. Last updated: 2025-10-14
 - Make (build automation)
 - Go 1.21 and 1.22 (matrix testing across both versions) (003-f005-github-actions)
 - GitHub Actions runners (standard ubuntu-latest, macos-latest, windows-latest) (003-f005-github-actions)
+- Cobra v1.8+ (CLI framework) (004-f006-cobra-cli)
+- cobra-cli v1.3+ (CLI scaffolding tool) (004-f006-cobra-cli)
+- testify (testing assertions) (004-f006-cobra-cli)
 
 ## Project Structure
 ```
@@ -88,10 +91,69 @@ sourcebox/
 ## Legal Notice
 **CRITICAL**: This project is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information. This notice MUST appear prominently in README.md.
 
+## Cobra CLI Framework (004-f006-cobra-cli)
+
+### Command Structure
+```
+cmd/sourcebox/
+├── main.go              # Entry point, version injection
+└── cmd/
+    ├── root.go          # Root command, global flags
+    ├── seed.go          # Seed command (scaffolded)
+    └── list_schemas.go  # List-schemas command (scaffolded)
+```
+
+### Global Flags (Persistent)
+- `--verbose, -v`: Enable verbose output (applies to all commands)
+- `--quiet, -q`: Suppress non-error output (applies to all commands)
+- `--config <file>`: Custom config file path (applies to all commands)
+
+### Command Patterns
+- **Root command**: `sourcebox` (shows help, version)
+- **Subcommands**: `seed`, `list-schemas` (implementation in F021, F022)
+- **Help system**: `--help` flag on all commands, comprehensive examples
+- **Version display**: `--version` flag, injected at build time via ldflags
+
+### Version Injection
+```makefile
+VERSION := $(shell git describe --tags --always --dirty)
+LDFLAGS := -ldflags="-s -w -X main.version=$(VERSION)"
+```
+
+### Help Text Standards
+- **Use**: Command signature with argument placeholders (`seed <database>`)
+- **Short**: One-line description (<60 chars)
+- **Long**: Multi-paragraph explanation with use cases
+- **Example**: 2-3 practical copyable examples
+- **Tone**: Clear, developer-friendly, no marketing fluff
+
+### Testing Patterns
+- Table-driven tests for flag combinations
+- Output buffer capture (`cmd.SetOut(buf)`, `cmd.SetErr(buf)`)
+- Flag parsing verification (`cmd.SetArgs()`, `cmd.Execute()`)
+- Coverage target: >80% for cmd/ package
+- TDD required for all command logic
+
+### Error Handling
+- Use `RunE` (not `Run`) for error returns
+- Return errors from Run function (Cobra handles display + exit code)
+- Error format: `fmt.Errorf("context: %w", err)` for wrapping
+- User-facing errors: Clear, actionable (what's wrong + how to fix)
+- SilenceUsage: true (don't print usage on business logic errors)
+
 ## Recent Changes
+- 004-f006-cobra-cli: Added Cobra v1.8+ CLI framework integration
+- 004-f006-cobra-cli: Added cobra-cli v1.3+ scaffolding tool
+- 004-f006-cobra-cli: Added testify for unit test assertions
+- 004-f006-cobra-cli: Deferred output helper functions to F021 (VerbosePrintf, QuietPrintf)
+- 004-f006-cobra-cli: Deferred color output support to F021
+- 004-f006-cobra-cli: Deferred verbosity levels (-vv, -vvv) to future releases
 - 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
-- 003-f005-github-actions: Added Go 1.21 and 1.22 (matrix testing across both versions)
-- 002-f004-project-directory: Directory structure and build system with Makefile
+
+## Known Technical Debt (004-f006-cobra-cli)
+- T054: Test state pollution (tests pass individually, some fail in full suite) - decision pending
+- T055: Coverage methodology needs documentation (76.2% vs 84.2% reporting)
+- Integration tests require pre-built binary (accepted design pattern)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
