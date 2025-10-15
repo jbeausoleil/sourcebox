@@ -15,7 +15,7 @@
 
 ## Problem Statement
 
-Developers waste hours crafting realistic demo data for prototypes, presentations, and tests. Generic data generators produce bland, unconvincing results that don't reflect real-world domain complexity. SourceBox solves this by providing rich, verticalized demo datasets (e-commerce, healthcare, fintech) that developers can instantly integrate into their projects, letting them focus on building features instead of fabricating data.
+Developers waste days or weeks provisioning realistic demo data for prototypes, presentations, and tests. Generic data generators produce bland, unconvincing results that don't reflect real-world domain complexity. SourceBox solves this by providing rich, verticalized demo datasets (e-commerce, healthcare, fintech) that developers can instantly integrate into their projects, letting them focus on building features instead of fabricating data.
 
 ## Features
 

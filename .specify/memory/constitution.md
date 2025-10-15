@@ -1,31 +1,31 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version Change: 1.0.0 → 2.0.0
-  Date: 2025-10-14
+  Version Change: 2.0.0 → 3.0.0
+  Date: 2025-01-15
 
-  Major Changes:
-  - Initial constitution creation for SourceBox project
-  - Established 7 core principles (verticalization, speed, local-first, boring tech, open source, developer-first, ship fast)
-  - Defined 7 technical constraints (performance, distribution, cost, licensing)
-  - Added 5 product philosophy statements
-  - Established 7 development practices (TDD, Spec-Kit driven, manual QA)
-  - Created 5 UX principles (zero config, transparent progress, graceful failures)
-  - Defined 5 business constraints (phased monetization, indie constraints)
-  - Added 5 critical legal constraints (independent development protection)
-  - Established 4 GTM philosophy statements
-  - Listed 8 anti-patterns to explicitly avoid
+  Major Changes (Market Research-Driven Amendments):
+  - Updated time savings claim from "5-10 hours/week" to "days to weeks" (lines 37, 39) based on K2View TDM Report validation
+  - Added schema complexity tiers: Tier 1 (<30s), Tier 2 (<2min), Tier 3 (<5min) to avoid overpromising on complex schemas (lines 176-197)
+  - Added "The Synthea Model" subsection emphasizing open source as competitive moat (lines 116-134)
+  - Updated "Open Source Forever" principle with research validation showing no multi-vertical competitor exists (lines 103-108)
+  - Replaced Phase 2 cloud-hosted-only monetization with dual monetization strategy (databases + API) (lines 275-292)
+  - Simplified Business Constraints section to focus on principles that drive design decisions (lines 473-502)
+  - Simplified Market Research Validation section to strategic summary with reference to internal-docs for tactical details (lines 870-889)
+  - Updated constitution version to 3.0.0 with amendment rationale (line 1011)
 
   Templates Status:
-  ✅ plan-template.md - Constitution Check section now enforces speed, verticalization, local-first
-  ✅ spec-template.md - User scenarios must align with developer-first, independently testable principles
-  ✅ tasks-template.md - Task organization must support TDD-first, Spec-Kit workflow
+  ✅ plan-template.md - Constitution Check section now enforces tiered performance constraints
+  ✅ spec-template.md - User scenarios must validate against appropriate schema tier (Tier 1 for MVP)
+  ✅ tasks-template.md - Implementation tasks must reference Market Research Validation for strategic decisions
 
   Follow-up Actions:
-  - None - all principles clearly defined with concrete values
+  - Update README.md problem statement to reflect "days to weeks" time savings (line 18)
+  - Update CLAUDE.md if any principle changes affect development guidelines
+  - Template updates pending for schema complexity tier validation in planning phase
 
   Version Bump Rationale:
-  - MAJOR (1.0.0 → 2.0.0): First complete constitution defining all governance rules from scratch
+  - MAJOR (2.0.0 → 3.0.0): Strategic shift from cloud-hosted-only to dual monetization (databases + API), validated by market research showing API access is premium feature. Breaking change to Phase 2 monetization strategy. Separated tactical business details into gitignored internal-docs/business-strategy.md.
 -->
 
 # SourceBox Constitution
@@ -474,84 +474,42 @@ Functional, fast, reliable > flashy animations, colors, emoji. Developers value 
 
 ### 1. Phase 1: Free Forever (Non-Negotiable)
 
-CLI and Docker MUST be free forever. MIT license. No paywalls, no feature gates, no "premium" versions of local tools. Open source is legal protection, community trust, and viral distribution.
+CLI and Docker MUST be free forever. MIT license. No paywalls, no feature gates, no "premium" versions of local tools.
 
-**Monetization**: Phase 1 has zero revenue. This is validation phase, not monetization phase.
+**Why**: Open source is legal protection, community trust, and viral distribution.
 
-### 2. Phase 2: Freemium SaaS (After Validation)
+**Architecture Impact**: Phase 1 features must be fully self-contained with no cloud dependencies.
 
-**Trigger**: Only build cloud version after MVP validation (1K GitHub stars, 10K Docker pulls, NPS 50+)
+### 2. Phase 2: Cloud Optional (After Validation)
 
-**Pricing Model**:
-- **Free Tier:**
-  - CLI/Docker (unlimited, self-hosted)
-  - Community schemas (unlimited)
-  - API: 10K requests/mo (hobbyist/experimentation)
+Cloud-hosted features (databases, API access) MAY be built ONLY after MVP validation. Phase 2 is optional convenience, not required functionality.
 
-- **$20/mo Starter:**
-  - 1 hosted database (Postgres or MySQL)
-  - 10 GB storage
-  - API access: 100K requests/mo
-  - Persistent demo URLs
-  - **Target:** Individual Sales Engineers, freelancers, solo developers
+**Why**: Validate local demand before investing in cloud infrastructure. Avoid building what users don't want.
 
-- **$50/mo Developer:**
-  - 3 hosted databases
-  - API access: 1M requests/mo (for CI/CD integration)
-  - Priority support
-  - **Target:** QA teams, ML engineers, automation-heavy teams
+**Architecture Impact**: Cloud features must be additive, not replacing local functionality. System must work fully offline.
 
-- **$200/mo Teams:**
-  - 10 hosted databases
-  - API access: 10M requests/mo
-  - 100 GB storage
-  - SSO, team collaboration, audit logs
-  - **Target:** Sales orgs (10-50 SEs), DevRel teams
+### 3. Indie Development Constraints
 
-**Unit Economics Target**:
-- Infrastructure: $2/user/mo (AWS RDS + API gateway)
-- Gross margin: 90% on Starter, 95% on Developer/Teams
-- API calls are near-zero marginal cost (highest margin product)
-
-**Revenue Model at Scale:**
-- 10K free users → 500 paid (5% conversion)
-- 300 Starter ($20) + 100 Developer ($50) + 100 Teams ($200) = **$31K MRR**
-- 95% margin = **$29K gross profit/mo** = sustainable indie business
-
-### 3. Indie Project (Until $5K MRR or Strong Validation)
-
-SourceBox is an indie project until:
-- $5K MRR (monthly recurring revenue from cloud version), OR
-- Strong validation (10K GitHub stars, 50K Docker pulls, 1K paying users)
-
-**Development Constraints**:
 - 10-15 hours/week maximum (outside work hours)
 - Personal equipment only (no employer resources)
-- Solo development (no hiring until validation)
-- < $100/month operating costs (free tiers for hosting, CI/CD)
+- Solo development (no hiring until after validation)
+- < $100/month operating costs (free tiers only)
 
 **Why**: Legal protection (independent development), capital efficiency (no burn rate), sustainable pace (avoid burnout).
 
-### 4. Unit Economics (Cloud Version - Phase 2)
+**Development Impact**: Scope must fit indie constraints. Reject features requiring >15 hrs/week maintenance or cloud spend.
 
-**Target**: 98%+ gross margin for cloud version
+**Business Strategy**: See `internal-docs/business-strategy.md` for monetization plans, pricing model, revenue projections, and go-to-market tactics.
 
-**Cost Breakdown** (per user/month):
-- Database hosting: $1.00 (AWS RDS or Supabase)
-- Storage: $0.50 (S3 or equivalent)
-- Networking: $0.30 (data transfer)
-- Auth/API: $0.20 (Supabase or Auth0)
-- **Total**: < $2.00/user/month
+---
 
-**Revenue Target**: $20/mo base tier → $18/mo gross profit (90% margin)
+## Legal Constraints (CRITICAL - NON-NEGOTIABLE)
 
-**Why**: High gross margin enables sustainability without venture funding. Capital-efficient business model.
+### 1. Independent Development Only
 
-### 5. Legal Protection: Independent Development Only
+This project is developed **independently** on personal equipment (MacBook, personal GitHub account), outside of work hours (evenings, weekends, 10-15 hours/week), with **no use of employer resources or proprietary information**.
 
-**CRITICAL**: This project is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information.
-
-**Legal Constraints** (See next section for full details):
+**Requirements**:
 - Personal equipment only (MacBook, personal GitHub account)
 - Outside work hours only (10-15 hours/week)
 - No employer resources (no cloud credits, no internal tools, no proprietary knowledge)
@@ -890,11 +848,31 @@ For day-to-day development guidance beyond constitutional principles, refer to:
 - **docs/architecture.md**: Technical architecture, design decisions
 - **Spec-Kit templates**: Feature specification, implementation planning, task generation
 
+### Market Research Validation
+
+**Status**: Constitutional principles validated through market research (January 2025).
+
+**Strategic Validations**:
+1. **Pain Magnitude**: Days-to-weeks provisioning time validated (not hours) → Updated time savings claim (lines 37, 39)
+2. **Competitive Gap**: No multi-vertical, open-source, affordable competitor exists → Validates Core Principles I & V
+3. **Market Position**: Gap between free-generic tools and expensive proprietary platforms → Validates freemium strategy
+4. **Monetization Path**: API access validated as premium feature → Added dual monetization (databases + API, lines 275-292)
+5. **Local-First Demand**: Developer preference for self-hosted solutions → Validates Core Principle III (Local-First, Cloud Optional)
+
+**Constitutional Impact**:
+- **Amendment 1**: Schema complexity tiers (Tier 1 <30s, Tier 2 <2min, Tier 3 <5min) to avoid overpromising on complex schemas
+- **Amendment 2**: "The Synthea Model" subsection (lines 116-134) - open source as competitive moat
+- **Amendment 3**: Dual monetization strategy (cloud databases + API access) replacing cloud-hosted-only approach
+
+**Competitive Position**: SourceBox occupies unique space (Free + Verticalized + Multi-industry + Open Source) with no direct competitor.
+
+**Research Details**: See `internal-docs/business-strategy.md` for detailed market analysis, competitor pricing, confidence assessments, and tactical implications.
+
 ---
 
-**Version**: 2.0.0
+**Version**: 3.0.0
 **Ratified**: 2025-01-14
-**Last Amended**: 2025-01-14
+**Last Amended**: 2025-01-15
 
 ---
 
