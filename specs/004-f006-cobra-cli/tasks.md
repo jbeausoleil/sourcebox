@@ -97,14 +97,14 @@ Project uses standard Go CLI structure:
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add global flag variables in `cmd/sourcebox/cmd/root.go`:
+- [X] T016 [US3] Add global flag variables in `cmd/sourcebox/cmd/root.go`:
   - `var verbose bool`
   - `var quiet bool`
-- [ ] T017 [US3] Add PersistentFlags in root command init():
+- [X] T017 [US3] Add PersistentFlags in root command init():
   - `rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")`
   - `rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")`
-- [ ] T018 [US3] Verify flags parse correctly: `go run ./cmd/sourcebox --verbose --help`
-- [ ] T019 [US3] Verify flags appear in help output under "Global Flags" section
+- [X] T018 [US3] Verify flags parse correctly: `go run ./cmd/sourcebox --verbose --help`
+- [X] T019 [US3] Verify flags appear in help output under "Global Flags" section
 
 **Checkpoint**: All P1 and P2 user stories should now be independently functional
 
