@@ -6,6 +6,8 @@
 
 > Verticalized demo data for developers in 30 seconds
 
+<!-- Test comment for PR workflow validation -->
+
 ## Legal Notice
 
 **SourceBox is developed independently on personal equipment, outside of work hours, with no use of employer resources or proprietary information.**
