@@ -68,17 +68,17 @@
 
 ### Implementation for User Story 4
 
-- [ ] T010 [US4] Create `schemas/example-schema.json` with fintech schema structure (borrowers, loans, payments tables)
-- [ ] T011 [US4] Define borrowers table (250 records) with personal data columns (first_name, last_name, email, phone, credit_score)
-- [ ] T012 [US4] Define loans table (1,000 records) with custom generators (loan_amount lognormal, interest_rate ranges, loan_status weighted)
-- [ ] T013 [US4] Define payments table (3,700 records) with foreign key to loans and payment amounts
-- [ ] T014 [US4] Add inline foreign_key definitions to loans.borrower_id and payments.loan_id
-- [ ] T015 [US4] Add explicit relationships section documenting all foreign key relationships
-- [ ] T016 [US4] Add indexes (email unique on borrowers, credit_score indexed, loan_id indexed on payments)
-- [ ] T017 [US4] Add generation_order array (borrowers, loans, payments)
-- [ ] T018 [US4] Add metadata section (industry: fintech, tags, total_records: 4950)
-- [ ] T019 [US4] Validate JSON syntax using `cat schemas/example-schema.json | jq '.'`
-- [ ] T020 [US4] Verify Tier 1 complexity compliance (<5,000 total records per constitution line 176-197)
+- [X] T010 [US4] Create `schemas/example-schema.json` with fintech schema structure (borrowers, loans, payments tables)
+- [X] T011 [US4] Define borrowers table (250 records) with personal data columns (first_name, last_name, email, phone, credit_score)
+- [X] T012 [US4] Define loans table (1,000 records) with custom generators (loan_amount lognormal, interest_rate ranges, loan_status weighted)
+- [X] T013 [US4] Define payments table (3,700 records) with foreign key to loans and payment amounts
+- [X] T014 [US4] Add inline foreign_key definitions to loans.borrower_id and payments.loan_id
+- [X] T015 [US4] Add explicit relationships section documenting all foreign key relationships
+- [X] T016 [US4] Add indexes (email unique on borrowers, credit_score indexed, loan_id indexed on payments)
+- [X] T017 [US4] Add generation_order array (borrowers, loans, payments)
+- [X] T018 [US4] Add metadata section (industry: fintech, tags, total_records: 4950)
+- [X] T019 [US4] Validate JSON syntax using `cat schemas/example-schema.json | jq '.'`
+- [X] T020 [US4] Verify Tier 1 complexity compliance (<5,000 total records per constitution line 176-197)
 
 **Checkpoint**: At this point, User Stories 1 and 4 are complete - developers have both documentation and a working example
 
