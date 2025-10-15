@@ -1,0 +1,282 @@
+{
+  "schema_version": "1.0",
+  "name": "fintech-loans",
+  "description": "Realistic fintech loan data with borrowers, loans, and payments",
+  "author": "SourceBox Contributors",
+  "version": "1.0.0",
+  "database_type": ["mysql", "postgres"],
+  "metadata": {
+    "industry": "fintech",
+    "tags": ["loans", "credit", "borrowers", "payments"],
+    "total_records": 4950,
+    "complexity_tier": 1
+  },
+  "tables": [
+    {
+      "name": "borrowers",
+      "description": "Individual loan borrowers with credit profiles and contact information",
+      "record_count": 250,
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Auto-incrementing primary key"
+        },
+        {
+          "name": "first_name",
+          "type": "varchar(100)",
+          "nullable": false,
+          "generator": "first_name",
+          "description": "Borrower's legal first name"
+        },
+        {
+          "name": "last_name",
+          "type": "varchar(100)",
+          "nullable": false,
+          "generator": "last_name",
+          "description": "Borrower's legal last name"
+        },
+        {
+          "name": "email",
+          "type": "varchar(255)",
+          "nullable": false,
+          "unique": true,
+          "generator": "email",
+          "description": "Primary contact email (unique across all borrowers)"
+        },
+        {
+          "name": "phone",
+          "type": "varchar(20)",
+          "nullable": true,
+          "generator": "phone",
+          "description": "Primary contact phone number"
+        },
+        {
+          "name": "credit_score",
+          "type": "int",
+          "nullable": false,
+          "generator": "int_range",
+          "generator_params": {
+            "min": 300,
+            "max": 850,
+            "distribution": {
+              "type": "normal",
+              "params": {
+                "mean": 680,
+                "std_dev": 80,
+                "min": 300,
+                "max": 850
+              }
+            }
+          },
+          "description": "FICO credit score (300-850 scale, normally distributed around 680)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_borrower_email",
+          "columns": ["email"],
+          "type": "BTREE",
+          "unique": true
+        },
+        {
+          "name": "idx_credit_score",
+          "columns": ["credit_score"],
+          "type": "BTREE"
+        }
+      ]
+    },
+    {
+      "name": "loans",
+      "description": "Loan records linked to borrowers with realistic loan amounts and interest rates",
+      "record_count": 1000,
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Auto-incrementing primary key"
+        },
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "nullable": false,
+          "foreign_key": {
+            "table": "borrowers",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          },
+          "description": "Reference to parent borrower (cascading deletes)"
+        },
+        {
+          "name": "loan_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "generator": "decimal_range",
+          "generator_params": {
+            "min": 1000,
+            "max": 50000,
+            "distribution": {
+              "type": "lognormal",
+              "params": {
+                "median": 15000,
+                "min": 1000,
+                "max": 50000
+              }
+            }
+          },
+          "description": "Loan principal amount in USD (lognormal distribution, realistic skew toward smaller loans)"
+        },
+        {
+          "name": "interest_rate",
+          "type": "float",
+          "nullable": false,
+          "generator": "float_range",
+          "generator_params": {
+            "distribution": {
+              "type": "ranges",
+              "params": {
+                "ranges": [
+                  {
+                    "min": 3.5,
+                    "max": 6.0,
+                    "weight": 0.30
+                  },
+                  {
+                    "min": 6.0,
+                    "max": 9.0,
+                    "weight": 0.45
+                  },
+                  {
+                    "min": 9.0,
+                    "max": 15.0,
+                    "weight": 0.20
+                  },
+                  {
+                    "min": 15.0,
+                    "max": 25.0,
+                    "weight": 0.05
+                  }
+                ]
+              }
+            }
+          },
+          "description": "Annual interest rate percentage (tiered distribution based on credit risk)"
+        },
+        {
+          "name": "loan_status",
+          "type": "enum('active','paid','delinquent','defaulted')",
+          "nullable": false,
+          "default": "active",
+          "generator": "enum",
+          "generator_params": {
+            "values": [
+              {"value": "active", "weight": 0.70},
+              {"value": "paid", "weight": 0.25},
+              {"value": "delinquent", "weight": 0.04},
+              {"value": "defaulted", "weight": 0.01}
+            ]
+          },
+          "description": "Current loan status (70% active, 25% paid, 4% delinquent, 1% defaulted)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_borrower_id",
+          "columns": ["borrower_id"],
+          "type": "BTREE"
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "description": "Payment records for loans with payment amounts and timestamps",
+      "record_count": 3700,
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true,
+          "description": "Auto-incrementing primary key"
+        },
+        {
+          "name": "loan_id",
+          "type": "int",
+          "nullable": false,
+          "foreign_key": {
+            "table": "loans",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          },
+          "description": "Reference to loan this payment applies to (cascading deletes)"
+        },
+        {
+          "name": "payment_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "generator": "decimal_range",
+          "generator_params": {
+            "min": 50,
+            "max": 2000
+          },
+          "description": "Payment amount in USD (50-2000 range, uniform distribution)"
+        },
+        {
+          "name": "payment_date",
+          "type": "date",
+          "nullable": false,
+          "generator": "date_between",
+          "generator_params": {
+            "start_date": "2020-01-01",
+            "end_date": "2024-12-31"
+          },
+          "description": "Date when payment was made (2020-2024 range)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_loan_id",
+          "columns": ["loan_id"],
+          "type": "BTREE"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "loans",
+      "from_column": "borrower_id",
+      "to_table": "borrowers",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each loan belongs to one borrower. One borrower can have multiple loans."
+    },
+    {
+      "from_table": "payments",
+      "from_column": "loan_id",
+      "to_table": "loans",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each payment is associated with one loan. One loan can have multiple payments."
+    }
+  ],
+  "generation_order": ["borrowers", "loans", "payments"],
+  "validation_rules": [
+    {
+      "rule": "loans.borrower_id REFERENCES borrowers.id",
+      "description": "All loans must reference valid borrowers",
+      "severity": "error"
+    },
+    {
+      "rule": "payments.loan_id REFERENCES loans.id",
+      "description": "All payments must reference valid loans",
+      "severity": "error"
+    }
+  ]
+}
