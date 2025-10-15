@@ -5680,7 +5680,687 @@ Here is a complete schema with a realistic `generation_order`:
 
 ---
 
-_Subsequent sections will be added in tasks T010-T012._
+## Foreign Key Relationships
+
+### Overview
+
+Foreign key relationships define how tables are linked together in a schema. SourceBox uses a **dual representation pattern** for foreign keys: an inline `foreign_key` object within column definitions (used by the parser for code generation) and an explicit `relationships` array at the schema level (used for documentation and visualization).
+
+**Key features**:
+- **Dual representation**: Both inline and explicit representations are required
+- **Inline foreign_key**: Drives data generation and referential integrity enforcement
+- **Explicit relationships**: Documents relationship semantics and provides human-readable context
+- **Type-safe**: Foreign key columns must match the type of the referenced column
+- **Referential integrity**: Supports CASCADE, SET NULL, and RESTRICT actions
+- **Validation**: Parser validates all relationships and enforces generation order constraints
+
+**Why dual representation?**
+- **Inline foreign_key**: Provides the technical specification the parser needs (which column references which table/column, what actions to take on delete/update). This is co-located with the column definition where it's used.
+- **Explicit relationships**: Provides semantic documentation (relationship type, cardinality, business meaning). This gives developers a high-level view of the schema's relationships without parsing column definitions.
+- **Complementary**: The inline definition is the source of truth for code; the explicit definition is the source of truth for documentation.
+
+---
+
+### Inline Foreign Key Object
+
+The inline `foreign_key` object is defined within a column definition and specifies the technical details of the foreign key constraint.
+
+**Location**: Within a column object in the `columns` array of a table definition.
+
+**Structure**:
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "borrowers",
+    "column": "id",
+    "on_delete": "CASCADE",
+    "on_update": "CASCADE"
+  },
+  "description": "Reference to parent borrower (cascading deletes)"
+}
+```
+
+**Fields**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `table` | string | Yes | Name of the parent table being referenced |
+| `column` | string | Yes | Name of the column in the parent table being referenced |
+| `on_delete` | string | Yes | Action to take when the parent record is deleted (CASCADE, SET NULL, RESTRICT) |
+| `on_update` | string | Yes | Action to take when the parent record's key is updated (CASCADE, SET NULL, RESTRICT) |
+
+**Example (One-to-Many Relationship)**:
+```json
+{
+  "name": "loans",
+  "columns": [
+    {
+      "name": "id",
+      "type": "int",
+      "primary_key": true
+    },
+    {
+      "name": "borrower_id",
+      "type": "int",
+      "nullable": false,
+      "foreign_key": {
+        "table": "borrowers",
+        "column": "id",
+        "on_delete": "CASCADE",
+        "on_update": "CASCADE"
+      },
+      "description": "Borrower who owns this loan"
+    }
+  ]
+}
+```
+
+**Parser behavior**:
+1. **Validation**: Verifies that the referenced table and column exist in the schema
+2. **Type checking**: Ensures the foreign key column type matches the referenced column type
+3. **Constraint generation**: Creates the appropriate FOREIGN KEY constraint in CREATE TABLE statements
+4. **Data generation**: When generating records for the `loans` table, the parser will randomly select existing `borrower_id` values from the `borrowers` table
+5. **Referential integrity**: Enforces that the parent table (`borrowers`) is generated before the child table (`loans`) via `generation_order`
+
+---
+
+### Explicit Relationships Array
+
+The explicit `relationships` array is defined at the schema level and documents the semantic meaning and cardinality of table relationships.
+
+**Location**: Top-level field in the schema JSON, alongside `tables`, `generation_order`, etc.
+
+**Structure**:
+```json
+{
+  "relationships": [
+    {
+      "from_table": "loans",
+      "from_column": "borrower_id",
+      "to_table": "borrowers",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each loan belongs to one borrower. One borrower can have multiple loans."
+    }
+  ]
+}
+```
+
+**Fields**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `from_table` | string | Yes | Name of the child table (the table with the foreign key) |
+| `from_column` | string | Yes | Name of the foreign key column in the child table |
+| `to_table` | string | Yes | Name of the parent table (the table being referenced) |
+| `to_column` | string | Yes | Name of the primary key or unique column being referenced |
+| `relationship_type` | string | Yes | Type of relationship (one_to_one, one_to_many, many_to_one, many_to_many) |
+| `description` | string | Yes | Human-readable explanation of the relationship's business meaning |
+
+**Example (Complete Schema Relationships)**:
+```json
+{
+  "relationships": [
+    {
+      "from_table": "loans",
+      "from_column": "borrower_id",
+      "to_table": "borrowers",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each loan belongs to one borrower. One borrower can have multiple loans."
+    },
+    {
+      "from_table": "payments",
+      "from_column": "loan_id",
+      "to_table": "loans",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each payment is associated with one loan. One loan can have multiple payments."
+    }
+  ]
+}
+```
+
+**Usage**:
+- **Documentation generation**: Tooling can read this section to generate ER diagrams, relationship maps, etc.
+- **Schema comprehension**: Developers can quickly understand the schema's structure without parsing column definitions
+- **Validation**: The parser validates that explicit relationships match the inline foreign_key definitions (consistency check)
+
+---
+
+### Rationale for Dual Representation
+
+**Why not just inline foreign_key?**
+
+The inline `foreign_key` object is essential for the parser to generate correct SQL and enforce referential integrity. However, it has limitations:
+- **Hidden in column definitions**: Relationships are scattered across table definitions, making it hard to get a complete picture of the schema's structure
+- **No cardinality information**: The inline definition doesn't specify whether it's one-to-one, one-to-many, etc.
+- **No semantic context**: The inline definition doesn't explain the business meaning of the relationship
+
+**Why not just explicit relationships?**
+
+The explicit `relationships` array provides a high-level view of the schema's structure, but it's insufficient for code generation:
+- **Not co-located with columns**: The parser would need to scan the entire relationships array every time it processes a column
+- **Redundant lookups**: Generating data requires knowing which column has the foreign key, what actions to take on delete/update, etc.
+- **Less ergonomic**: Developers would need to update two separate sections when adding a foreign key column
+
+**Best of both worlds**:
+
+By using both representations, SourceBox achieves:
+1. **Parser efficiency**: The parser reads the inline `foreign_key` object directly when processing columns (no lookups needed)
+2. **Documentation quality**: The explicit `relationships` array provides a clear, high-level view of the schema's structure
+3. **Consistency validation**: The parser can validate that the two representations are consistent (they describe the same relationships)
+4. **Tooling support**: External tools (ER diagram generators, schema explorers) can read the `relationships` array without parsing column definitions
+
+**Example - Inconsistency Detection**:
+
+If a schema defines an inline foreign key but forgets to add it to the `relationships` array, the parser can warn:
+
+```
+WARNING: Column 'loans.borrower_id' has a foreign_key definition but no matching entry in relationships array
+```
+
+Similarly, if the `relationships` array references a column that doesn't have a `foreign_key` object, the parser can error:
+
+```
+ERROR: Relationship 'loans.borrower_id → borrowers.id' is declared but 'loans.borrower_id' has no foreign_key object
+```
+
+---
+
+### Relationship Types
+
+The `relationship_type` field in the explicit relationships array specifies the cardinality of the relationship. This is a **documentation field**—it doesn't affect data generation, but it helps developers and tools understand the schema's structure.
+
+#### one_to_one
+
+**Definition**: Each record in the child table references exactly one record in the parent table, and each record in the parent table is referenced by at most one record in the child table.
+
+**Example**: Users and UserProfiles (each user has one profile, each profile belongs to one user).
+
+```json
+{
+  "from_table": "user_profiles",
+  "from_column": "user_id",
+  "to_table": "users",
+  "to_column": "id",
+  "relationship_type": "one_to_one",
+  "description": "Each user has exactly one profile. Each profile belongs to exactly one user."
+}
+```
+
+**Implementation notes**:
+- The foreign key column should have a UNIQUE constraint to enforce the one-to-one relationship
+- Typically, the child table's foreign key column is also its primary key
+
+**Data generation behavior**:
+- Each record in the child table will reference a unique parent record (no duplicates)
+
+---
+
+#### one_to_many
+
+**Definition**: Each record in the parent table can be referenced by multiple records in the child table, but each record in the child table references exactly one record in the parent table.
+
+**Example**: Borrowers and Loans (one borrower can have many loans, but each loan belongs to one borrower).
+
+**Perspective note**: This is the same relationship as `many_to_one`, but described from the parent table's perspective. Use `one_to_many` when documenting from the parent's viewpoint.
+
+```json
+{
+  "from_table": "borrowers",
+  "from_column": "id",
+  "to_table": "loans",
+  "to_column": "borrower_id",
+  "relationship_type": "one_to_many",
+  "description": "One borrower can have multiple loans."
+}
+```
+
+**Note**: In practice, SourceBox schemas typically use `many_to_one` (from the child's perspective) rather than `one_to_many` (from the parent's perspective), since the foreign key is defined in the child table. Both are valid, but `many_to_one` aligns better with the inline `foreign_key` definition's location.
+
+---
+
+#### many_to_one
+
+**Definition**: Each record in the child table references exactly one record in the parent table, but each record in the parent table can be referenced by multiple records in the child table.
+
+**Example**: Loans and Borrowers (many loans belong to one borrower).
+
+```json
+{
+  "from_table": "loans",
+  "from_column": "borrower_id",
+  "to_table": "borrowers",
+  "to_column": "id",
+  "relationship_type": "many_to_one",
+  "description": "Each loan belongs to one borrower. One borrower can have multiple loans."
+}
+```
+
+**Implementation notes**:
+- This is the most common relationship type in relational databases
+- The foreign key column is in the child table (`loans.borrower_id`)
+- No UNIQUE constraint is needed on the foreign key column (multiple loans can reference the same borrower)
+
+**Data generation behavior**:
+- Multiple child records can reference the same parent record
+- The parser will randomly distribute child records across parent records based on `record_count` ratios
+
+---
+
+#### many_to_many
+
+**Definition**: Each record in one table can be associated with multiple records in another table, and vice versa.
+
+**Example**: Students and Courses (one student can enroll in multiple courses, one course can have multiple students).
+
+**Implementation notes**:
+- Requires a **junction table** (also called a "join table" or "associative table")
+- The junction table has two foreign keys: one to each of the related tables
+- The junction table's primary key is typically a composite of both foreign keys
+
+**Example**:
+
+```json
+{
+  "tables": [
+    {
+      "name": "students",
+      "columns": [
+        {"name": "id", "type": "int", "primary_key": true}
+      ]
+    },
+    {
+      "name": "courses",
+      "columns": [
+        {"name": "id", "type": "int", "primary_key": true}
+      ]
+    },
+    {
+      "name": "enrollments",
+      "description": "Junction table linking students and courses",
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "int",
+          "foreign_key": {
+            "table": "students",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          }
+        },
+        {
+          "name": "course_id",
+          "type": "int",
+          "foreign_key": {
+            "table": "courses",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          }
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "enrollments",
+      "from_column": "student_id",
+      "to_table": "students",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each enrollment belongs to one student"
+    },
+    {
+      "from_table": "enrollments",
+      "from_column": "course_id",
+      "to_table": "courses",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each enrollment is for one course"
+    }
+  ]
+}
+```
+
+**Note**: Many-to-many relationships are **not represented directly** in the `relationships` array. Instead, they are decomposed into two `many_to_one` relationships via the junction table.
+
+---
+
+### Referential Integrity Actions
+
+The `on_delete` and `on_update` fields in the inline `foreign_key` object specify what action the database should take when the referenced parent record is deleted or updated. These actions enforce **referential integrity** and prevent orphaned records.
+
+**Supported actions**:
+- **CASCADE**: Automatically propagate the delete/update to child records
+- **SET NULL**: Set the foreign key column to NULL when the parent is deleted/updated (requires `nullable: true`)
+- **RESTRICT**: Prevent the delete/update if child records exist (enforce referential integrity)
+
+---
+
+#### CASCADE
+
+**Behavior**: When the parent record is deleted or updated, the corresponding child records are automatically deleted or updated.
+
+**Use case**: When child records are meaningless without the parent (e.g., deleting a borrower should delete their loans).
+
+**Example (on_delete: CASCADE)**:
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "borrowers",
+    "column": "id",
+    "on_delete": "CASCADE",
+    "on_update": "CASCADE"
+  }
+}
+```
+
+**What happens**:
+- **Delete**: If borrower ID 5 is deleted, all loans with `borrower_id = 5` are automatically deleted
+- **Update**: If borrower ID 5 is updated to ID 50, all loans with `borrower_id = 5` are updated to `borrower_id = 50`
+
+**Pros**:
+- Maintains referential integrity automatically
+- Prevents orphaned records
+- Simple to implement and understand
+
+**Cons**:
+- Can cause unintended data loss (deleting a borrower deletes all their loans)
+- Cascading deletes can be slow if there are many child records
+- Can create complex dependency chains (deleting A deletes B, which deletes C, etc.)
+
+---
+
+#### SET NULL
+
+**Behavior**: When the parent record is deleted or updated, the foreign key column in child records is set to NULL.
+
+**Use case**: When child records should be preserved even if the parent is deleted (e.g., deleting a loan officer should preserve their loans but mark them as unassigned).
+
+**Example**:
+```json
+{
+  "name": "loan_officer_id",
+  "type": "int",
+  "nullable": true,
+  "foreign_key": {
+    "table": "loan_officers",
+    "column": "id",
+    "on_delete": "SET NULL",
+    "on_update": "CASCADE"
+  }
+}
+```
+
+**What happens**:
+- **Delete**: If loan officer ID 10 is deleted, all loans with `loan_officer_id = 10` are updated to `loan_officer_id = NULL`
+- **Update**: If loan officer ID 10 is updated to ID 20, all loans with `loan_officer_id = 10` are updated to `loan_officer_id = 20`
+
+**Requirements**:
+- The foreign key column **must** have `nullable: true` (otherwise SET NULL is invalid)
+- The parser will validate this constraint and error if `nullable: false`
+
+**Validation error example**:
+```
+ERROR: Table 'loans', Column 'borrower_id': Foreign key uses 'SET NULL' but column is not nullable. Set nullable: true
+```
+
+**Pros**:
+- Preserves child records even when the parent is deleted
+- Useful for optional relationships (e.g., optional loan officer assignment)
+
+**Cons**:
+- Creates NULL values, which may require additional handling in queries
+- May violate business logic if the foreign key is semantically required (e.g., every loan should have a borrower)
+
+---
+
+#### RESTRICT
+
+**Behavior**: Prevent the parent record from being deleted or updated if any child records reference it. The database will raise an error and abort the operation.
+
+**Use case**: When referential integrity must be enforced manually (e.g., prevent deleting a borrower if they have active loans).
+
+**Example**:
+```json
+{
+  "name": "borrower_id",
+  "type": "int",
+  "nullable": false,
+  "foreign_key": {
+    "table": "borrowers",
+    "column": "id",
+    "on_delete": "RESTRICT",
+    "on_update": "RESTRICT"
+  }
+}
+```
+
+**What happens**:
+- **Delete**: If borrower ID 5 has any loans, attempting to delete borrower ID 5 will fail with an error
+- **Update**: If borrower ID 5 has any loans, attempting to update borrower ID 5 will fail with an error
+
+**Error example** (database-level error):
+```
+ERROR: Cannot delete or update a parent row: a foreign key constraint fails (`loans`.`borrower_id`)
+```
+
+**Pros**:
+- Prevents accidental data loss
+- Forces explicit handling of child records before deleting parents
+- Useful for auditing and compliance (e.g., can't delete a borrower with loan history)
+
+**Cons**:
+- Requires manual cleanup of child records before deleting parents
+- Can be cumbersome in development/testing scenarios
+- May require additional application logic to handle deletion workflows
+
+---
+
+### Complete Example: Dual Representation
+
+This example demonstrates a complete schema with foreign key relationships using both inline and explicit representations.
+
+**Scenario**: A fintech schema with borrowers, loans, and payments.
+
+**Schema**:
+```json
+{
+  "schema_version": "1.0",
+  "name": "fintech-loans",
+  "tables": [
+    {
+      "name": "borrowers",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true
+        },
+        {
+          "name": "email",
+          "type": "varchar(255)",
+          "nullable": false,
+          "unique": true,
+          "generator": "email"
+        }
+      ]
+    },
+    {
+      "name": "loans",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true
+        },
+        {
+          "name": "borrower_id",
+          "type": "int",
+          "nullable": false,
+          "foreign_key": {
+            "table": "borrowers",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          },
+          "description": "Borrower who owns this loan (cascading deletes)"
+        },
+        {
+          "name": "loan_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "generator": "decimal_range",
+          "generator_params": {"min": 1000, "max": 50000}
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "primary_key": true
+        },
+        {
+          "name": "loan_id",
+          "type": "int",
+          "nullable": false,
+          "foreign_key": {
+            "table": "loans",
+            "column": "id",
+            "on_delete": "CASCADE",
+            "on_update": "CASCADE"
+          },
+          "description": "Loan this payment applies to (cascading deletes)"
+        },
+        {
+          "name": "payment_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "generator": "decimal_range",
+          "generator_params": {"min": 50, "max": 2000}
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "loans",
+      "from_column": "borrower_id",
+      "to_table": "borrowers",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each loan belongs to one borrower. One borrower can have multiple loans."
+    },
+    {
+      "from_table": "payments",
+      "from_column": "loan_id",
+      "to_table": "loans",
+      "to_column": "id",
+      "relationship_type": "many_to_one",
+      "description": "Each payment is associated with one loan. One loan can have multiple payments."
+    }
+  ],
+  "generation_order": ["borrowers", "loans", "payments"]
+}
+```
+
+**How it works**:
+
+1. **Inline foreign_key (parser-facing)**:
+   - `loans.borrower_id` has a `foreign_key` object pointing to `borrowers.id`
+   - `payments.loan_id` has a `foreign_key` object pointing to `loans.id`
+   - The parser uses these definitions to:
+     - Generate CREATE TABLE statements with FOREIGN KEY constraints
+     - Populate foreign key columns with valid parent IDs during data generation
+     - Enforce generation order (borrowers → loans → payments)
+
+2. **Explicit relationships (documentation-facing)**:
+   - The `relationships` array documents the semantic meaning of the relationships
+   - Each relationship specifies `relationship_type: "many_to_one"` (cardinality)
+   - The descriptions explain the business logic ("each loan belongs to one borrower")
+   - Tooling can use this to generate ER diagrams, schema visualizations, etc.
+
+3. **Consistency**:
+   - Both representations describe the same relationships
+   - The parser validates that inline foreign keys match the explicit relationships
+   - If they diverge, the parser raises a warning or error
+
+**Generated SQL** (MySQL example):
+
+```sql
+CREATE TABLE borrowers (
+  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE loans (
+  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  borrower_id INT NOT NULL,
+  loan_amount DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (borrower_id) REFERENCES borrowers(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE payments (
+  id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  loan_id INT NOT NULL,
+  payment_amount DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+```
+
+**Data generation flow**:
+
+1. Generate 250 borrowers (IDs: 1-250)
+2. Generate 1,000 loans:
+   - For each loan, randomly select a `borrower_id` from 1-250
+   - Multiple loans can reference the same borrower (many-to-one relationship)
+3. Generate 3,700 payments:
+   - For each payment, randomly select a `loan_id` from 1-1,000
+   - Multiple payments can reference the same loan (many-to-one relationship)
+
+---
+
+### Summary
+
+**Key points**:
+- **Dual representation**: Foreign keys are defined both inline (in column definitions) and explicitly (in the `relationships` array)
+- **Inline foreign_key**: Used by the parser for code generation, data population, and validation
+- **Explicit relationships**: Used for documentation, tooling, and high-level schema comprehension
+- **Relationship types**: `one_to_one`, `one_to_many`, `many_to_one`, `many_to_many` (decomposed into junction tables)
+- **Referential integrity**: Supports `CASCADE`, `SET NULL`, and `RESTRICT` actions
+- **Validation**: The parser validates type matching, nullability constraints, and consistency between representations
+
+**Best practices**:
+- Always define both inline and explicit representations for every foreign key
+- Use `CASCADE` for dependent child records (e.g., loan payments depend on loans)
+- Use `SET NULL` for optional relationships (e.g., optional loan officer assignment)
+- Use `RESTRICT` for compliance/auditing scenarios (e.g., can't delete borrowers with loan history)
+- Document the business meaning of relationships in the `description` field
+- Ensure `generation_order` respects foreign key dependencies (parents before children)
+
+**What to avoid**:
+- Defining an inline `foreign_key` without a matching entry in the `relationships` array
+- Defining a relationship in the `relationships` array without a matching inline `foreign_key`
+- Using `SET NULL` with `nullable: false` (parser will error)
+- Creating circular foreign key dependencies (A → B → A)
+- Forgetting to include parent tables before child tables in `generation_order`
+
+---
 
 ## Built-in Generators
 

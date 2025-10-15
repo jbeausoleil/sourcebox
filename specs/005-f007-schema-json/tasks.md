@@ -186,12 +186,12 @@
 
 ### Implementation
 
-- [ ] T051 [US1+US2] Document inline foreign_key object structure in schema-spec.md (table, column, on_delete, on_update)
-- [ ] T052 [US1+US2] Document explicit relationships section format in schema-spec.md (from_table, from_column, to_table, to_column, relationship_type, description)
-- [ ] T053 [US1+US2] Document rationale for dual representation (inline for code, explicit for documentation)
-- [ ] T054 [US1+US2] Document relationship types (one_to_one, one_to_many, many_to_one, many_to_many)
-- [ ] T055 [US1+US2] Document referential integrity actions (CASCADE, SET NULL, RESTRICT) with examples
-- [ ] T056 [US1+US2] Add foreign key examples showing both inline and explicit representations
+- [X] T051 [US1+US2] Document inline foreign_key object structure in schema-spec.md (table, column, on_delete, on_update)
+- [X] T052 [US1+US2] Document explicit relationships section format in schema-spec.md (from_table, from_column, to_table, to_column, relationship_type, description)
+- [X] T053 [US1+US2] Document rationale for dual representation (inline for code, explicit for documentation)
+- [X] T054 [US1+US2] Document relationship types (one_to_one, one_to_many, many_to_one, many_to_many)
+- [X] T055 [US1+US2] Document referential integrity actions (CASCADE, SET NULL, RESTRICT) with examples
+- [X] T056 [US1+US2] Add foreign key examples showing both inline and explicit representations
 
 **Checkpoint**: Foreign key documentation is complete - developers understand how to define relationships
 
