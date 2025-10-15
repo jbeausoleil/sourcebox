@@ -1,4 +1,4 @@
-# Feature Specification Prompt: F004 - Project Directory Structure & Build System
+# F004 - Project Directory Structure & Build System
 
 ## Feature Metadata
 - **Feature ID**: F004

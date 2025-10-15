@@ -4,7 +4,9 @@
 *.dll
 *.so
 *.dylib
-sourcebox
+/sourcebox
+dist/sourcebox
+dist/sourcebox-*
 
 # Test binary, built with `go test -c`
 *.test
