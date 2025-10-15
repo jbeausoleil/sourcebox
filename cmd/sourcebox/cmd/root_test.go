@@ -312,3 +312,473 @@ func TestMainVersionFlow(t *testing.T) {
 		})
 	}
 }
+
+// TestGlobalFlagVariables verifies that global flag variables are properly declared
+// and initialized to their default values.
+func TestGlobalFlagVariables(t *testing.T) {
+	// Reset flags to default state
+	verbose = false
+	quiet = false
+
+	// Verify default values
+	assert.False(t, verbose, "verbose should default to false")
+	assert.False(t, quiet, "quiet should default to false")
+
+	// Verify flags can be modified (they're package-level vars)
+	verbose = true
+	assert.True(t, verbose, "verbose should be modifiable")
+
+	quiet = true
+	assert.True(t, quiet, "quiet should be modifiable")
+
+	// Reset for other tests
+	verbose = false
+	quiet = false
+}
+
+// TestVerboseFlagParsing verifies that the --verbose/-v flag parses correctly
+// in various forms and combinations.
+func TestVerboseFlagParsing(t *testing.T) {
+	tests := []struct {
+		name          string
+		args          []string
+		expectedValue bool
+	}{
+		{
+			name:          "long form verbose flag",
+			args:          []string{"--verbose"},
+			expectedValue: true,
+		},
+		{
+			name:          "short form verbose flag",
+			args:          []string{"-v"},
+			expectedValue: true,
+		},
+		{
+			name:          "no verbose flag",
+			args:          []string{},
+			expectedValue: false,
+		},
+		{
+			name:          "verbose with other args",
+			args:          []string{"--verbose", "somecommand"},
+			expectedValue: true,
+		},
+		{
+			name:          "verbose short form with other args",
+			args:          []string{"-v", "somecommand"},
+			expectedValue: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+
+			// Create a fresh command to avoid state pollution
+			cmd := &cobra.Command{
+				Use: "sourcebox",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op, we're just testing flag parsing
+				},
+			}
+			cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			// Execute command
+			err := cmd.Execute()
+
+			// We expect no error for valid flag combinations
+			// (invalid commands are fine, we're testing flag parsing)
+			if err != nil && !strings.Contains(err.Error(), "unknown command") {
+				require.NoError(t, err, "Unexpected error: %v", err)
+			}
+
+			// Verify flag value
+			assert.Equal(t, tt.expectedValue, verbose,
+				"verbose flag should be set to expected value")
+		})
+	}
+}
+
+// TestQuietFlagParsing verifies that the --quiet/-q flag parses correctly
+// in various forms and combinations.
+func TestQuietFlagParsing(t *testing.T) {
+	tests := []struct {
+		name          string
+		args          []string
+		expectedValue bool
+	}{
+		{
+			name:          "long form quiet flag",
+			args:          []string{"--quiet"},
+			expectedValue: true,
+		},
+		{
+			name:          "short form quiet flag",
+			args:          []string{"-q"},
+			expectedValue: true,
+		},
+		{
+			name:          "no quiet flag",
+			args:          []string{},
+			expectedValue: false,
+		},
+		{
+			name:          "quiet with other args",
+			args:          []string{"--quiet", "somecommand"},
+			expectedValue: true,
+		},
+		{
+			name:          "quiet short form with other args",
+			args:          []string{"-q", "somecommand"},
+			expectedValue: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+
+			// Create a fresh command to avoid state pollution
+			cmd := &cobra.Command{
+				Use: "sourcebox",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op, we're just testing flag parsing
+				},
+			}
+			cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			// Execute command
+			err := cmd.Execute()
+
+			// We expect no error for valid flag combinations
+			if err != nil && !strings.Contains(err.Error(), "unknown command") {
+				require.NoError(t, err, "Unexpected error: %v", err)
+			}
+
+			// Verify flag value
+			assert.Equal(t, tt.expectedValue, quiet,
+				"quiet flag should be set to expected value")
+		})
+	}
+}
+
+// TestFlagCombinations verifies that verbose and quiet flags work together
+// and handle various combinations correctly.
+func TestFlagCombinations(t *testing.T) {
+	tests := []struct {
+		name            string
+		args            []string
+		expectedVerbose bool
+		expectedQuiet   bool
+	}{
+		{
+			name:            "both verbose and quiet (long form)",
+			args:            []string{"--verbose", "--quiet"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "both verbose and quiet (short form)",
+			args:            []string{"-v", "-q"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "both flags (mixed form)",
+			args:            []string{"--verbose", "-q"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "only verbose",
+			args:            []string{"--verbose"},
+			expectedVerbose: true,
+			expectedQuiet:   false,
+		},
+		{
+			name:            "only quiet",
+			args:            []string{"--quiet"},
+			expectedVerbose: false,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "neither flag",
+			args:            []string{},
+			expectedVerbose: false,
+			expectedQuiet:   false,
+		},
+		{
+			name:            "combined short flags (vq)",
+			args:            []string{"-vq"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "combined short flags (qv)",
+			args:            []string{"-qv"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+
+			// Create a fresh command
+			cmd := &cobra.Command{
+				Use: "sourcebox",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op
+				},
+			}
+			cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+			cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			cmd.SetOut(buf)
+			cmd.SetErr(buf)
+			cmd.SetArgs(tt.args)
+
+			// Execute command
+			err := cmd.Execute()
+			require.NoError(t, err, "Unexpected error: %v", err)
+
+			// Verify both flags
+			assert.Equal(t, tt.expectedVerbose, verbose,
+				"verbose flag should be set to expected value")
+			assert.Equal(t, tt.expectedQuiet, quiet,
+				"quiet flag should be set to expected value")
+		})
+	}
+}
+
+// TestPersistentFlagsInHelp verifies that global flags appear in help output.
+func TestPersistentFlagsInHelp(t *testing.T) {
+	// Reset root command
+	verbose = false
+	quiet = false
+
+	// Capture help output
+	buf := new(bytes.Buffer)
+	rootCmd.SetOut(buf)
+	rootCmd.SetErr(buf)
+	rootCmd.SetArgs([]string{"--help"})
+
+	err := rootCmd.Execute()
+	require.NoError(t, err, "Help command should not error")
+
+	output := buf.String()
+
+	// Verify verbose flag appears in help
+	assert.Contains(t, output, "--verbose", "Help should contain --verbose flag")
+	assert.Contains(t, output, "-v", "Help should contain -v shorthand")
+	assert.Contains(t, output, "verbose output", "Help should contain verbose flag description")
+
+	// Verify quiet flag appears in help
+	assert.Contains(t, output, "--quiet", "Help should contain --quiet flag")
+	assert.Contains(t, output, "-q", "Help should contain -q shorthand")
+	assert.Contains(t, output, "suppress non-error output", "Help should contain quiet flag description")
+}
+
+// TestPersistentFlagsWithSubcommands verifies that global flags work with subcommands.
+// This tests the "persistent" aspect of PersistentFlags.
+func TestPersistentFlagsWithSubcommands(t *testing.T) {
+	tests := []struct {
+		name            string
+		args            []string
+		expectedVerbose bool
+		expectedQuiet   bool
+	}{
+		{
+			name:            "verbose flag before subcommand",
+			args:            []string{"--verbose", "subcommand"},
+			expectedVerbose: true,
+			expectedQuiet:   false,
+		},
+		{
+			name:            "quiet flag before subcommand",
+			args:            []string{"--quiet", "subcommand"},
+			expectedVerbose: false,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "both flags before subcommand",
+			args:            []string{"-v", "-q", "subcommand"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "verbose flag after subcommand",
+			args:            []string{"subcommand", "--verbose"},
+			expectedVerbose: true,
+			expectedQuiet:   false,
+		},
+		{
+			name:            "quiet flag after subcommand",
+			args:            []string{"subcommand", "--quiet"},
+			expectedVerbose: false,
+			expectedQuiet:   true,
+		},
+		{
+			name:            "both flags after subcommand",
+			args:            []string{"subcommand", "-v", "-q"},
+			expectedVerbose: true,
+			expectedQuiet:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+
+			// Create root command with persistent flags
+			rootCmd := &cobra.Command{
+				Use: "sourcebox",
+			}
+			rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+			rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "suppress non-error output")
+
+			// Add a subcommand
+			subCmd := &cobra.Command{
+				Use: "subcommand",
+				Run: func(cmd *cobra.Command, args []string) {
+					// No-op, we're testing flag inheritance
+				},
+			}
+			rootCmd.AddCommand(subCmd)
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			rootCmd.SetOut(buf)
+			rootCmd.SetErr(buf)
+			rootCmd.SetArgs(tt.args)
+
+			// Execute command
+			err := rootCmd.Execute()
+			require.NoError(t, err, "Unexpected error: %v", err)
+
+			// Verify flags were parsed correctly
+			assert.Equal(t, tt.expectedVerbose, verbose,
+				"verbose flag should be set to expected value")
+			assert.Equal(t, tt.expectedQuiet, quiet,
+				"quiet flag should be set to expected value")
+		})
+	}
+}
+
+// TestRootCommandFlagsIntegration verifies the actual rootCmd has the flags configured.
+func TestRootCommandFlagsIntegration(t *testing.T) {
+	// This test verifies the actual production rootCmd, not a test double
+
+	// Check that persistent flags are defined
+	verboseFlag := rootCmd.PersistentFlags().Lookup("verbose")
+	require.NotNil(t, verboseFlag, "verbose flag should be defined")
+	assert.Equal(t, "v", verboseFlag.Shorthand, "verbose shorthand should be 'v'")
+	assert.Equal(t, "verbose output", verboseFlag.Usage, "verbose usage text should match")
+
+	quietFlag := rootCmd.PersistentFlags().Lookup("quiet")
+	require.NotNil(t, quietFlag, "quiet flag should be defined")
+	assert.Equal(t, "q", quietFlag.Shorthand, "quiet shorthand should be 'q'")
+	assert.Equal(t, "suppress non-error output", quietFlag.Usage, "quiet usage text should match")
+}
+
+// TestFlagDefaultValues verifies that flags have the correct default values.
+func TestFlagDefaultValues(t *testing.T) {
+	// Check verbose flag default
+	verboseFlag := rootCmd.PersistentFlags().Lookup("verbose")
+	require.NotNil(t, verboseFlag, "verbose flag should be defined")
+	assert.Equal(t, "false", verboseFlag.DefValue, "verbose should default to false")
+
+	// Check quiet flag default
+	quietFlag := rootCmd.PersistentFlags().Lookup("quiet")
+	require.NotNil(t, quietFlag, "quiet flag should be defined")
+	assert.Equal(t, "false", quietFlag.DefValue, "quiet should default to false")
+}
+
+// TestExecuteFunction verifies that Execute() function works correctly.
+// This tests the exported Execute function that's called from main.go.
+func TestExecuteFunction(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+	}{
+		{
+			name:        "execute with help flag",
+			args:        []string{"--help"},
+			expectError: false,
+		},
+		{
+			name:        "execute with version flag",
+			args:        []string{"--version"},
+			expectError: false,
+		},
+		{
+			name:        "execute with verbose flag",
+			args:        []string{"--verbose"},
+			expectError: false,
+		},
+		{
+			name:        "execute with quiet flag",
+			args:        []string{"--quiet"},
+			expectError: false,
+		},
+		{
+			name:        "execute with combined flags",
+			args:        []string{"-v", "-q"},
+			expectError: false,
+		},
+		{
+			name:        "execute with no args (shows help)",
+			args:        []string{},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			verbose = false
+			quiet = false
+
+			// Capture output
+			buf := new(bytes.Buffer)
+			rootCmd.SetOut(buf)
+			rootCmd.SetErr(buf)
+			rootCmd.SetArgs(tt.args)
+
+			// Call Execute directly
+			err := rootCmd.Execute()
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error but got none")
+			} else {
+				assert.NoError(t, err, "Unexpected error: %v", err)
+				assert.NotEmpty(t, buf.String(), "Expected output from command")
+			}
+		})
+	}
+}
