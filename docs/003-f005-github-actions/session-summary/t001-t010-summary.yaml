@@ -148,22 +148,35 @@ risks_and_backlog:
       impact: "Each workflow run downloads all dependencies from scratch after cache expiration"
       solution: "Already mitigated by actions/setup-go@v5 automatic caching"
       estimate: "0 hours (no action needed)"
+      mapped_task: "Built-in feature of actions/setup-go@v5"
+      status: "✅ ADDRESSED - Built-in caching enabled"
+      resolved_in_session: "t001-t010 (design decision)"
 
     - issue: "No build step in current workflow"
       impact: "Tests pass but compilation errors could slip through"
       solution: "Add make build step in Phase 4 (T022-T028)"
       estimate: "0.5 hours (planned work)"
+      mapped_task: "T009 [X] Configure test job to run `make build` after tests"
+      status: "✅ ADDRESSED - Task completed"
+      resolved_in_session: "t001-t010"
 
   low_priority:
     - issue: "Workflow runs on all branches, including feature branches"
       impact: "Potentially wasteful CI/CD usage for experimental branches"
       solution: "Consider branch filtering if CI costs become significant"
       estimate: "0.25 hours (defer until needed)"
+      mapped_task: "T045 [ ] Consider branch filtering for CI workflow (Phase 9 - Future Maintenance)"
+      status: "❌ NOT ADDRESSED - Deferred to backlog"
+      recommended_action: "Task T045 created in Phase 9: Monitor CI usage and add branch filtering only if costs become significant"
+      source_session: "t001-t010"
 
     - issue: "No coverage reporting to external service"
       impact: "Coverage tracked locally but not visualized in PR reviews"
       solution: "Add codecov.io integration in Phase 4 or Phase 5"
       estimate: "1 hour (nice-to-have)"
+      mapped_tasks: "T022 [X], T025 [X], T028 [X], T031 [X]"
+      status: "✅ ADDRESSED - Tasks completed"
+      resolved_in_session: "t022-t042"
 
 scope_deviations:
   exceeded_scope:

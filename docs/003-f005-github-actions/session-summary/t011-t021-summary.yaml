@@ -160,27 +160,42 @@ risks_and_backlog:
       impact: "Cannot track code quality trends or enforce coverage thresholds"
       solution: "T022: Add -coverprofile=coverage.txt to test command"
       estimate: "15 minutes"
+      mapped_task: "T022 [X] Add coverage generation to test command"
+      status: "✅ ADDRESSED - Task completed"
+      resolved_in_session: "t022-t042"
 
     - issue: "No linting job configured"
       impact: "Code style issues not caught until manual review"
       solution: "T023: Add golangci-lint job to workflow"
       estimate: "20 minutes"
+      mapped_tasks: "T023 [X], T024 [X]"
+      status: "✅ ADDRESSED - Tasks completed"
+      resolved_in_session: "t022-t042"
 
     - issue: "No Go module caching"
       impact: "Workflow downloads dependencies every run, wasting ~30-60 seconds"
       solution: "T032-T037: Add actions/cache for go.sum"
       estimate: "30 minutes"
+      mapped_tasks: "T032 [X], T033 [X], T034 [X], T035 [X], T036 [X], T037 [X]"
+      status: "✅ ADDRESSED - Tasks completed"
+      resolved_in_session: "t022-t042"
 
   low_priority:
     - issue: "Branch protection not enforced"
       impact: "Developers can merge PRs with failing checks"
       solution: "Manual setup in GitHub Settings per quickstart.md guide"
       estimate: "10 minutes (manual process)"
+      mapped_task: "T013 [X] Document branch protection setup in quickstart.md"
+      status: "✅ ADDRESSED - Manual process documented"
+      resolved_in_session: "t011-t021"
 
     - issue: "No status badges in README"
       impact: "Build status not visible at repository level"
       solution: "T027-T030: Add CI/coverage/license badges"
       estimate: "10 minutes"
+      mapped_tasks: "T027 [X], T028 [X], T029 [X], T030 [X]"
+      status: "✅ ADDRESSED - Tasks completed"
+      resolved_in_session: "t022-t042"
 
 next_steps:
   immediate:

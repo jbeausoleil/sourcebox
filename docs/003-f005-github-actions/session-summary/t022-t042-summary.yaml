@@ -225,17 +225,28 @@ risks_and_backlog:
       impact: "Coverage tracking unavailable if Codecov experiences outages"
       solution: "Already mitigated with fail_ci_if_error: false"
       estimate: "0 hours (already handled)"
+      mapped_task: "T025 [X] Add Codecov upload step with fail_ci_if_error: false"
+      status: "✅ ADDRESSED - Task completed with mitigation"
+      resolved_in_session: "t022-t042"
 
     - issue: "golangci-lint version updates may introduce new rules"
       impact: "CI may start failing on previously passing code after linter update"
       solution: "Pin golangci-lint version or review updates quarterly"
       estimate: "1 hour quarterly"
+      mapped_task: "T043 [ ] Establish quarterly review process for golangci-lint version updates (Phase 9 - Future Maintenance)"
+      status: "❌ NOT ADDRESSED - Deferred to backlog"
+      recommended_action: "Task T043 created in Phase 9: Establish quarterly linter review process"
+      source_session: "t022-t042"
 
   low_priority:
     - issue: "Cache strategy may need adjustment as dependencies grow"
       impact: "Cache size or hit rate could degrade with many dependencies"
       solution: "Monitor cache performance and adjust path/key strategy if needed"
       estimate: "2 hours if needed"
+      mapped_task: "T044 [ ] Monitor GitHub Actions cache performance metrics (Phase 9 - Future Maintenance)"
+      status: "❌ NOT ADDRESSED - Deferred to backlog"
+      recommended_action: "Task T044 created in Phase 9: Monitor cache performance and optimize if needed"
+      source_session: "t022-t042"
 
 next_steps:
   immediate: []

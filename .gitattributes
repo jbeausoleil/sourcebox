@@ -1,0 +1,47 @@
+# Auto-detect text files and normalize line endings to LF on checkin
+# and convert to native line endings on checkout.
+* text=auto
+
+# Go source files
+*.go text eol=lf
+
+# Shell scripts (must use LF even on Windows)
+*.sh text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Makefiles (must use tabs and LF)
+Makefile text eol=lf
+*.mk text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# Configuration files
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+
+# Git configuration
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Binary files
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.a binary
+*.gz binary
+*.tar binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
