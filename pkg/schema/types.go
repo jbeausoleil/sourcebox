@@ -1,3 +1,22 @@
+// Package schema provides types and functionality for parsing and validating
+// SourceBox schema definitions. Schemas are JSON-based files that describe
+// database tables, columns, relationships, and data generation rules.
+//
+// The schema format follows the specification defined in F007 (005-f007-schema-json).
+// Schemas support MySQL and PostgreSQL databases and include support for:
+//   - Table and column definitions with data types
+//   - Primary keys and foreign key relationships
+//   - Indexes and constraints
+//   - Data generator specifications with distribution parameters
+//   - Validation rules for referential integrity
+//
+// Example usage:
+//
+//	schema, err := schema.LoadSchema("schemas/example-schema.json")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Printf("Loaded schema: %s with %d tables\n", schema.Name, len(schema.Tables))
 package schema
 
 // Schema represents the top-level schema definition for a database schema.
