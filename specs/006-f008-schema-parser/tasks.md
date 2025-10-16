@@ -126,12 +126,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T045 [US3] Build table names map in ValidateSchema (map[string]bool of all table names for O(1) lookup)
-- [ ] T046 [US3] Implement ValidateForeignKeys function in pkg/schema/parser.go (checks foreign key table existence)
-- [ ] T047 [US3] Implement ValidateReferentialAction function in pkg/schema/parser.go (checks on_delete/on_update actions)
-- [ ] T048 [US3] Integrate foreign key validation into ValidateSchema (call ValidateForeignKeys after table validation)
-- [ ] T049 [US3] Add error context to foreign key errors (include table name, column name, array indices)
-- [ ] T050 [US3] Verify all User Story 3 tests pass
+- [X] T045 [US3] Build table names map in ValidateSchema (map[string]bool of all table names for O(1) lookup)
+- [X] T046 [US3] Implement ValidateForeignKeys function in pkg/schema/parser.go (checks foreign key table existence)
+- [X] T047 [US3] Implement ValidateReferentialAction function in pkg/schema/parser.go (checks on_delete/on_update actions)
+- [X] T048 [US3] Integrate foreign key validation into ValidateSchema (call ValidateForeignKeys after table validation)
+- [X] T049 [US3] Add error context to foreign key errors (include table name, column name, array indices)
+- [X] T050 [US3] Verify all User Story 3 tests pass
 
 **Checkpoint**: At this point, foreign key validation should catch invalid references and actions
 
@@ -145,22 +145,22 @@
 
 ### Tests for User Story 4
 
-- [ ] T051 [P] [US4] Write TestValidateDataTypeInt in pkg/schema/parser_test.go (int, bigint, smallint, tinyint valid)
-- [ ] T052 [P] [US4] Write TestValidateDataTypeDecimal in pkg/schema/parser_test.go (decimal, float, double, decimal(10,2) valid)
-- [ ] T053 [P] [US4] Write TestValidateDataTypeString in pkg/schema/parser_test.go (varchar(255), text, char(50) valid)
-- [ ] T054 [P] [US4] Write TestValidateDataTypeDateTime in pkg/schema/parser_test.go (date, datetime, timestamp valid)
-- [ ] T055 [P] [US4] Write TestValidateDataTypeBoolean in pkg/schema/parser_test.go (boolean, bit valid)
-- [ ] T056 [P] [US4] Write TestValidateDataTypeJSON in pkg/schema/parser_test.go (json, jsonb valid)
-- [ ] T057 [P] [US4] Write TestValidateDataTypeEnum in pkg/schema/parser_test.go (enum('a','b','c') valid)
-- [ ] T058 [P] [US4] Write TestValidateDataTypeInvalid in pkg/schema/parser_test.go (unsupported type returns error)
-- [ ] T059 [P] [US4] Write TestValidateDataTypeCaseInsensitive in pkg/schema/parser_test.go (INT, Int, int all valid)
+- [X] T051 [P] [US4] Write TestValidateDataTypeInt in pkg/schema/parser_test.go (int, bigint, smallint, tinyint valid)
+- [X] T052 [P] [US4] Write TestValidateDataTypeDecimal in pkg/schema/parser_test.go (decimal, float, double, decimal(10,2) valid)
+- [X] T053 [P] [US4] Write TestValidateDataTypeString in pkg/schema/parser_test.go (varchar(255), text, char(50) valid)
+- [X] T054 [P] [US4] Write TestValidateDataTypeDateTime in pkg/schema/parser_test.go (date, datetime, timestamp valid)
+- [X] T055 [P] [US4] Write TestValidateDataTypeBoolean in pkg/schema/parser_test.go (boolean, bit valid)
+- [X] T056 [P] [US4] Write TestValidateDataTypeJSON in pkg/schema/parser_test.go (json, jsonb valid)
+- [X] T057 [P] [US4] Write TestValidateDataTypeEnum in pkg/schema/parser_test.go (enum('a','b','c') valid)
+- [X] T058 [P] [US4] Write TestValidateDataTypeInvalid in pkg/schema/parser_test.go (unsupported type returns error)
+- [X] T059 [P] [US4] Write TestValidateDataTypeCaseInsensitive in pkg/schema/parser_test.go (INT, Int, int all valid)
 
 ### Implementation for User Story 4
 
-- [ ] T060 [US4] Implement ValidateDataType function in pkg/schema/parser.go (case-insensitive prefix matching against supported types list)
-- [ ] T061 [US4] Define validTypes slice in pkg/schema/parser.go (list of all supported data types from F007)
-- [ ] T062 [US4] Integrate data type validation into ValidateColumn (call ValidateDataType for each column)
-- [ ] T063 [US4] Verify all User Story 4 tests pass
+- [X] T060 [US4] Implement ValidateDataType function in pkg/schema/parser.go (case-insensitive prefix matching against supported types list)
+- [X] T061 [US4] Define validTypes slice in pkg/schema/parser.go (list of all supported data types from F007)
+- [X] T062 [US4] Integrate data type validation into ValidateColumn (call ValidateDataType for each column)
+- [X] T063 [US4] Verify all User Story 4 tests pass
 
 **Checkpoint**: At this point, data type validation should reject unsupported types with clear error messages
 
@@ -174,20 +174,20 @@
 
 ### Tests for User Story 5
 
-- [ ] T064 [P] [US5] Write TestValidateGenerationOrderComplete in pkg/schema/parser_test.go (all tables included succeeds)
-- [ ] T065 [P] [US5] Write TestValidateGenerationOrderMissingTable in pkg/schema/parser_test.go (missing table produces error)
-- [ ] T066 [P] [US5] Write TestValidateGenerationOrderDuplicate in pkg/schema/parser_test.go (duplicate table name produces error)
-- [ ] T067 [P] [US5] Write TestValidateGenerationOrderNonExistentTable in pkg/schema/parser_test.go (table in order but not in schema produces error)
-- [ ] T068 [P] [US5] Write TestValidateGenerationOrderEmpty in pkg/schema/parser_test.go (empty generation_order produces error)
+- [X] T064 [P] [US5] Write TestValidateGenerationOrderComplete in pkg/schema/parser_test.go (all tables included succeeds)
+- [X] T065 [P] [US5] Write TestValidateGenerationOrderMissingTable in pkg/schema/parser_test.go (missing table produces error)
+- [X] T066 [P] [US5] Write TestValidateGenerationOrderDuplicate in pkg/schema/parser_test.go (duplicate table name produces error)
+- [X] T067 [P] [US5] Write TestValidateGenerationOrderNonExistentTable in pkg/schema/parser_test.go (table in order but not in schema produces error)
+- [X] T068 [P] [US5] Write TestValidateGenerationOrderEmpty in pkg/schema/parser_test.go (empty generation_order produces error)
 
 ### Implementation for User Story 5
 
-- [ ] T069 [US5] Implement ValidateGenerationOrder function in pkg/schema/parser.go (checks all tables included, no duplicates, no missing)
-- [ ] T070 [US5] Build generation order set in ValidateGenerationOrder (map[string]bool to detect duplicates)
-- [ ] T071 [US5] Check all tables exist in generation_order (compare tableNames map with orderSet)
-- [ ] T072 [US5] Check generation_order only references existing tables (validate each entry against tableNames map)
-- [ ] T073 [US5] Integrate generation order validation into ValidateSchema (call ValidateGenerationOrder after table validation)
-- [ ] T074 [US5] Verify all User Story 5 tests pass
+- [X] T069 [US5] Implement ValidateGenerationOrder function in pkg/schema/parser.go (checks all tables included, no duplicates, no missing)
+- [X] T070 [US5] Build generation order set in ValidateGenerationOrder (map[string]bool to detect duplicates)
+- [X] T071 [US5] Check all tables exist in generation_order (compare tableNames map with orderSet)
+- [X] T072 [US5] Check generation_order only references existing tables (validate each entry against tableNames map)
+- [X] T073 [US5] Integrate generation order validation into ValidateSchema (call ValidateGenerationOrder after table validation)
+- [X] T074 [US5] Verify all User Story 5 tests pass
 
 **Checkpoint**: At this point, generation order validation should ensure correct table ordering for data generation
 

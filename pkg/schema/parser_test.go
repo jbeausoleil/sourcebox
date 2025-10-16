@@ -1372,3 +1372,672 @@ func TestParseForeignKeyMultipleReferences(t *testing.T) {
 	assert.Equal(t, "SET NULL", categoryIDCol.ForeignKey.OnDelete)
 	assert.Equal(t, "RESTRICT", categoryIDCol.ForeignKey.OnUpdate)
 }
+
+// ============================================================================
+// User Story 4: Validate Data Types (T051-T059) - TDD RED Phase
+// These tests should FAIL initially until data type validation is implemented
+// ============================================================================
+
+func TestValidateDataTypeInt(t *testing.T) {
+	// Test that int, bigint, smallint, tinyint are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"int is valid", "int"},
+		{"bigint is valid", "bigint"},
+		{"smallint is valid", "smallint"},
+		{"tinyint is valid", "tinyint"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "%s",
+								"primary_key": true
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[0].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeDecimal(t *testing.T) {
+	// Test that decimal, float, double, decimal(10,2) are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"decimal is valid", "decimal"},
+		{"decimal with precision is valid", "decimal(10,2)"},
+		{"float is valid", "float"},
+		{"double is valid", "double"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "amount",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeString(t *testing.T) {
+	// Test that varchar(255), text, char(50) are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"varchar with size is valid", "varchar(255)"},
+		{"varchar with different size is valid", "varchar(100)"},
+		{"text is valid", "text"},
+		{"char with size is valid", "char(50)"},
+		{"char with different size is valid", "char(10)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "name",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeDateTime(t *testing.T) {
+	// Test that date, datetime, timestamp are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"date is valid", "date"},
+		{"datetime is valid", "datetime"},
+		{"timestamp is valid", "timestamp"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "created_at",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeBoolean(t *testing.T) {
+	// Test that boolean, bit are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"boolean is valid", "boolean"},
+		{"bit is valid", "bit"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "is_active",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeJSON(t *testing.T) {
+	// Test that json, jsonb are valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"json is valid", "json"},
+		{"jsonb is valid", "jsonb"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["postgres"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "metadata",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeEnum(t *testing.T) {
+	// Test that enum('a','b','c') is valid
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"enum with single quotes is valid", "enum('active','inactive','pending')"},
+		{"enum with two values is valid", "enum('yes','no')"},
+		{"enum with multiple values is valid", "enum('small','medium','large','xlarge')"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "status",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s as valid data type", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[1].Type)
+		})
+	}
+}
+
+func TestValidateDataTypeInvalid(t *testing.T) {
+	// Test that unsupported types return errors
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"blob is invalid", "blob"},
+		{"binary is invalid", "binary"},
+		{"uuid is invalid", "uuid"},
+		{"xml is invalid", "xml"},
+		{"array is invalid", "array"},
+		{"hstore is invalid", "hstore"},
+		{"geometry is invalid", "geometry"},
+		{"point is invalid", "point"},
+		{"invalid_type is invalid", "invalid_type"},
+		{"empty string is invalid", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "invalid_col",
+								"type": "%s"
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.Error(t, err, "ParseSchema should reject %s as invalid data type", tt.dataType)
+			assert.Nil(t, schema)
+			assert.Contains(t, err.Error(), "invalid data type")
+			assert.Contains(t, err.Error(), "test_table")
+			assert.Contains(t, err.Error(), "invalid_col")
+		})
+	}
+}
+
+func TestValidateDataTypeCaseInsensitive(t *testing.T) {
+	// Test INT, Int, int all valid (case insensitive matching)
+	tests := []struct {
+		name     string
+		dataType string
+	}{
+		{"INT (uppercase) is valid", "INT"},
+		{"Int (mixed case) is valid", "Int"},
+		{"int (lowercase) is valid", "int"},
+		{"VARCHAR (uppercase) is valid", "VARCHAR(255)"},
+		{"Varchar (mixed case) is valid", "Varchar(100)"},
+		{"varchar (lowercase) is valid", "varchar(50)"},
+		{"BIGINT (uppercase) is valid", "BIGINT"},
+		{"BigInt (mixed case) is valid", "BigInt"},
+		{"TEXT (uppercase) is valid", "TEXT"},
+		{"Text (mixed case) is valid", "Text"},
+		{"BOOLEAN (uppercase) is valid", "BOOLEAN"},
+		{"Boolean (mixed case) is valid", "Boolean"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "test_table",
+						"record_count": 10,
+						"columns": [
+							{
+								"name": "test_col",
+								"type": "%s",
+								"primary_key": true
+							}
+						]
+					}
+				],
+				"generation_order": ["test_table"]
+			}`, tt.dataType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept %s (case insensitive)", tt.dataType)
+			require.NotNil(t, schema)
+			assert.Equal(t, tt.dataType, schema.Tables[0].Columns[0].Type)
+		})
+	}
+}
+
+// ============================================================================
+// User Story 5: Validate Generation Order (T064-T068) - TDD RED Phase
+// These tests should FAIL initially until generation order validation is implemented
+// ============================================================================
+
+func TestValidateGenerationOrderComplete(t *testing.T) {
+	// Test that generation_order with all tables included succeeds
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "comments",
+				"record_count": 200,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts", "comments"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.NoError(t, err, "ParseSchema should succeed when generation_order includes all tables")
+	require.NotNil(t, schema)
+	assert.Equal(t, []string{"users", "posts", "comments"}, schema.GenerationOrder)
+}
+
+func TestValidateGenerationOrderMissingTable(t *testing.T) {
+	// Test that generation_order missing a table produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "comments",
+				"record_count": 200,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when generation_order is missing a table")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "generation_order")
+	assert.Contains(t, err.Error(), "missing")
+	assert.Contains(t, err.Error(), "comments")
+}
+
+func TestValidateGenerationOrderDuplicate(t *testing.T) {
+	// Test that duplicate table name in generation_order produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts", "users"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when generation_order has duplicate table name")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "generation_order")
+	assert.Contains(t, err.Error(), "duplicate")
+	assert.Contains(t, err.Error(), "users")
+}
+
+func TestValidateGenerationOrderNonExistentTable(t *testing.T) {
+	// Test that table in generation_order but not in schema produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts", "comments"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when generation_order references non-existent table")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "generation_order")
+	assert.Contains(t, err.Error(), "comments")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestValidateGenerationOrderEmpty(t *testing.T) {
+	// Test that empty generation_order with non-empty tables produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": []
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when generation_order is empty but tables exist")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "generation_order")
+	assert.Contains(t, err.Error(), "missing")
+	assert.Contains(t, err.Error(), "users")
+}

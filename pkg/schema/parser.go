@@ -8,6 +8,26 @@ import (
 	"strings"
 )
 
+// validTypes defines all supported data types from F007 specification.
+// Stored as lowercase for case-insensitive matching via prefix matching.
+// Supports parameterized types like varchar(255), decimal(10,2), enum('a','b').
+var validTypes = []string{
+	// Integer types
+	"int", "bigint", "smallint", "tinyint",
+	// Decimal types
+	"decimal", "float", "double",
+	// String types
+	"varchar", "text", "char",
+	// Date/Time types
+	"date", "datetime", "timestamp",
+	// Boolean types
+	"boolean", "bit",
+	// JSON types
+	"json", "jsonb",
+	// Enum type
+	"enum",
+}
+
 // ParseSchema parses a schema from an io.Reader.
 // Returns the parsed Schema or an error if parsing fails.
 // Uses strict parsing to catch unknown fields in the JSON.
@@ -105,6 +125,11 @@ func ValidateSchema(s *Schema) error {
 		return err
 	}
 
+	// T069-T073: User Story 5: Validate Generation Order
+	if err := ValidateGenerationOrder(s.GenerationOrder, tableNames); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -161,12 +186,38 @@ func ValidateColumn(c *Column, tableIndex int, tableName string, colIndex int) e
 		return fmt.Errorf("table %d (%s): column %d: column name is required", tableIndex, tableName, colIndex)
 	}
 
-	// T035: Check column type is required
-	if c.Type == "" {
-		return fmt.Errorf("table %d (%s): column %d (%s): column type is required", tableIndex, tableName, colIndex, c.Name)
+	// T062: Validate data type first (User Story 4)
+	// This will catch both empty types and invalid types with consistent error messaging
+	if err := ValidateDataType(c.Type); err != nil {
+		return fmt.Errorf("table %d (%s): column %d (%s): %w", tableIndex, tableName, colIndex, c.Name, err)
 	}
 
 	return nil
+}
+
+// ValidateDataType validates that a data type is supported.
+// T060: Implements case-insensitive prefix matching against supported types list.
+// Handles parameterized types like varchar(255), decimal(10,2), enum('a','b','c').
+// Returns an error if the type is not supported, or nil if valid.
+func ValidateDataType(dataType string) error {
+	// Empty type is treated as invalid data type with "required" hint
+	// This satisfies both User Story 2 (required field) and User Story 4 (invalid type) tests
+	if dataType == "" {
+		return fmt.Errorf("invalid data type: column type is required")
+	}
+
+	// Normalize to lowercase for case-insensitive matching
+	normalized := strings.ToLower(dataType)
+
+	// Check if normalized type starts with any valid type (prefix matching)
+	for _, validType := range validTypes {
+		if strings.HasPrefix(normalized, validType) {
+			return nil // Valid type found
+		}
+	}
+
+	// Type not supported (User Story 4)
+	return fmt.Errorf("invalid data type %q: type not supported", dataType)
 }
 
 // ValidateForeignKeys validates all foreign key references in the schema.
@@ -222,4 +273,48 @@ func ValidateReferentialAction(action string, actionType string, tableName strin
 	// T049: Return error with full context
 	return fmt.Errorf("table '%s': column '%s': invalid %s action '%s': must be one of: %s",
 		tableName, colName, actionType, action, strings.Join(validActions, ", "))
+}
+
+// ValidateGenerationOrder validates that generation_order is complete and consistent.
+// T069-T073: Implements generation order validation for User Story 5.
+// Checks:
+// - All tables in schema appear in generation_order
+// - No duplicate table names in generation_order
+// - All entries in generation_order reference existing tables
+// - Non-empty tables require non-empty generation_order
+//
+// Returns the first validation error encountered, or nil if valid.
+func ValidateGenerationOrder(generationOrder []string, tableNames map[string]bool) error {
+	// T073: Empty generation_order is only valid if there are no tables
+	if len(generationOrder) == 0 && len(tableNames) > 0 {
+		// Find first missing table for error message
+		for tableName := range tableNames {
+			return fmt.Errorf("generation_order is missing table '%s' (and possibly others)", tableName)
+		}
+	}
+
+	// T070: Build set of tables in generation_order to detect duplicates
+	orderSet := make(map[string]bool)
+
+	for _, tableName := range generationOrder {
+		// T070: Check for duplicates
+		if orderSet[tableName] {
+			return fmt.Errorf("generation_order contains duplicate table '%s'", tableName)
+		}
+		orderSet[tableName] = true
+
+		// T072: Check that table exists in schema
+		if !tableNames[tableName] {
+			return fmt.Errorf("generation_order references table '%s' which does not exist in schema", tableName)
+		}
+	}
+
+	// T071: Check all tables are included in generation_order
+	for tableName := range tableNames {
+		if !orderSet[tableName] {
+			return fmt.Errorf("generation_order is missing table '%s'", tableName)
+		}
+	}
+
+	return nil
 }
