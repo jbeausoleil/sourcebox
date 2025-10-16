@@ -201,14 +201,14 @@
 
 ### Tests for User Story 6
 
-- [ ] T075 [P] [US6] Write TestParseDuplicateTableNames in pkg/schema/parser_test.go (two tables with same name produces error)
-- [ ] T076 [P] [US6] Write TestParseDuplicateColumnNames in pkg/schema/parser_test.go (two columns in same table with same name produces error)
+- [X] T075 [P] [US6] Write TestParseDuplicateTableNames in pkg/schema/parser_test.go (two tables with same name produces error)
+- [X] T076 [P] [US6] Write TestParseDuplicateColumnNames in pkg/schema/parser_test.go (two columns in same table with same name produces error)
 
 ### Implementation for User Story 6
 
-- [ ] T077 [US6] Implement duplicate table name detection in ValidateSchema (check tableNames map for duplicates)
-- [ ] T078 [US6] Implement duplicate column name detection in ValidateTable (check for duplicate column names within each table)
-- [ ] T079 [US6] Verify all User Story 6 tests pass
+- [X] T077 [US6] Implement duplicate table name detection in ValidateSchema (check tableNames map for duplicates)
+- [X] T078 [US6] Implement duplicate column name detection in ValidateTable (check for duplicate column names within each table)
+- [X] T079 [US6] Verify all User Story 6 tests pass
 
 **Checkpoint**: At this point, duplicate names should be detected with clear error messages
 
@@ -222,19 +222,19 @@
 
 ### Tests for Edge Cases
 
-- [ ] T080 [P] [Edge] Write TestParseEmptyFile in pkg/schema/parser_test.go (empty file produces parse error)
-- [ ] T081 [P] [Edge] Write TestParseMalformedJSON in pkg/schema/parser_test.go (invalid JSON syntax produces parse error)
-- [ ] T082 [P] [Edge] Write TestParseUnknownFields in pkg/schema/parser_test.go (unknown fields in JSON produce error due to DisallowUnknownFields)
-- [ ] T083 [P] [Edge] Write TestParseNullRequiredFields in pkg/schema/parser_test.go (null values for required fields produce validation error)
-- [ ] T084 [P] [Edge] Write TestLoadSchemaNonExistentFile in pkg/schema/parser_test.go (file path doesn't exist produces clear error)
+- [X] T080 [P] [Edge] Write TestParseEmptyFile in pkg/schema/parser_test.go (empty file produces parse error)
+- [X] T081 [P] [Edge] Write TestParseMalformedJSON in pkg/schema/parser_test.go (invalid JSON syntax produces parse error)
+- [X] T082 [P] [Edge] Write TestParseUnknownFields in pkg/schema/parser_test.go (unknown fields in JSON produce error due to DisallowUnknownFields)
+- [X] T083 [P] [Edge] Write TestParseNullRequiredFields in pkg/schema/parser_test.go (null values for required fields produce validation error)
+- [X] T084 [P] [Edge] Write TestLoadSchemaNonExistentFile in pkg/schema/parser_test.go (file path doesn't exist produces clear error)
 
 ### Implementation for Edge Cases
 
-- [ ] T085 [Edge] Ensure ParseSchema handles empty input gracefully (verify JSON decoder error handling)
-- [ ] T086 [Edge] Ensure ParseSchema handles malformed JSON gracefully (verify JSON decode errors are wrapped with context)
-- [ ] T087 [Edge] Verify DisallowUnknownFields is enabled (ensure strict parsing catches typos)
-- [ ] T088 [Edge] Ensure LoadSchema handles file open errors gracefully (verify os.Open error wrapping)
-- [ ] T089 [Edge] Verify all edge case tests pass
+- [X] T085 [Edge] Ensure ParseSchema handles empty input gracefully (verify JSON decoder error handling)
+- [X] T086 [Edge] Ensure ParseSchema handles malformed JSON gracefully (verify JSON decode errors are wrapped with context)
+- [X] T087 [Edge] Verify DisallowUnknownFields is enabled (ensure strict parsing catches typos)
+- [X] T088 [Edge] Ensure LoadSchema handles file open errors gracefully (verify os.Open error wrapping)
+- [X] T089 [Edge] Verify all edge case tests pass
 
 **Checkpoint**: All edge cases should be handled with clear, actionable error messages
 
@@ -244,15 +244,15 @@
 
 **Purpose**: Final improvements and verification
 
-- [ ] T090 [P] Run go fmt ./pkg/schema/... (format all schema package files)
-- [ ] T091 [P] Run go vet ./pkg/schema/... (verify no lint issues)
-- [ ] T092 Verify test coverage with go test -coverprofile=coverage.out ./pkg/schema/... (target: 100% for parser.go)
-- [ ] T093 Run go test ./pkg/schema/... -v (ensure all tests pass)
-- [ ] T094 Test parser with F007 example schema file (manual verification that example schema from F007 loads successfully)
-- [ ] T095 [P] Add package documentation comment to pkg/schema/types.go
-- [ ] T096 [P] Add package documentation comment to pkg/schema/parser.go
-- [ ] T097 Run quickstart.md verification steps (follow quickstart guide to verify all steps work)
-- [ ] T098 Measure parse performance with benchmark (verify <100ms for typical schemas)
+- [X] T090 [P] Run go fmt ./pkg/schema/... (format all schema package files)
+- [X] T091 [P] Run go vet ./pkg/schema/... (verify no lint issues)
+- [X] T092 Verify test coverage with go test -coverprofile=coverage.out ./pkg/schema/... (target: 100% for parser.go)
+- [X] T093 Run go test ./pkg/schema/... -v (ensure all tests pass)
+- [X] T094 Test parser with F007 example schema file (manual verification that example schema from F007 loads successfully)
+- [X] T095 [P] Add package documentation comment to pkg/schema/types.go
+- [X] T096 [P] Add package documentation comment to pkg/schema/parser.go
+- [X] T097 Run quickstart.md verification steps (follow quickstart guide to verify all steps work)
+- [X] T098 Measure parse performance with benchmark (verify <100ms for typical schemas)
 
 ---
 
