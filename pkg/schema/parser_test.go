@@ -133,6 +133,17 @@ func TestParseSchema_ValidJSON(t *testing.T) {
 				"database_type": ["mysql"],
 				"tables": [
 					{
+						"name": "users",
+						"record_count": 25,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							}
+						]
+					},
+					{
 						"name": "posts",
 						"record_count": 50,
 						"columns": [
@@ -154,14 +165,20 @@ func TestParseSchema_ValidJSON(t *testing.T) {
 						]
 					}
 				],
-				"generation_order": ["posts"]
+				"generation_order": ["users", "posts"]
 			}`,
 			validate: func(t *testing.T, schema *Schema) {
-				require.Len(t, schema.Tables, 1)
-				table := schema.Tables[0]
-				require.Len(t, table.Columns, 2)
+				require.Len(t, schema.Tables, 2)
 
-				col := table.Columns[1]
+				// Verify users table exists
+				usersTable := schema.Tables[0]
+				assert.Equal(t, "users", usersTable.Name)
+
+				// Verify posts table with foreign key
+				postsTable := schema.Tables[1]
+				assert.Equal(t, "posts", postsTable.Name)
+
+				col := postsTable.Columns[1]
 				assert.Equal(t, "user_id", col.Name)
 				require.NotNil(t, col.ForeignKey)
 				assert.Equal(t, "users", col.ForeignKey.Table)

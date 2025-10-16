@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // ParseSchema parses a schema from an io.Reader.
@@ -86,7 +87,7 @@ func ValidateSchema(s *Schema) error {
 	}
 
 	// T038: Integrate table and column validation
-	// Build tableNames map for downstream validation (User Story 3)
+	// T045: Build tableNames map for downstream validation (User Story 3)
 	tableNames := make(map[string]bool)
 
 	for i, table := range s.Tables {
@@ -97,6 +98,11 @@ func ValidateSchema(s *Schema) error {
 
 		// Track table names for foreign key validation
 		tableNames[table.Name] = true
+	}
+
+	// T048: User Story 3: Validate Foreign Key Integrity
+	if err := ValidateForeignKeys(s.Tables, tableNames); err != nil {
+		return err
 	}
 
 	return nil
@@ -161,4 +167,59 @@ func ValidateColumn(c *Column, tableIndex int, tableName string, colIndex int) e
 	}
 
 	return nil
+}
+
+// ValidateForeignKeys validates all foreign key references in the schema.
+// T046: Checks that foreign keys reference tables that exist in tableNames map.
+// Returns the first validation error encountered, or nil if all foreign keys are valid.
+func ValidateForeignKeys(tables []Table, tableNames map[string]bool) error {
+	for _, table := range tables {
+		for _, col := range table.Columns {
+			// Skip columns without foreign keys
+			if col.ForeignKey == nil {
+				continue
+			}
+
+			fk := col.ForeignKey
+
+			// T046: Check that referenced table exists
+			if !tableNames[fk.Table] {
+				return fmt.Errorf("table '%s': column '%s': foreign key references table '%s' which does not exist in schema", table.Name, col.Name, fk.Table)
+			}
+
+			// T047: Validate on_delete action
+			if err := ValidateReferentialAction(fk.OnDelete, "on_delete", table.Name, col.Name); err != nil {
+				return err
+			}
+
+			// T047: Validate on_update action
+			if err := ValidateReferentialAction(fk.OnUpdate, "on_update", table.Name, col.Name); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// ValidateReferentialAction validates a foreign key referential action.
+// T047: Checks that action is one of: CASCADE, SET NULL, RESTRICT (case-sensitive).
+// Returns an error if the action is invalid, or nil if valid.
+func ValidateReferentialAction(action string, actionType string, tableName string, colName string) error {
+	// Valid actions according to SQL standard and schema spec (F007)
+	validActions := []string{"CASCADE", "SET NULL", "RESTRICT"}
+
+	// Normalize to uppercase for case-insensitive comparison
+	normalizedAction := strings.ToUpper(action)
+
+	// Check if action is valid
+	for _, valid := range validActions {
+		if normalizedAction == valid {
+			return nil
+		}
+	}
+
+	// T049: Return error with full context
+	return fmt.Errorf("table '%s': column '%s': invalid %s action '%s': must be one of: %s",
+		tableName, colName, actionType, action, strings.Join(validActions, ", "))
 }
