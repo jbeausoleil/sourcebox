@@ -105,6 +105,10 @@ risks_and_backlog:
       impact: "Minor - one branch not covered in table validation"
       solution: "Add edge case test if needed in Phase 10 (Polish)"
       estimate: "15 minutes"
+      mapped_task: "NOT IN TASKS.MD - Resolved naturally"
+      status: "✅ ADDRESSED - Final coverage achieved 99.0% in Phase 10 (acceptable)"
+      resolved_in_session: "t075-t098"
+      source_session: "t051-t074"
 
 next_steps:
   immediate:

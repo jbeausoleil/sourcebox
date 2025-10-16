@@ -180,11 +180,19 @@ risks_and_backlog:
       impact: "Cannot validate foreign key references yet"
       solution: "Implement User Story 3 in next session (T040-T050)"
       estimate: "1.5 hours"
+      mapped_task: "T045-T050 [X] Foreign key validation (User Story 3)"
+      status: "✅ ADDRESSED - Foreign key validation implemented in Phase 5"
+      resolved_in_session: "t045-t050"
+      source_session: "t030-t039"
   low_priority:
     - issue: "Error accumulation not implemented (fail-fast only)"
       impact: "Developers see one error at a time instead of all errors"
       solution: "Future enhancement: collect and return all validation errors"
       estimate: "2 hours (requires API change)"
+      mapped_task: "NOT IN TASKS.MD"
+      status: "❌ NOT ADDRESSED - Deferred as future enhancement (not MVP requirement)"
+      recommended_action: "Add T099: Implement error accumulation mode in future iteration"
+      source_session: "t030-t039"
 
 next_steps:
   immediate:

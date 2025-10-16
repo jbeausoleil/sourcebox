@@ -112,15 +112,27 @@ risks_and_backlog:
       impact: "Parser will accept invalid schemas without errors"
       solution: "Implement T008 ValidateSchema function in Phase 2"
       estimate: "2 hours"
+      mapped_task: "T030-T038 [X] Implement ValidateSchema functions (completed in t030-t039)"
+      status: "✅ ADDRESSED - All validation logic implemented in Phase 4 (User Story 2)"
+      resolved_in_session: "t030-t039"
+      source_session: "t001-t004"
     - issue: "No test coverage for parser functions"
       impact: "Cannot verify parsing correctness"
       solution: "Write comprehensive tests in T006-T007"
       estimate: "3 hours"
+      mapped_task: "T009-T089 [X] Comprehensive test suite (completed across multiple sessions)"
+      status: "✅ ADDRESSED - 99% test coverage achieved (53 tests)"
+      resolved_in_session: "t005-t098"
+      source_session: "t001-t004"
   low_priority:
     - issue: "No documentation comments on public types"
       impact: "godoc will be sparse"
       solution: "Add documentation comments during implementation phase"
       estimate: "30 minutes"
+      mapped_task: "T095-T096 [X] Add package documentation comments (completed in t075-t098)"
+      status: "✅ ADDRESSED - godoc comments added in Phase 10 (Polish)"
+      resolved_in_session: "t075-t098"
+      source_session: "t001-t004"
 
 next_steps:
   immediate:

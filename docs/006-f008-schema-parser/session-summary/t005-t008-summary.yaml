@@ -113,28 +113,48 @@ risks_and_backlog:
       impact: "Invalid schemas will parse successfully, causing runtime errors in generators"
       solution: "Implement Phase 3 validation (T009-T025)"
       estimate: "4-6 hours for full validation suite"
+      mapped_task: "T030-T089 [X] Complete validation implementation (all user stories)"
+      status: "✅ ADDRESSED - All validation logic implemented (US2-US6)"
+      resolved_in_session: "t030-t098"
+      source_session: "t005-t008"
 
     - issue: "No validation of foreign key references (cross-table integrity)"
       impact: "Schemas can reference nonexistent tables/columns"
       solution: "T015-T016 will validate foreign key integrity"
       estimate: "Covered in Phase 3 scope"
+      mapped_task: "T045-T050 [X] Foreign key validation (User Story 3)"
+      status: "✅ ADDRESSED - FK validation implemented in Phase 5"
+      resolved_in_session: "t045-t050"
+      source_session: "t005-t008"
 
     - issue: "No validation of generation_order vs table dependencies"
       impact: "Circular dependencies or missing tables could cause generation failures"
       solution: "T018 will validate generation order"
       estimate: "Covered in Phase 3 scope"
+      mapped_task: "T069-T074 [X] Generation order validation (User Story 5)"
+      status: "✅ ADDRESSED - Generation order validation implemented in Phase 7"
+      resolved_in_session: "t051-t074"
+      source_session: "t005-t008"
 
   medium_priority:
     - issue: "Parser test fixtures embedded as JSON strings in code"
       impact: "Test readability, harder to maintain complex schemas"
       solution: "Move to testdata/ directory (T026 cleanup task)"
       estimate: "1 hour"
+      mapped_task: "NOT IN TASKS.MD"
+      status: "❌ NOT ADDRESSED - Deferred as low-priority enhancement"
+      recommended_action: "Add T099: Refactor test fixtures to testdata/ directory in future cleanup phase"
+      source_session: "t005-t008"
 
   low_priority:
     - issue: "No benchmarks for parser performance"
       impact: "Unknown if parser meets <30s constitutional constraint on large schemas"
       solution: "Add benchmarks in Phase 4 (T027)"
       estimate: "1 hour"
+      mapped_task: "T098 [X] Measure parse performance with benchmark"
+      status: "✅ ADDRESSED - Benchmark added in Phase 10, parser is 1,024x faster than requirement"
+      resolved_in_session: "t075-t098"
+      source_session: "t005-t008"
 
 next_steps:
   immediate:

@@ -177,16 +177,28 @@ risks_and_backlog:
       impact: "Performance regressions won't be automatically detected"
       solution: "Add benchmark CI job in F032 (CI/CD expansion)"
       estimate: "1 hour"
+      mapped_task: "NOT IN TASKS.MD - Future F032 feature"
+      status: "❌ NOT ADDRESSED - Deferred to F032 (CI/CD Enhancement)"
+      recommended_action: "Track in F032: Add benchmark CI job to GitHub Actions workflow"
+      source_session: "t075-t098"
 
     - issue: "Error messages could include line numbers for JSON parsing errors"
       impact: "Debugging malformed JSON schemas requires manual inspection"
       solution: "Use json.Decoder with Offset() to report line numbers"
       estimate: "2 hours"
+      mapped_task: "NOT IN TASKS.MD"
+      status: "❌ NOT ADDRESSED - Deferred as future UX enhancement (post-MVP)"
+      recommended_action: "Add T102: Enhance error messages with line number context in future iteration"
+      source_session: "t075-t098"
 
     - issue: "No validation for enum value syntax (single quotes required)"
       impact: "Invalid enum syntax like enum(val1,val2) won't be caught"
       solution: "Add regex validation in ValidateDataType for enum values"
       estimate: "1 hour"
+      mapped_task: "NOT IN TASKS.MD"
+      status: "❌ NOT ADDRESSED - Deferred as future validation enhancement (post-MVP)"
+      recommended_action: "Add T103: Add enum syntax validation in future iteration"
+      source_session: "t075-t098"
 
 next_steps:
   immediate: []
