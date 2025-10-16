@@ -118,11 +118,11 @@
 
 ### Tests for User Story 3
 
-- [ ] T040 [P] [US3] Write TestParseValidForeignKey in pkg/schema/parser_test.go (foreign key to existing table succeeds)
-- [ ] T041 [P] [US3] Write TestParseForeignKeyNonExistentTable in pkg/schema/parser_test.go (error for non-existent table reference)
-- [ ] T042 [P] [US3] Write TestParseForeignKeyInvalidOnDelete in pkg/schema/parser_test.go (error for invalid on_delete action)
-- [ ] T043 [P] [US3] Write TestParseForeignKeyInvalidOnUpdate in pkg/schema/parser_test.go (error for invalid on_update action)
-- [ ] T044 [P] [US3] Write TestParseForeignKeyValidActions in pkg/schema/parser_test.go (CASCADE, SET NULL, RESTRICT all valid)
+- [X] T040 [P] [US3] Write TestParseValidForeignKey in pkg/schema/parser_test.go (foreign key to existing table succeeds)
+- [X] T041 [P] [US3] Write TestParseForeignKeyNonExistentTable in pkg/schema/parser_test.go (error for non-existent table reference)
+- [X] T042 [P] [US3] Write TestParseForeignKeyInvalidOnDelete in pkg/schema/parser_test.go (error for invalid on_delete action)
+- [X] T043 [P] [US3] Write TestParseForeignKeyInvalidOnUpdate in pkg/schema/parser_test.go (error for invalid on_update action)
+- [X] T044 [P] [US3] Write TestParseForeignKeyValidActions in pkg/schema/parser_test.go (CASCADE, SET NULL, RESTRICT all valid)
 
 ### Implementation for User Story 3
 

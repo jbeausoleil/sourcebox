@@ -900,3 +900,458 @@ func TestParseMultiplePrimaryKeys(t *testing.T) {
 	assert.Contains(t, err.Error(), "must have exactly one primary key")
 	assert.Contains(t, err.Error(), "found 2")
 }
+
+// ============================================================================
+// User Story 3: Validate Foreign Key Integrity (T040-T044) - TDD RED Phase
+// These tests should FAIL initially until foreign key validation is implemented
+// ============================================================================
+
+func TestParseValidForeignKey(t *testing.T) {
+	// Test that a foreign key to an existing table succeeds
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "email",
+						"type": "varchar(255)",
+						"nullable": false
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "user_id",
+						"type": "int",
+						"nullable": false,
+						"foreign_key": {
+							"table": "users",
+							"column": "id",
+							"on_delete": "CASCADE",
+							"on_update": "CASCADE"
+						}
+					},
+					{
+						"name": "title",
+						"type": "varchar(255)",
+						"nullable": false
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.NoError(t, err, "ParseSchema should succeed when foreign key references existing table")
+	require.NotNil(t, schema)
+	require.Len(t, schema.Tables, 2)
+
+	// Verify foreign key was parsed correctly
+	postsTable := schema.Tables[1]
+	assert.Equal(t, "posts", postsTable.Name)
+	userIDCol := postsTable.Columns[1]
+	assert.Equal(t, "user_id", userIDCol.Name)
+	require.NotNil(t, userIDCol.ForeignKey)
+	assert.Equal(t, "users", userIDCol.ForeignKey.Table)
+	assert.Equal(t, "id", userIDCol.ForeignKey.Column)
+	assert.Equal(t, "CASCADE", userIDCol.ForeignKey.OnDelete)
+	assert.Equal(t, "CASCADE", userIDCol.ForeignKey.OnUpdate)
+}
+
+func TestParseForeignKeyNonExistentTable(t *testing.T) {
+	// Test that a foreign key referencing a non-existent table produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "user_id",
+						"type": "int",
+						"nullable": false,
+						"foreign_key": {
+							"table": "users",
+							"column": "id",
+							"on_delete": "CASCADE",
+							"on_update": "CASCADE"
+						}
+					}
+				]
+			}
+		],
+		"generation_order": ["posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when foreign key references non-existent table")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "foreign key")
+	assert.Contains(t, err.Error(), "users")
+	assert.Contains(t, err.Error(), "does not exist")
+	assert.Contains(t, err.Error(), "posts")
+	assert.Contains(t, err.Error(), "user_id")
+}
+
+func TestParseForeignKeyInvalidOnDelete(t *testing.T) {
+	// Test that invalid on_delete action produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "user_id",
+						"type": "int",
+						"nullable": false,
+						"foreign_key": {
+							"table": "users",
+							"column": "id",
+							"on_delete": "DELETE_ALL",
+							"on_update": "CASCADE"
+						}
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when on_delete action is invalid")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "on_delete")
+	assert.Contains(t, err.Error(), "DELETE_ALL")
+	assert.Contains(t, err.Error(), "must be one of")
+	assert.Contains(t, err.Error(), "CASCADE")
+	assert.Contains(t, err.Error(), "SET NULL")
+	assert.Contains(t, err.Error(), "RESTRICT")
+	assert.Contains(t, err.Error(), "posts")
+	assert.Contains(t, err.Error(), "user_id")
+}
+
+func TestParseForeignKeyInvalidOnUpdate(t *testing.T) {
+	// Test that invalid on_update action produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "user_id",
+						"type": "int",
+						"nullable": false,
+						"foreign_key": {
+							"table": "users",
+							"column": "id",
+							"on_delete": "CASCADE",
+							"on_update": "UPDATE_ALL"
+						}
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when on_update action is invalid")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "on_update")
+	assert.Contains(t, err.Error(), "UPDATE_ALL")
+	assert.Contains(t, err.Error(), "must be one of")
+	assert.Contains(t, err.Error(), "CASCADE")
+	assert.Contains(t, err.Error(), "SET NULL")
+	assert.Contains(t, err.Error(), "RESTRICT")
+	assert.Contains(t, err.Error(), "posts")
+	assert.Contains(t, err.Error(), "user_id")
+}
+
+func TestParseForeignKeyValidActions(t *testing.T) {
+	// Test that all valid referential actions (CASCADE, SET NULL, RESTRICT) are accepted
+	tests := []struct {
+		name     string
+		onDelete string
+		onUpdate string
+	}{
+		{
+			name:     "CASCADE on both",
+			onDelete: "CASCADE",
+			onUpdate: "CASCADE",
+		},
+		{
+			name:     "SET NULL on both",
+			onDelete: "SET NULL",
+			onUpdate: "SET NULL",
+		},
+		{
+			name:     "RESTRICT on both",
+			onDelete: "RESTRICT",
+			onUpdate: "RESTRICT",
+		},
+		{
+			name:     "mixed CASCADE and SET NULL",
+			onDelete: "CASCADE",
+			onUpdate: "SET NULL",
+		},
+		{
+			name:     "mixed RESTRICT and CASCADE",
+			onDelete: "RESTRICT",
+			onUpdate: "CASCADE",
+		},
+		{
+			name:     "mixed SET NULL and RESTRICT",
+			onDelete: "SET NULL",
+			onUpdate: "RESTRICT",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"description": "Test schema",
+				"author": "Test Author",
+				"version": "1.0.0",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "users",
+						"record_count": 50,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							}
+						]
+					},
+					{
+						"name": "posts",
+						"record_count": 100,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true
+							},
+							{
+								"name": "user_id",
+								"type": "int",
+								"nullable": false,
+								"foreign_key": {
+									"table": "users",
+									"column": "id",
+									"on_delete": "%s",
+									"on_update": "%s"
+								}
+							}
+						]
+					}
+				],
+				"generation_order": ["users", "posts"]
+			}`, tt.onDelete, tt.onUpdate)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.NoError(t, err, "ParseSchema should accept valid referential actions: on_delete=%s, on_update=%s", tt.onDelete, tt.onUpdate)
+			require.NotNil(t, schema)
+			require.Len(t, schema.Tables, 2)
+
+			// Verify the actions were parsed correctly
+			postsTable := schema.Tables[1]
+			userIDCol := postsTable.Columns[1]
+			require.NotNil(t, userIDCol.ForeignKey)
+			assert.Equal(t, tt.onDelete, userIDCol.ForeignKey.OnDelete)
+			assert.Equal(t, tt.onUpdate, userIDCol.ForeignKey.OnUpdate)
+		})
+	}
+}
+
+func TestParseForeignKeyMultipleReferences(t *testing.T) {
+	// Test multiple foreign keys with different valid actions
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "categories",
+				"record_count": 20,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "posts",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "user_id",
+						"type": "int",
+						"nullable": false,
+						"foreign_key": {
+							"table": "users",
+							"column": "id",
+							"on_delete": "CASCADE",
+							"on_update": "CASCADE"
+						}
+					},
+					{
+						"name": "category_id",
+						"type": "int",
+						"nullable": true,
+						"foreign_key": {
+							"table": "categories",
+							"column": "id",
+							"on_delete": "SET NULL",
+							"on_update": "RESTRICT"
+						}
+					}
+				]
+			}
+		],
+		"generation_order": ["users", "categories", "posts"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.NoError(t, err, "ParseSchema should succeed with multiple valid foreign keys")
+	require.NotNil(t, schema)
+	require.Len(t, schema.Tables, 3)
+
+	// Verify both foreign keys were parsed correctly
+	postsTable := schema.Tables[2]
+	assert.Equal(t, "posts", postsTable.Name)
+
+	// First foreign key (user_id)
+	userIDCol := postsTable.Columns[1]
+	assert.Equal(t, "user_id", userIDCol.Name)
+	require.NotNil(t, userIDCol.ForeignKey)
+	assert.Equal(t, "users", userIDCol.ForeignKey.Table)
+	assert.Equal(t, "id", userIDCol.ForeignKey.Column)
+	assert.Equal(t, "CASCADE", userIDCol.ForeignKey.OnDelete)
+	assert.Equal(t, "CASCADE", userIDCol.ForeignKey.OnUpdate)
+
+	// Second foreign key (category_id)
+	categoryIDCol := postsTable.Columns[2]
+	assert.Equal(t, "category_id", categoryIDCol.Name)
+	require.NotNil(t, categoryIDCol.ForeignKey)
+	assert.Equal(t, "categories", categoryIDCol.ForeignKey.Table)
+	assert.Equal(t, "id", categoryIDCol.ForeignKey.Column)
+	assert.Equal(t, "SET NULL", categoryIDCol.ForeignKey.OnDelete)
+	assert.Equal(t, "RESTRICT", categoryIDCol.ForeignKey.OnUpdate)
+}
