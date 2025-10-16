@@ -99,11 +99,14 @@ jobs:
           output-format: sarif
           output-file: govulncheck-results.sarif
 
+      # Note: continue-on-error is set because govulncheck occasionally generates
+      # invalid SARIF with duplicate CVE tags. This ensures license checks run.
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: govulncheck-results.sarif
           category: govulncheck
+        continue-on-error: true
         if: always()
 
       - name: Install go-licenses
