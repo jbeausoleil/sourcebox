@@ -1,6 +1,7 @@
 # SourceBox
 
 [![CI](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml/badge.svg)](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml)
+[![Security](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml/badge.svg?job=security)](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jbeausoleil/sourcebox/branch/main/graph/badge.svg)](https://codecov.io/gh/jbeausoleil/sourcebox)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/jbeausoleil/sourcebox)](go.mod)
@@ -58,6 +59,26 @@ SourceBox uses the following dependencies to provide a powerful and user-friendl
 ### License Compatibility
 
 All dependencies are MIT or similarly permissive licenses compatible with our MIT license.
+
+## Security
+
+SourceBox implements automated security checks in CI/CD:
+
+### Dependency Integrity
+- **go mod verify** - Verifies dependency checksums match go.sum (detects tampering)
+
+### Vulnerability Scanning
+- **govulncheck** - Official Go vulnerability scanner
+- Scans codebase and dependencies for known CVEs
+- Results available in [GitHub Code Scanning](https://github.com/jbeausoleil/sourcebox/security/code-scanning) tab
+
+### License Compliance
+- **go-licenses** - Automated license scanning
+- Ensures all dependencies use MIT-compatible licenses
+- Allowed: MIT, Apache-2.0, BSD-2/3-Clause, ISC, MPL-2.0
+- Prohibited: GPL, LGPL, AGPL, SSPL, proprietary
+
+All security checks run automatically on every push and pull request.
 
 ## Quick Start
 

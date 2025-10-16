@@ -361,6 +361,42 @@ SourceBox uses JSON-based schema definitions to describe database schemas, data 
 - Quarterly manual vulnerability check with `govulncheck`
 - Phase 2: Automated security scanning in CI/CD (F005 follow-up)
 
+## Security CI/CD (003-f005-github-actions)
+
+### Automated Security Checks
+- **go mod verify**: Runs on every push, verifies dependency checksums against go.sum
+- **govulncheck**: Official Go vulnerability scanner, uploads SARIF to Code Scanning tab
+- **go-licenses**: Enforces MIT-compatible licenses only
+
+### Security Job Configuration
+- Runs on: `ubuntu-latest` (single platform, fastest)
+- Go version: `1.22` (latest supported)
+- Permissions: `contents: read`, `security-events: write`
+- Runs in parallel with test/lint jobs
+- Target completion time: <2 minutes
+
+### Failure Policies
+- **go mod verify fails**: Checksums don't match go.sum (supply chain attack risk)
+- **govulncheck fails**: Known CVE found in codebase or dependencies
+- **go-licenses fails**: Non-MIT-compatible license detected
+
+### Security Outputs
+- SARIF results: Uploaded to GitHub Code Scanning tab
+- Vulnerability alerts: Viewable at `/security/code-scanning`
+- CI badge: Shows security check status in README.md
+
+### Manual Testing
+- Quarterly dependency review (every 3 months)
+- Check Code Scanning tab for vulnerabilities
+- Review license compliance before adding new dependencies
+- Use `govulncheck ./...` locally before pushing
+
+### Allowed Licenses
+- MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0
+
+### Prohibited Licenses
+- GPL, LGPL, AGPL, SSPL, proprietary
+
 ## Recent Changes
 - 007-f009-dependency-management: Added 6 core dependencies (Cobra, gofakeit, progressbar, MySQL driver, PostgreSQL driver, color)
 - 007-f009-dependency-management: Configured dependency management with exact versions, MIT-compatible licenses
