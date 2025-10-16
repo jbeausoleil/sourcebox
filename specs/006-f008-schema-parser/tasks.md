@@ -81,17 +81,17 @@
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Write TestParseMissingSchemaName in pkg/schema/parser_test.go
-- [ ] T020 [P] [US2] Write TestParseMissingTables in pkg/schema/parser_test.go
-- [ ] T021 [P] [US2] Write TestParseMissingDatabaseType in pkg/schema/parser_test.go
-- [ ] T022 [P] [US2] Write TestParseMissingGenerationOrder in pkg/schema/parser_test.go
-- [ ] T023 [P] [US2] Write TestParseTableMissingName in pkg/schema/parser_test.go
-- [ ] T024 [P] [US2] Write TestParseTableMissingColumns in pkg/schema/parser_test.go
-- [ ] T025 [P] [US2] Write TestParseTableMissingPrimaryKey in pkg/schema/parser_test.go
-- [ ] T026 [P] [US2] Write TestParseColumnMissingName in pkg/schema/parser_test.go
-- [ ] T027 [P] [US2] Write TestParseColumnMissingType in pkg/schema/parser_test.go
-- [ ] T028 [P] [US2] Write TestParseZeroRecordCount in pkg/schema/parser_test.go
-- [ ] T029 [P] [US2] Write TestParseNegativeRecordCount in pkg/schema/parser_test.go
+- [X] T019 [P] [US2] Write TestParseMissingSchemaName in pkg/schema/parser_test.go
+- [X] T020 [P] [US2] Write TestParseMissingTables in pkg/schema/parser_test.go
+- [X] T021 [P] [US2] Write TestParseMissingDatabaseType in pkg/schema/parser_test.go
+- [X] T022 [P] [US2] Write TestParseMissingGenerationOrder in pkg/schema/parser_test.go
+- [X] T023 [P] [US2] Write TestParseTableMissingName in pkg/schema/parser_test.go
+- [X] T024 [P] [US2] Write TestParseTableMissingColumns in pkg/schema/parser_test.go
+- [X] T025 [P] [US2] Write TestParseTableMissingPrimaryKey in pkg/schema/parser_test.go
+- [X] T026 [P] [US2] Write TestParseColumnMissingName in pkg/schema/parser_test.go
+- [X] T027 [P] [US2] Write TestParseColumnMissingType in pkg/schema/parser_test.go
+- [X] T028 [P] [US2] Write TestParseZeroRecordCount in pkg/schema/parser_test.go
+- [X] T029 [P] [US2] Write TestParseNegativeRecordCount in pkg/schema/parser_test.go
 
 ### Implementation for User Story 2
 
