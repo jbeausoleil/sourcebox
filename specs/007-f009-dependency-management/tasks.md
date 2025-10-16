@@ -112,14 +112,14 @@ go mod tidy  # Should produce no changes
 
 ### Implementation for User Story 3
 
-- [ ] T015 [P] [US3] Add "Dependencies" section to README.md after "Installation", before "Usage"
-- [ ] T016 [P] [US3] Document dependencies by category in README.md:
+- [X] T015 [P] [US3] Add "Dependencies" section to README.md after "Installation", before "Usage"
+- [X] T016 [P] [US3] Document dependencies by category in README.md:
   - CLI & UX: Cobra (v1.10.1), progressbar (v3.14.1), color (v1.16.0)
   - Data Generation: gofakeit (v6.27.0)
   - Database Drivers: go-sql-driver/mysql (v1.7.1), lib/pq (v1.10.9)
-- [ ] T017 [US3] Add license compatibility statement to README.md: "All dependencies are MIT or similarly permissive licenses compatible with our MIT license"
-- [ ] T018 [US3] Add each dependency with: name (GitHub link), version (backticks), one-line purpose
-- [ ] T019 [US3] Verify README.md versions match go.mod exactly
+- [X] T017 [US3] Add license compatibility statement to README.md: "All dependencies are MIT or similarly permissive licenses compatible with our MIT license"
+- [X] T018 [US3] Add each dependency with: name (GitHub link), version (backticks), one-line purpose
+- [X] T019 [US3] Verify README.md versions match go.mod exactly
 
 **Acceptance Validation**:
 - ✅ Each dependency listed with purpose and version
@@ -144,10 +144,10 @@ go list -m all  # Verify all listed dependencies are used
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Verify no unused direct dependencies: Run `go mod tidy` and check for removals
-- [ ] T021 [US4] Verify indirect dependencies are properly marked: Check go.mod for `// indirect` comments
-- [ ] T022 [US4] Test dependency cleanup: Temporarily add unused dependency, run `go mod tidy`, verify removal
-- [ ] T023 [US4] Document cleanup process: Add to CONTRIBUTING.md dependency update section (if needed)
+- [X] T020 [US4] Verify no unused direct dependencies: Run `go mod tidy` and check for removals
+- [X] T021 [US4] Verify indirect dependencies are properly marked: Check go.mod for `// indirect` comments
+- [X] T022 [US4] Test dependency cleanup: Temporarily add unused dependency, run `go mod tidy`, verify removal
+- [X] T023 [US4] Document cleanup process: Add to CONTRIBUTING.md dependency update section (if needed)
 
 **Acceptance Validation**:
 - ✅ `go mod tidy` produces no changes on clean repository
@@ -163,12 +163,12 @@ go list -m all  # Verify all listed dependencies are used
 
 **Purpose**: Final validation and documentation updates
 
-- [ ] T024 [P] Run full quickstart.md validation checklist
-- [ ] T025 [P] Verify all Success Criteria (SC-001 through SC-008) from spec.md
-- [ ] T026 Commit all changes: `git add go.mod go.sum README.md`
-- [ ] T027 Create commit with clear message documenting all 6 dependencies and their versions
-- [ ] T028 Update CLAUDE.md with dependency management context (if not already done)
-- [ ] T029 Verify constitutional compliance: <10 dependencies, MIT-compatible licenses, <30s builds
+- [X] T024 [P] Run full quickstart.md validation checklist
+- [X] T025 [P] Verify all Success Criteria (SC-001 through SC-008) from spec.md
+- [X] T026 Commit all changes: `git add go.mod go.sum README.md`
+- [X] T027 Create commit with clear message documenting all 6 dependencies and their versions
+- [X] T028 Update CLAUDE.md with dependency management context (if not already done)
+- [X] T029 Verify constitutional compliance: <10 dependencies, MIT-compatible licenses, <30s builds
 
 ---
 
