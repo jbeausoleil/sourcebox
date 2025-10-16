@@ -2128,3 +2128,232 @@ func TestParseDuplicateColumnNames(t *testing.T) {
 	assert.Contains(t, err.Error(), "email")
 	assert.Contains(t, err.Error(), "users")
 }
+
+// ============================================================================
+// Phase 9: Edge Cases (T080-T084) - TDD RED Phase
+// These tests verify robust error handling for edge cases
+// ============================================================================
+
+func TestParseEmptyFile(t *testing.T) {
+	// T080: Test that an empty file produces a clear parse error
+	input := ``
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when input is completely empty")
+	assert.Nil(t, schema, "Schema should be nil when parsing fails")
+	assert.Contains(t, err.Error(), "ParseSchema", "Error should indicate ParseSchema function")
+	assert.Contains(t, err.Error(), "failed to decode JSON", "Error should indicate JSON decode failure")
+}
+
+func TestParseMalformedJSON(t *testing.T) {
+	// T081: Test that malformed JSON syntax produces a clear parse error
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "missing closing brace",
+			input: `{"schema_version": "1.0", "name": "test"`,
+		},
+		{
+			name:  "invalid syntax with bareword",
+			input: `{invalid: json}`,
+		},
+		{
+			name:  "trailing comma",
+			input: `{"schema_version": "1.0", "name": "test",}`,
+		},
+		{
+			name:  "single quote strings",
+			input: `{'schema_version': '1.0', 'name': 'test'}`,
+		},
+		{
+			name:  "missing quotes on key",
+			input: `{schema_version: "1.0", name: "test"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := strings.NewReader(tt.input)
+			schema, err := ParseSchema(reader)
+
+			require.Error(t, err, "ParseSchema should fail when JSON is malformed: %s", tt.name)
+			assert.Nil(t, schema, "Schema should be nil when parsing fails")
+			assert.Contains(t, err.Error(), "ParseSchema", "Error should indicate ParseSchema function")
+			assert.Contains(t, err.Error(), "failed to decode JSON", "Error should indicate JSON decode failure")
+		})
+	}
+}
+
+func TestParseUnknownFields(t *testing.T) {
+	// T082: Test that unknown fields in JSON produce an error (DisallowUnknownFields)
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name: "unknown field at schema level",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [],
+				"generation_order": [],
+				"unknown_field": "value"
+			}`,
+		},
+		{
+			name: "unknown field in table",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "users",
+						"record_count": 50,
+						"columns": [],
+						"invalid_field": "value"
+					}
+				],
+				"generation_order": ["users"]
+			}`,
+		},
+		{
+			name: "unknown field in column",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [
+					{
+						"name": "users",
+						"record_count": 50,
+						"columns": [
+							{
+								"name": "id",
+								"type": "int",
+								"primary_key": true,
+								"extra_field": "value"
+							}
+						]
+					}
+				],
+				"generation_order": ["users"]
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := strings.NewReader(tt.input)
+			schema, err := ParseSchema(reader)
+
+			require.Error(t, err, "ParseSchema should fail when JSON contains unknown fields: %s", tt.name)
+			assert.Nil(t, schema, "Schema should be nil when parsing fails")
+			assert.Contains(t, err.Error(), "ParseSchema", "Error should indicate ParseSchema function")
+			assert.Contains(t, err.Error(), "unknown field", "Error should indicate unknown field")
+		})
+	}
+}
+
+func TestParseNullRequiredFields(t *testing.T) {
+	// T083: Test that null values for required fields produce validation errors
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name: "null name field",
+			input: `{
+				"schema_version": "1.0",
+				"name": null,
+				"database_type": ["mysql"],
+				"tables": [],
+				"generation_order": []
+			}`,
+		},
+		{
+			name: "null database_type field",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": null,
+				"tables": [],
+				"generation_order": []
+			}`,
+		},
+		{
+			name: "null tables field",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": null,
+				"generation_order": []
+			}`,
+		},
+		{
+			name: "null generation_order field",
+			input: `{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"database_type": ["mysql"],
+				"tables": [],
+				"generation_order": null
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := strings.NewReader(tt.input)
+			schema, err := ParseSchema(reader)
+
+			require.Error(t, err, "ParseSchema should fail when required fields are null: %s", tt.name)
+			assert.Nil(t, schema, "Schema should be nil when validation fails")
+			assert.Contains(t, err.Error(), "ParseSchema", "Error should indicate ParseSchema function")
+			assert.Contains(t, err.Error(), "required", "Error should indicate required field")
+		})
+	}
+}
+
+func TestLoadSchemaNonExistentFile(t *testing.T) {
+	// T084: Test that non-existent file path produces a clear, actionable error
+	tests := []struct {
+		name string
+		path string
+	}{
+		{
+			name: "absolute path to non-existent file",
+			path: "/nonexistent/path/to/schema.json",
+		},
+		{
+			name: "relative path to non-existent file",
+			path: "./does-not-exist/schema.json",
+		},
+		{
+			name: "non-existent file in current directory",
+			path: "missing-schema.json",
+		},
+		{
+			name: "path with special characters",
+			path: "/tmp/this-file-should-not-exist-12345.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			schema, err := LoadSchema(tt.path)
+
+			require.Error(t, err, "LoadSchema should fail when file does not exist: %s", tt.name)
+			assert.Nil(t, schema, "Schema should be nil when loading fails")
+			assert.Contains(t, err.Error(), "LoadSchema", "Error should indicate LoadSchema function")
+			assert.Contains(t, err.Error(), "failed to open file", "Error should indicate file open failure")
+			assert.Contains(t, err.Error(), tt.path, "Error should include the file path that was attempted")
+		})
+	}
+}
