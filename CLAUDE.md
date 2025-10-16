@@ -1,6 +1,6 @@
 # SourceBox Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-10-14
+Auto-generated from all feature plans. Last updated: 2025-10-16
 
 ## Project Overview
 - **Repository**: github.com/jbeausoleil/sourcebox
@@ -47,7 +47,13 @@ sourcebox/
 ## Go Module
 - **Module Path**: github.com/jbeausoleil/sourcebox
 - **Go Version**: 1.21+ (minimum)
-- **Dependencies**: None yet (to be added in F009)
+- **Dependencies**: 6 core dependencies (configured in F009)
+  - github.com/spf13/cobra@v1.8.0 - CLI framework
+  - github.com/brianvoe/gofakeit/v6@v6.27.0 - Data generation
+  - github.com/schollz/progressbar/v3@v3.14.1 - Progress bars
+  - github.com/go-sql-driver/mysql@v1.7.1 - MySQL driver
+  - github.com/lib/pq@v1.10.9 - PostgreSQL driver
+  - github.com/fatih/color@v1.16.0 - Terminal colors
 
 ## Code Style
 - Follow standard Go conventions (gofmt)
@@ -277,7 +283,87 @@ SourceBox uses JSON-based schema definitions to describe database schemas, data 
 - JSON: `json` (both), `jsonb` (PostgreSQL only)
 - Enum: `enum('val1','val2')` (MySQL format)
 
+## Dependency Management (007-f009-dependency-management)
+
+### Dependency Commands
+- `go get <dependency>@<version>` - Add or update specific dependency
+- `go mod tidy` - Clean up go.mod and generate go.sum checksums
+- `go mod verify` - Verify dependency checksums (security check)
+- `go mod download` - Download all dependencies to module cache
+- `go list -m all` - List all dependencies (direct + transitive)
+- `go mod graph` - Show dependency graph
+- `go mod why <dependency>` - Explain why dependency is needed
+
+### Version Selection
+- Use **exact semantic versions** (e.g., `v1.8.0`, not `v1.8.x` or `latest`)
+- Pin to **stable releases** (not pre-release, not `@main`)
+- Update cadence: **Quarterly review** (every 3 months)
+- Emergency updates: Critical security vulnerabilities (CVE)
+
+### License Requirements
+- All dependencies MUST be MIT-compatible
+- Acceptable: MIT, Apache 2.0, BSD-2, BSD-3, ISC, MPL 2.0
+- Prohibited: GPL, LGPL, AGPL, SSPL, Proprietary
+- Verification: Manual for MVP, automated scanning in Phase 2 (F005 CI/CD)
+
+### go.mod Organization
+- Single require block with alphabetical order (enforced by `go mod tidy`)
+- No comments in go.mod (use README.md for documentation)
+- Indirect dependencies in separate block (automatic, marked with `// indirect`)
+- Never manually edit indirect dependency versions
+
+### Build Performance
+- First build (cold cache): 15-20 seconds
+- Subsequent builds (warm cache): 5-10 seconds
+- Threshold: **< 30 seconds** (constitutional constraint)
+- Build caching: Automatic via Go build cache
+- Dependencies rarely change → cache highly effective
+
+### Documentation Location
+- README.md "Dependencies" section (after "Installation", before "Usage")
+- Grouped by category: CLI & UX, Data Generation, Database Drivers
+- Each dependency: Name (GitHub link), version (backticks), one-line purpose
+- License compatibility statement at bottom
+
+### Dependency Update Process
+1. Check release notes for breaking changes
+2. Update one dependency at a time (isolate issues)
+3. Run `go get <dependency>@latest` or `@vX.Y.Z`
+4. Run `go mod tidy` after each update
+5. Run full test suite (`go test ./...`)
+6. Test key CLI commands manually
+7. Commit go.mod and go.sum together
+8. Update README.md dependency versions
+
+### Known Dependency Licenses
+- Cobra: Apache 2.0 ✅
+- gofakeit: MIT ✅
+- progressbar: MIT ✅
+- go-sql-driver/mysql: MPL 2.0 ✅
+- lib/pq: MIT ✅
+- fatih/color: MIT ✅
+
+### Transitive Dependencies
+- Let Go manage automatically (don't manually add/edit)
+- Trust major dependencies (Cobra, gofakeit) have vetted their deps
+- Spot-check major transitive deps during quarterly review
+- Full audit in Phase 2 (CI/CD with automated scanning)
+
+### Offline Support
+- All dependencies work offline after initial download
+- Module cache: `~/go/pkg/mod` (persistent, local)
+- Build cache: `~/.cache/go-build` (persistent, local)
+- No network calls after initial `go mod download`
+
+### Security
+- go.sum MUST be committed to version control (reproducible builds)
+- `go mod verify` checks checksums (detects tampering)
+- Quarterly manual vulnerability check with `govulncheck`
+- Phase 2: Automated security scanning in CI/CD (F005 follow-up)
+
 ## Recent Changes
+- 007-f009-dependency-management: Added 6 core dependencies (Cobra, gofakeit, progressbar, MySQL driver, PostgreSQL driver, color)
+- 007-f009-dependency-management: Configured dependency management with exact versions, MIT-compatible licenses
 - 006-f008-schema-parser: Added Go 1.21+ (existing project configuration from F003/F004)
 - 006-f008-schema-parser: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 005-f007-schema-json: Completed schema JSON format specification (schema_version 1.0)

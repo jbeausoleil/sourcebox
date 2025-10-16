@@ -36,6 +36,29 @@ Installation instructions will be available once the initial release is publishe
 go install github.com/jbeausoleil/sourcebox@latest
 ```
 
+## Dependencies
+
+SourceBox uses the following dependencies to provide a powerful and user-friendly CLI experience:
+
+### CLI & User Experience
+
+- [**Cobra**](https://github.com/spf13/cobra) (`v1.10.1`) - CLI framework for building command-line applications
+- [**progressbar**](https://github.com/schollz/progressbar) (`v3.14.1`) - Terminal progress bars for long-running operations
+- [**color**](https://github.com/fatih/color) (`v1.16.0`) - Terminal color output for better readability
+
+### Data Generation
+
+- [**gofakeit**](https://github.com/brianvoe/gofakeit) (`v6.27.0`) - Fake data generator for creating realistic demo datasets
+
+### Database Drivers
+
+- [**go-sql-driver/mysql**](https://github.com/go-sql-driver/mysql) (`v1.7.1`) - MySQL database driver
+- [**lib/pq**](https://github.com/lib/pq) (`v1.10.9`) - PostgreSQL database driver
+
+### License Compatibility
+
+All dependencies are MIT or similarly permissive licenses compatible with our MIT license.
+
 ## Quick Start
 
 Quick start guide will be available after the first release. In the meantime, you can:
