@@ -2041,3 +2041,90 @@ func TestValidateGenerationOrderEmpty(t *testing.T) {
 	assert.Contains(t, err.Error(), "missing")
 	assert.Contains(t, err.Error(), "users")
 }
+
+// ============================================================================
+// User Story 6: Detect Duplicate Names (T075-T076) - TDD RED Phase
+// These tests should FAIL initially until duplicate name validation is implemented
+// ============================================================================
+
+func TestParseDuplicateTableNames(t *testing.T) {
+	// Test that two tables with the same name produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			},
+			{
+				"name": "users",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when two tables have the same name")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "duplicate table name")
+	assert.Contains(t, err.Error(), "users")
+}
+
+func TestParseDuplicateColumnNames(t *testing.T) {
+	// Test that two columns in the same table with the same name produces an error
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 50,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "email",
+						"type": "varchar(255)"
+					},
+					{
+						"name": "email",
+						"type": "varchar(100)"
+					}
+				]
+			}
+		],
+		"generation_order": ["users"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when two columns in the same table have the same name")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "duplicate column name")
+	assert.Contains(t, err.Error(), "email")
+	assert.Contains(t, err.Error(), "users")
+}

@@ -69,9 +69,9 @@ func LoadSchema(path string) (*Schema, error) {
 // Implements multi-phase fail-fast validation for User Stories 2-6:
 // - User Story 2: Detect missing required fields
 // - User Story 3: Validate foreign key references
-// - User Story 4: Validate generation order
-// - User Story 5: Detect duplicate names
-// - User Story 6: Validate data type consistency
+// - User Story 4: Validate data types
+// - User Story 5: Validate generation order
+// - User Story 6: Detect duplicate names
 //
 // Returns the first validation error encountered, or nil if valid.
 func ValidateSchema(s *Schema) error {
@@ -108,15 +108,21 @@ func ValidateSchema(s *Schema) error {
 
 	// T038: Integrate table and column validation
 	// T045: Build tableNames map for downstream validation (User Story 3)
+	// T077: Detect duplicate table names (User Story 6)
 	tableNames := make(map[string]bool)
 
 	for i, table := range s.Tables {
+		// T077: Check for duplicate table names
+		if tableNames[table.Name] {
+			return fmt.Errorf("duplicate table name '%s'", table.Name)
+		}
+
 		// Validate each table
 		if err := ValidateTable(&table, i); err != nil {
 			return err
 		}
 
-		// Track table names for foreign key validation
+		// Track table names for foreign key validation and duplicate detection
 		tableNames[table.Name] = true
 	}
 
@@ -168,11 +174,22 @@ func ValidateTable(t *Table, tableIndex int) error {
 		return fmt.Errorf("table %d (%s): columns are required", tableIndex, t.Name)
 	}
 
+	// T078: Detect duplicate column names (User Story 6)
+	columnNames := make(map[string]bool)
+
 	// T038: Validate each column
 	for j, col := range t.Columns {
+		// T078: Check for duplicate column names
+		if columnNames[col.Name] {
+			return fmt.Errorf("table '%s': duplicate column name '%s'", t.Name, col.Name)
+		}
+
 		if err := ValidateColumn(&col, tableIndex, t.Name, j); err != nil {
 			return err
 		}
+
+		// Track column names for duplicate detection
+		columnNames[col.Name] = true
 	}
 
 	return nil
