@@ -107,8 +107,34 @@ Ready to contribute code? Follow this process:
 - Run `gofmt -w .` to format code
 - Run `go vet ./...` to check for issues
 - Run `go test ./...` to ensure all tests pass
+- Run `go mod tidy` to clean up dependencies
 - Update documentation if needed
 - Rebase on latest main: `git pull --rebase upstream main`
+
+### Dependency Management
+When working with dependencies, follow these practices:
+
+**Adding Dependencies:**
+- Use exact semantic versions: `go get package@vX.Y.Z`
+- Only add dependencies that are MIT-compatible
+- Update README.md dependency list if adding a new direct dependency
+
+**Updating Dependencies:**
+- Update one dependency at a time to isolate issues
+- Check release notes for breaking changes
+- Run full test suite after each update
+- Update README.md versions to match go.mod
+
+**Cleanup:**
+- Always run `go mod tidy` before committing changes
+- Verify no changes: `go mod tidy && git diff go.mod go.sum`
+- Unused dependencies are automatically removed by `go mod tidy`
+- Never manually edit indirect dependencies
+
+**Verification:**
+- Run `go mod verify` to check dependency integrity
+- Commit both go.mod and go.sum together
+- Build time must stay under 30 seconds
 
 ### 4. Submit PR
 - Push to your fork: `git push origin feature/your-feature-name`

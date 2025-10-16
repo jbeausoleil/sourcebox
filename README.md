@@ -1,6 +1,7 @@
 # SourceBox
 
 [![CI](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml/badge.svg)](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml)
+[![Security](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml/badge.svg?job=security)](https://github.com/jbeausoleil/sourcebox/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jbeausoleil/sourcebox/branch/main/graph/badge.svg)](https://codecov.io/gh/jbeausoleil/sourcebox)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/jbeausoleil/sourcebox)](go.mod)
@@ -35,6 +36,49 @@ Installation instructions will be available once the initial release is publishe
 # Placeholder - coming soon
 go install github.com/jbeausoleil/sourcebox@latest
 ```
+
+## Dependencies
+
+SourceBox uses the following dependencies to provide a powerful and user-friendly CLI experience:
+
+### CLI & User Experience
+
+- [**Cobra**](https://github.com/spf13/cobra) (`v1.10.1`) - CLI framework for building command-line applications
+- [**progressbar**](https://github.com/schollz/progressbar) (`v3.14.1`) - Terminal progress bars for long-running operations
+- [**color**](https://github.com/fatih/color) (`v1.16.0`) - Terminal color output for better readability
+
+### Data Generation
+
+- [**gofakeit**](https://github.com/brianvoe/gofakeit) (`v6.27.0`) - Fake data generator for creating realistic demo datasets
+
+### Database Drivers
+
+- [**go-sql-driver/mysql**](https://github.com/go-sql-driver/mysql) (`v1.7.1`) - MySQL database driver
+- [**lib/pq**](https://github.com/lib/pq) (`v1.10.9`) - PostgreSQL database driver
+
+### License Compatibility
+
+All dependencies are MIT or similarly permissive licenses compatible with our MIT license.
+
+## Security
+
+SourceBox implements automated security checks in CI/CD:
+
+### Dependency Integrity
+- **go mod verify** - Verifies dependency checksums match go.sum (detects tampering)
+
+### Vulnerability Scanning
+- **govulncheck** - Official Go vulnerability scanner
+- Scans codebase and dependencies for known CVEs
+- Results available in [GitHub Code Scanning](https://github.com/jbeausoleil/sourcebox/security/code-scanning) tab
+
+### License Compliance
+- **go-licenses** - Automated license scanning
+- Ensures all dependencies use MIT-compatible licenses
+- Allowed: MIT, Apache-2.0, BSD-2/3-Clause, ISC, MPL-2.0
+- Prohibited: GPL, LGPL, AGPL, SSPL, proprietary
+
+All security checks run automatically on every push and pull request.
 
 ## Quick Start
 
