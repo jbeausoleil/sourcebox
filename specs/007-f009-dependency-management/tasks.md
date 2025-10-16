@@ -62,10 +62,10 @@ go test ./...  # Tests should pass
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Verify dependency integrity with `go mod verify` - expect "all modules verified"
-- [ ] T008 [US1] Test clean build with timing: `time go build ./cmd/sourcebox` - expect < 30 seconds
-- [ ] T009 [US1] Run test suite: `go test ./...` - verify no import errors
-- [ ] T010 [US1] Verify clean state: `go mod tidy && git diff go.mod go.sum` - expect no changes
+- [X] T007 [US1] Verify dependency integrity with `go mod verify` - expect "all modules verified"
+- [X] T008 [US1] Test clean build with timing: `time go build ./cmd/sourcebox` - expect < 30 seconds
+- [X] T009 [US1] Run test suite: `go test ./...` - verify no import errors
+- [X] T010 [US1] Verify clean state: `go mod tidy && git diff go.mod go.sum` - expect no changes
 
 **Acceptance Validation**:
 - ✅ Build succeeds without manual steps
@@ -89,10 +89,10 @@ go mod tidy  # Should produce no changes
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Test checksum verification: Run `go mod verify` and confirm "all modules verified" output
-- [ ] T012 [US2] Test corruption detection: Simulate tampered dependency (optional manual test)
-- [ ] T013 [US2] Verify go.sum is committed: `git status go.sum` - should show as tracked file
-- [ ] T014 [US2] Test clean state verification: `go mod tidy && git status` - should show no changes
+- [X] T011 [US2] Test checksum verification: Run `go mod verify` and confirm "all modules verified" output
+- [X] T012 [US2] Test corruption detection: Simulate tampered dependency (optional manual test)
+- [X] T013 [US2] Verify go.sum is committed: `git status go.sum` - should show as tracked file
+- [X] T014 [US2] Test clean state verification: `go mod tidy && git status` - should show no changes
 
 **Acceptance Validation**:
 - ✅ `go mod verify` passes
