@@ -55,19 +55,19 @@
 
 **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [US1] Write TestParseValidMinimalSchema in pkg/schema/parser_test.go (tests parsing of minimal valid schema with one table, one column, primary key)
-- [ ] T010 [US1] Write TestParseValidFullSchema in pkg/schema/parser_test.go (tests parsing of complex schema with multiple tables, foreign keys, indexes, relationships)
-- [ ] T011 [US1] Write TestParseValidSchemaWithOptionalFields in pkg/schema/parser_test.go (tests schemas with metadata, validation_rules, indexes)
+- [X] T009 [US1] Write TestParseValidMinimalSchema in pkg/schema/parser_test.go (tests parsing of minimal valid schema with one table, one column, primary key)
+- [X] T010 [US1] Write TestParseValidFullSchema in pkg/schema/parser_test.go (tests parsing of complex schema with multiple tables, foreign keys, indexes, relationships)
+- [X] T011 [US1] Write TestParseValidSchemaWithOptionalFields in pkg/schema/parser_test.go (tests schemas with metadata, validation_rules, indexes)
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Ensure ParseSchema correctly unmarshals JSON into Schema struct (verify JSON decoder works with all struct fields)
-- [ ] T013 [US1] Ensure ParseSchema correctly preserves all table definitions (verify Tables array is populated)
-- [ ] T014 [US1] Ensure ParseSchema correctly preserves column definitions and foreign keys (verify nested structures work)
-- [ ] T015 [US1] Ensure ParseSchema correctly handles optional fields (verify omitempty works, nil pointers for missing optional fields)
-- [ ] T016 [US1] Verify TestParseValidMinimalSchema passes
-- [ ] T017 [US1] Verify TestParseValidFullSchema passes
-- [ ] T018 [US1] Verify TestParseValidSchemaWithOptionalFields passes
+- [X] T012 [US1] Ensure ParseSchema correctly unmarshals JSON into Schema struct (verify JSON decoder works with all struct fields)
+- [X] T013 [US1] Ensure ParseSchema correctly preserves all table definitions (verify Tables array is populated)
+- [X] T014 [US1] Ensure ParseSchema correctly preserves column definitions and foreign keys (verify nested structures work)
+- [X] T015 [US1] Ensure ParseSchema correctly handles optional fields (verify omitempty works, nil pointers for missing optional fields)
+- [X] T016 [US1] Verify TestParseValidMinimalSchema passes
+- [X] T017 [US1] Verify TestParseValidFullSchema passes
+- [X] T018 [US1] Verify TestParseValidSchemaWithOptionalFields passes
 
 **Checkpoint**: At this point, valid schemas should load successfully. All User Story 1 tests should pass.
 
