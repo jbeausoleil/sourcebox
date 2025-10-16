@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -809,4 +810,93 @@ func TestParseNegativeRecordCount(t *testing.T) {
 	assert.Nil(t, schema)
 	assert.Contains(t, err.Error(), "record_count")
 	assert.Contains(t, err.Error(), "greater than")
+}
+
+// ============================================================================
+// Additional Coverage Tests (T030-T039 coverage improvements)
+// ============================================================================
+
+func TestParseInvalidDatabaseType(t *testing.T) {
+	tests := []struct {
+		name         string
+		databaseType string
+	}{
+		{
+			name:         "unsupported database type - sqlite",
+			databaseType: "sqlite",
+		},
+		{
+			name:         "unsupported database type - mongodb",
+			databaseType: "mongodb",
+		},
+		{
+			name:         "unsupported database type - empty string",
+			databaseType: "",
+		},
+		{
+			name:         "unsupported database type - invalid name",
+			databaseType: "invaliddb",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{
+				"schema_version": "1.0",
+				"name": "test-schema",
+				"description": "Test schema",
+				"author": "Test Author",
+				"version": "1.0.0",
+				"database_type": ["%s"],
+				"tables": [],
+				"generation_order": []
+			}`, tt.databaseType)
+
+			reader := strings.NewReader(input)
+			schema, err := ParseSchema(reader)
+
+			require.Error(t, err, "ParseSchema should fail for invalid database_type: %s", tt.databaseType)
+			assert.Nil(t, schema)
+			assert.Contains(t, err.Error(), "invalid database_type")
+			assert.Contains(t, err.Error(), "must be")
+		})
+	}
+}
+
+func TestParseMultiplePrimaryKeys(t *testing.T) {
+	input := `{
+		"schema_version": "1.0",
+		"name": "test-schema",
+		"description": "Test schema",
+		"author": "Test Author",
+		"version": "1.0.0",
+		"database_type": ["mysql"],
+		"tables": [
+			{
+				"name": "users",
+				"record_count": 100,
+				"columns": [
+					{
+						"name": "id",
+						"type": "int",
+						"primary_key": true
+					},
+					{
+						"name": "email",
+						"type": "varchar(255)",
+						"primary_key": true
+					}
+				]
+			}
+		],
+		"generation_order": ["users"]
+	}`
+
+	reader := strings.NewReader(input)
+	schema, err := ParseSchema(reader)
+
+	require.Error(t, err, "ParseSchema should fail when table has multiple primary keys")
+	assert.Nil(t, schema)
+	assert.Contains(t, err.Error(), "must have exactly one primary key")
+	assert.Contains(t, err.Error(), "found 2")
 }

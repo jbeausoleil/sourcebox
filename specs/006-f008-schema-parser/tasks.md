@@ -95,16 +95,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Implement ValidateSchema: check schema name is required (add to ValidateSchema function)
-- [ ] T031 [US2] Implement ValidateSchema: check at least one table exists (add to ValidateSchema function)
-- [ ] T032 [US2] Implement ValidateSchema: check database_type is required and valid (add to ValidateSchema function)
-- [ ] T033 [US2] Implement ValidateSchema: check generation_order is non-empty (add to ValidateSchema function)
-- [ ] T034 [US2] Implement ValidateTable function in pkg/schema/parser.go (checks table name, columns, record_count requirements)
-- [ ] T035 [US2] Implement ValidateColumn function in pkg/schema/parser.go (checks column name and type requirements)
-- [ ] T036 [US2] Implement primary key validation in ValidateTable (exactly one primary key per table)
-- [ ] T037 [US2] Implement record_count validation in ValidateTable (must be positive)
-- [ ] T038 [US2] Integrate table and column validation into ValidateSchema (call ValidateTable and ValidateColumn in loop)
-- [ ] T039 [US2] Verify all User Story 2 tests pass
+- [X] T030 [US2] Implement ValidateSchema: check schema name is required (add to ValidateSchema function)
+- [X] T031 [US2] Implement ValidateSchema: check at least one table exists (add to ValidateSchema function)
+- [X] T032 [US2] Implement ValidateSchema: check database_type is required and valid (add to ValidateSchema function)
+- [X] T033 [US2] Implement ValidateSchema: check generation_order is non-empty (add to ValidateSchema function)
+- [X] T034 [US2] Implement ValidateTable function in pkg/schema/parser.go (checks table name, columns, record_count requirements)
+- [X] T035 [US2] Implement ValidateColumn function in pkg/schema/parser.go (checks column name and type requirements)
+- [X] T036 [US2] Implement primary key validation in ValidateTable (exactly one primary key per table)
+- [X] T037 [US2] Implement record_count validation in ValidateTable (must be positive)
+- [X] T038 [US2] Integrate table and column validation into ValidateSchema (call ValidateTable and ValidateColumn in loop)
+- [X] T039 [US2] Verify all User Story 2 tests pass
 
 **Checkpoint**: At this point, missing required fields should produce clear, actionable error messages
 

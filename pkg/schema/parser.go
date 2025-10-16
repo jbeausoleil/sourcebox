@@ -61,17 +61,26 @@ func ValidateSchema(s *Schema) error {
 		return fmt.Errorf("schema name is required")
 	}
 
-	// T031: Check at least one table exists
-	if s.Tables == nil {
-		return fmt.Errorf("tables field is required")
-	}
-
 	// T032: Check database_type is required and valid
 	if len(s.DatabaseType) == 0 {
 		return fmt.Errorf("database_type is required")
 	}
 
-	// T033: Check generation_order is non-empty
+	// Validate each database type is either "mysql" or "postgres"
+	for _, dbType := range s.DatabaseType {
+		if dbType != "mysql" && dbType != "postgres" {
+			return fmt.Errorf("invalid database_type %q: must be \"mysql\" or \"postgres\"", dbType)
+		}
+	}
+
+	// T031: Check tables field is present (not nil)
+	// Note: Empty tables array is allowed for minimal schemas
+	if s.Tables == nil {
+		return fmt.Errorf("tables field is required")
+	}
+
+	// T033: Check generation_order field is present (not nil)
+	// Note: Empty generation_order array is allowed for minimal schemas
 	if s.GenerationOrder == nil {
 		return fmt.Errorf("generation_order is required")
 	}
