@@ -36,10 +36,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement all Go structs in pkg/schema/types.go with complete JSON tags (Schema, SchemaMetadata, Table, Column, ForeignKey, Index, Relationship, ValidationRule)
-- [ ] T006 Implement basic ParseSchema function in pkg/schema/parser.go (JSON decoder setup with DisallowUnknownFields)
-- [ ] T007 Implement LoadSchema convenience function in pkg/schema/parser.go (file opening and delegation to ParseSchema)
-- [ ] T008 Create ValidateSchema function stub in pkg/schema/parser.go (to be filled with validation logic)
+- [X] T005 Implement all Go structs in pkg/schema/types.go with complete JSON tags (Schema, SchemaMetadata, Table, Column, ForeignKey, Index, Relationship, ValidationRule)
+- [X] T006 Implement basic ParseSchema function in pkg/schema/parser.go (JSON decoder setup with DisallowUnknownFields)
+- [X] T007 Implement LoadSchema convenience function in pkg/schema/parser.go (file opening and delegation to ParseSchema)
+- [X] T008 Create ValidateSchema function stub in pkg/schema/parser.go (to be filled with validation logic)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
